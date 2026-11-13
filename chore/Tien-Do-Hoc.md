@@ -10,7 +10,7 @@ Ghi lại mức độ đã đọc của từng phần, để biết phần nào 
 |---|---|---|
 | 1. Bản đồ các hướng | Ngày 1 kỹ; ngày 2, 3 lướt | Đã qua, còn nợ đọc kỹ ngày 2, 3 |
 | 2. Backbone SSL và môi trường | Ngày 1 lướt; ngày 2 xong | **Đã qua** (13/11). Còn nợ đọc kỹ ngày 1 |
-| 3. Post-training và zero-shot | Ngày 1 chưa đọc (đã có tài liệu); ngày 2 code xong, chưa chạy | Đang làm (13/11). Chờ Kaggle CLI |
+| 3. Post-training và zero-shot | Ngày 1 chưa đọc (đã có tài liệu); ngày 2 lần chấm 1 xong | Đang làm (13/11). Lần 2, 3 trên RADAR tiếng Việt chưa xong |
 | 4–8 | Chưa | |
 
 ## GĐ1. Bản đồ các hướng
