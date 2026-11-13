@@ -86,9 +86,11 @@ GRPO giữ thêm hai bản mô hình chỉ chạy inference (mô hình tham chi�
 | **1. Mục tiêu** | GPU 16 GB | Fine-tune MMS-300M, W2V-Large, W2V-Small; so SFT với GRPO | Đủ ablation và cải tiến |
 | 2. Mở rộng | GPU từ 40 GB (Colab Pro) | Fine-tune XLS-R-1B | Không bắt buộc |
 
-**Quota:** Colab miễn phí (kiểm tra 13/11): 0 compute unit, mỗi phiên T4 tối đa khoảng 4 giờ, không bảo đảm được cấp GPU. Kaggle: theo hiểu biết hiện tại khoảng 30 giờ GPU mỗi tuần cho mỗi tài khoản, cần kiểm tra lại. Mỗi thành viên dùng tài khoản riêng của mình.
+**Quota:** Colab miễn phí (kiểm tra 13/11): 0 compute unit, mỗi phiên T4 tối đa khoảng 4 giờ, không bảo đảm được cấp GPU. Kaggle (kiểm tra 13/11): 30 giờ GPU mỗi tuần, làm mới 7 giờ sáng thứ Bảy (giờ VN), máy T4 × 2, phiên tối đa 12 giờ. Mỗi thành viên dùng tài khoản riêng của mình.
 
 **Hệ quả:** việc dài phải chạy được qua nhiều phiên: lưu file điểm lên Drive sau mỗi checkpoint (GĐ3), đặt thư mục thí nghiệm trên Drive để huấn luyện chạy tiếp từ checkpoint cuối (GĐ5–6). Checkpoint lớn không lưu trên Drive (15 GB): tải vào máy Colab mỗi phiên, dùng xong xoá.
+
+**Bằng chứng mỗi lần chạy (bắt buộc, áp dụng mọi giai đoạn):** mọi lần chạy GPU, kể cả lần lỗi, phải lưu vào git ở `results/runs/<kernel>-v<N>/` (Kaggle) hoặc `results/runs/colab-<tên>-<YYYYMMDD>/` (Colab): code đã chạy, log, môi trường, kết quả, `RUN.md`. Dùng cho báo cáo, vấn đáp và tái hiện. Cách làm: `chore/Quy-Trinh-Chay-Kaggle.md` mục "Lưu bằng chứng"; mục lục: `results/runs/README.md`.
 
 ## 3. Danh sách đọc
 

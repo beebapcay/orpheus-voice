@@ -10,6 +10,7 @@
 | Chạy việc dài (cài môi trường, chấm điểm, huấn luyện) | Notebook trên **trình duyệt** | Bạn bấm chạy |
 | Checkpoint, dữ liệu tải về | Drive `MyDrive/orpheus/cache/` | Notebook tự tải, dùng lại giữa các phiên |
 | Kết quả mỗi lần chạy | Drive `MyDrive/orpheus/runs/<tên>_<thời gian>/` | Notebook tự lưu |
+| **Bằng chứng mỗi lần chạy** | `results/runs/colab-<tên>-<YYYYMMDD>/` trong git (bước 5) | Bạn tải về từ Drive, Claude sắp xếp và commit. **Bắt buộc** |
 | Gỡ lỗi | Claude đọc lỗi bạn dán vào, sửa code trên Mac | |
 
 **Vì sao không dùng Colab CLI cho việc dài:** ngày 13/11, kết nối từ Mac tới máy Colab bị reset hoặc treo 5 lần trong khoảng 25 phút, và máy T4 bị thu hồi giữa chừng. CLI chỉ nên dùng cho việc ngắn (dưới vài phút): kiểm tra GPU, chạy thử một lệnh. Mỗi lệnh `colab` phải chạy ngoài sandbox của Claude Code.
@@ -50,6 +51,12 @@ Không cần tóm tắt lỗi, dán nguyên văn.
 ### Bước 5. Khi chạy xong
 1. Ô cuối in đường dẫn `MyDrive/orpheus/runs/...`.
 2. Báo Claude các con số in ra (GĐ2: EER, cảnh báo nạp trọng số, thời gian cài, `it/s`).
+3. **Lưu bằng chứng vào git** (quy ước chung ở mục "Lưu bằng chứng" của `chore/Quy-Trinh-Chay-Kaggle.md`):
+   - File → Download → **Download .ipynb** (notebook có cả output các ô), và tải thư mục `MyDrive/orpheus/runs/<tên>_<thời gian>/` từ Drive (bỏ checkpoint, embedding).
+   - Đặt vào `results/runs/colab-<tên>-<YYYYMMDD>/` (hoặc đưa đường dẫn cho Claude).
+   - Claude viết `RUN.md` (commit code lúc chạy, GPU, thời gian, kết quả, ghi chú), thêm vào `results/runs/README.md`, rồi commit.
+
+**Còn thiếu:** lần chạy toy example ở GĐ2 (13/11, EER 6,11%) chưa có bằng chứng trong git, kết quả chỉ ghi trong `chore/GD2-Backbone-Va-Moi-Truong.md` mục 4.2. Nếu thư mục run trên Drive còn, tải về để bổ sung `results/runs/colab-toy-20261113/`.
 
 ### Bước 6. Tắt máy
 **Runtime → Disconnect and delete runtime.** Đóng tab không đủ, máy vẫn chạy và tính quota.
