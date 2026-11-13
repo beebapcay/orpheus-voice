@@ -180,11 +180,10 @@ Code đưa lên Kaggle dưới dạng **dataset riêng tư** thay vì clone GitH
 
 ### 5.5. Việc người dùng cần làm trước lần chạy đầu
 
-1. Cài Kaggle CLI trên máy: `uv tool install kaggle` (hoặc `pip install --user kaggle`).
-2. Kaggle → Settings → **API → Create New Token**, đặt file vào `~/.kaggle/kaggle.json`, rồi `chmod 600 ~/.kaggle/kaggle.json`.
+1. ~~Cài Kaggle CLI~~: đã cài (bản 2.2.5, 13/11).
+2. Đăng nhập: `kaggle auth login` (OAuth qua trình duyệt; CLI 2.x không dùng `kaggle.json`).
 3. Xác minh số điện thoại trên Kaggle (bắt buộc để bật internet và GPU cho kernel).
-4. Xem quota GPU còn lại (Settings hoặc trang Notebooks).
-5. Báo Claude. Claude sẽ chạy: `push.sh src` → `push.sh push prep` → chờ xong → `push.sh push zeroshot` → `push.sh status` → `push.sh output zeroshot`.
+4. Báo Claude. Claude kiểm tra đăng nhập và quota (`push.sh quota`). Claude sẽ chạy: `push.sh src` → `push.sh push prep` → chờ xong → `push.sh push zeroshot` → `push.sh status` → `push.sh output zeroshot`.
 
 Hướng dẫn chung: `chore/Quy-Trinh-Chay-Kaggle.md`.
 

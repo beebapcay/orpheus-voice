@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Điều khiển Kaggle từ máy (Claude chạy). Cần Kaggle CLI và ~/.kaggle/kaggle.json.
+# Điều khiển Kaggle từ máy (Claude chạy). Cần Kaggle CLI (>= 2.x) đã đăng nhập bằng `kaggle auth login`.
 #
 #   bash kaggle/push.sh src                 tạo/cập nhật dataset riêng tư <user>/orpheus-src
 #                                           (src/*.py, src/*.sh, protocols/ids/*, VERSION)
 #   bash kaggle/push.sh push prep|zeroshot  đẩy kernel và bắt đầu chạy
 #   bash kaggle/push.sh status prep|zeroshot
+#   bash kaggle/push.sh logs prep|zeroshot [-f]   xem log (không tải output)
+#   bash kaggle/push.sh quota               quota GPU còn lại
 #   bash kaggle/push.sh output zeroshot     tải kết quả về results/kaggle-raw/, chép phần
 #                                           cần lưu vào results/zeroshot/
 #
@@ -16,10 +18,11 @@ CMD="${1:-help}"
 KAGGLE="${KAGGLE:-kaggle}"
 
 user() {
-  # Tên người dùng lấy từ cấu hình của CLI (không đọc khoá API).
-  local u
-  u=$($KAGGLE config view 2>/dev/null | sed -n 's/^- username: //p' | head -1)
-  [ -n "$u" ] || { echo "Không lấy được username: kiểm tra ~/.kaggle/kaggle.json" >&2; exit 1; }
+  # Tên người dùng: biến KAGGLE_USERNAME nếu có, không thì lấy từ `kaggle config view`
+  # (không đọc token).
+  local u="${KAGGLE_USERNAME:-}"
+  [ -n "$u" ] || u=$($KAGGLE config view 2>/dev/null | sed -n 's/^- username: //p' | head -1)
+  [ -n "$u" ] || { echo "Không lấy được username: chạy 'kaggle auth login' hoặc đặt KAGGLE_USERNAME" >&2; exit 1; }
   echo "$u"
 }
 
@@ -63,6 +66,14 @@ case "$CMD" in
   status)
     K="${2:?prep hoặc zeroshot}"; U=$(user)
     $KAGGLE kernels status "$U/orpheus-$K"
+    ;;
+  logs)
+    # Xem log mà không tải output (output của prep ~10 GB)
+    K="${2:?prep hoặc zeroshot}"; U=$(user)
+    $KAGGLE kernels logs "$U/orpheus-$K" "${@:3}"
+    ;;
+  quota)
+    $KAGGLE quota
     ;;
   output)
     K="${2:?zeroshot}"; U=$(user)
