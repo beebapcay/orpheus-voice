@@ -39,8 +39,14 @@ cd "$BASE"
 export MAMBA_ROOT_PREFIX="$BASE/mamba"
 MM="$BASE/bin/micromamba"
 RUN="$MM run -n antideepfake"
+# Kiểm tra gói đã cài chưa. Chạy từ "/" để Python không nhầm thư mục
+# $BASE/fairseq (repo vừa clone) với gói fairseq đã cài.
+has() { (cd / && $RUN python -c "import $1" >/dev/null 2>&1); }
 LOG="$BASE/setup.log"
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
+# Lệnh nào lỗi thì in ra dòng và lệnh đó trước khi dừng (set -E để áp dụng cả trong hàm).
+set -E
+trap 'log "LỖI ở dòng $LINENO: $BASH_COMMAND. Chi tiết: tail -n 50 $LOG"' ERR
 
 # Tải về CACHE_DIR nếu chưa có. Tải vào file tạm rồi đổi tên, để lần tải dở
 # không để lại file hỏng trông như đã xong.
@@ -70,7 +76,7 @@ setup_env() {
   fi
 
   # 2. PyTorch 2.6.0 bản CUDA 11.8 (chạy được trên T4 và P100).
-  if ! $RUN python -c "import torch" 2>/dev/null; then
+  if ! has torch; then
     log "Cài torch 2.6.0 + torchaudio 2.6.0 (cu118)"
     $RUN pip install torch==2.6.0 torchaudio==2.6.0 \
       --index-url https://download.pytorch.org/whl/cu118 >>"$LOG" 2>&1
@@ -81,13 +87,25 @@ setup_env() {
     log "Clone fairseq"
     git clone -q https://github.com/pytorch/fairseq "$BASE/fairseq"
   fi
-  if ! $RUN python -c "import fairseq" 2>/dev/null; then
+  local fairseq_new=0
+  if ! has fairseq.models.wav2vec; then
     log "Cài fairseq $FAIRSEQ_COMMIT (biên dịch, mất vài phút)"
-    (cd "$BASE/fairseq" && git checkout -q "$FAIRSEQ_COMMIT" && $RUN pip install --editable . >>"$LOG" 2>&1)
+    (cd "$BASE/fairseq" && git checkout -q "$FAIRSEQ_COMMIT")
+    # Cách của install.sh. Nếu setuptools mới không build được (môi trường build
+    # tách biệt thiếu numpy), thử lại với cython/numpy cài sẵn và tắt cô lập.
+    if ! (cd "$BASE/fairseq" && $RUN pip install --editable . >>"$LOG" 2>&1); then
+      log "Build fairseq lần 1 lỗi, thử lại với --no-build-isolation"
+      $RUN pip install cython "numpy<2" >>"$LOG" 2>&1
+      (cd "$BASE/fairseq" && $RUN pip install --no-build-isolation --editable . >>"$LOG" 2>&1)
+    fi
+    has fairseq.models.wav2vec || { log "LỖI: cài fairseq thất bại, xem $LOG"; exit 1; }
+    fairseq_new=1
   fi
 
   # 4. SpeechBrain và các gói còn lại, đúng phiên bản trong install.sh.
-  if ! $RUN python -c "import speechbrain" 2>/dev/null; then
+  # Phải chạy SAU fairseq (như install.sh) để các phiên bản cố định là bản cuối
+  # cùng được cài; vừa cài fairseq thì cài lại.
+  if ! has speechbrain || [ "$fairseq_new" = 1 ]; then
     log "Cài speechbrain 1.0.2 và các gói phụ"
     $RUN pip install speechbrain==1.0.2 >>"$LOG" 2>&1
     $RUN pip install tensorboard tensorboardX soundfile pandarallel scikit-learn \
@@ -102,7 +120,7 @@ setup_env() {
   (cd "$BASE/AntiDeepfake" && git checkout -q "$ANTIDEEPFAKE_COMMIT")
 
   log "Kiểm tra môi trường"
-  $RUN python - <<'EOF' | tee "$BASE/versions.txt" | tee -a "$LOG"
+  (cd / && $RUN python -) <<'EOF' | tee "$BASE/versions.txt" | tee -a "$LOG"
 import sys, torch, torchaudio, fairseq, speechbrain, numpy, pandas
 print("python      ", sys.version.split()[0])
 print("torch       ", torch.__version__, "| CUDA:", torch.cuda.is_available(),
@@ -124,7 +142,7 @@ run_toy() {
   # Dữ liệu toy: 150 câu thuộc ASVspoof 2019 LA (16 thật, 134 giả).
   # AntiDeepfake đã dùng ASVspoof 2019 LA để huấn luyện, nên đây chỉ là
   # kiểm tra code chạy đúng, không phải kết quả ngoài miền.
-  if [ ! -x "$MM" ] || ! $RUN python -c "import fairseq" 2>/dev/null; then
+  if [ ! -x "$MM" ] || ! has fairseq.models.wav2vec; then
     log "LỖI: chưa có môi trường. Chạy bước env trước."
     exit 1
   fi
