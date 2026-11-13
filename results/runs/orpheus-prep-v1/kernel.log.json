@@ -1,0 +1,66 @@
+[{"stream_name":"stdout","time":0.916080906,"data":"Code: /kaggle/input/datasets/beebapcay/orpheus-src\n"}
+,{"stream_name":"stdout","time":1.008208906,"data":"git 968f43e\n"}
+,{"stream_name":"stdout","time":1.008242821,"data":"staged 2026-11-13 17:14:30\n"}
+,{"stream_name":"stdout","time":1.009329662,"data":"\n"}
+,{"stream_name":"stdout","time":1.026962567,"data":"Filesystem      Size  Used Avail Use% Mounted on\n"}
+,{"stream_name":"stdout","time":1.02700827,"data":"/dev/loop2       20G  116K   20G   1% /kaggle/working\n"}
+,{"stream_name":"stdout","time":1.027014516,"data":"overlay         8.0T  7.1T  967G  89% /\n"}
+,{"stream_name":"stdout","time":7.430828017,"data":"[10:15:41] Ổ chứa /kaggle/working/data: trống 20.9 / 21.0 GB\n"}
+,{"stream_name":"stdout","time":7.4308686569999995,"data":"[10:15:41] Ổ chứa /tmp/orpheus_prep: trống 1038.2 / 8758.4 GB\n"}
+,{"stream_name":"stdout","time":7.700070748,"data":"[10:15:41] RADAR: cần 15438 file, còn thiếu 15438\n"}
+,{"stream_name":"stdout","time":7.700109806,"data":"[10:15:41] RADAR: đọc luồng RADAR2026-eval.tar.gz (8,75 GB), lần 1\n"}
+,{"stream_name":"stdout","time":128.021403079,"data":"[10:17:41]   đã qua 10000 mục, còn thiếu 14646, 2.0 phút\n"}
+,{"stream_name":"stdout","time":210.628281273,"data":"[10:19:04]   đã qua 20000 mục, còn thiếu 13902, 3.4 phút\n"}
+,{"stream_name":"stdout","time":311.801607902,"data":"[10:20:45]   đã qua 30000 mục, còn thiếu 13179, 5.1 phút\n"}
+,{"stream_name":"stdout","time":403.880759324,"data":"[10:22:17]   đã qua 40000 mục, còn thiếu 12441, 6.6 phút\n"}
+,{"stream_name":"stdout","time":486.201544109,"data":"[10:23:40]   đã qua 50000 mục, còn thiếu 11692, 8.0 phút\n"}
+,{"stream_name":"stdout","time":572.93697655,"data":"[10:25:06]   đã qua 60000 mục, còn thiếu 10894, 9.4 phút\n"}
+,{"stream_name":"stdout","time":662.058496633,"data":"[10:26:35]   đã qua 70000 mục, còn thiếu 10095, 10.9 phút\n"}
+,{"stream_name":"stdout","time":761.523262744,"data":"[10:28:15]   đã qua 80000 mục, còn thiếu 9357, 12.6 phút\n"}
+,{"stream_name":"stdout","time":837.244597351,"data":"[10:29:31]   đã qua 90000 mục, còn thiếu 8571, 13.8 phút\n"}
+,{"stream_name":"stdout","time":933.408336155,"data":"[10:31:07]   đã qua 100000 mục, còn thiếu 7838, 15.4 phút\n"}
+,{"stream_name":"stdout","time":1019.690191068,"data":"[10:32:33]   đã qua 110000 mục, còn thiếu 7073, 16.9 phút\n"}
+,{"stream_name":"stdout","time":1113.389945393,"data":"[10:34:07]   đã qua 120000 mục, còn thiếu 6351, 18.4 phút\n"}
+,{"stream_name":"stdout","time":1208.799030337,"data":"[10:35:42]   đã qua 130000 mục, còn thiếu 5618, 20.0 phút\n"}
+,{"stream_name":"stdout","time":1289.087839568,"data":"[10:37:02]   đã qua 140000 mục, còn thiếu 4883, 21.4 phút\n"}
+,{"stream_name":"stdout","time":1357.780151765,"data":"[10:38:11]   đã qua 150000 mục, còn thiếu 4101, 22.5 phút\n"}
+,{"stream_name":"stdout","time":1438.608919502,"data":"[10:39:32]   đã qua 160000 mục, còn thiếu 3371, 23.8 phút\n"}
+,{"stream_name":"stdout","time":1501.113675331,"data":"[10:40:34]   đã qua 170000 mục, còn thiếu 2626, 24.9 phút\n"}
+,{"stream_name":"stdout","time":1588.975367735,"data":"[10:42:02]   đã qua 180000 mục, còn thiếu 1870, 26.4 phút\n"}
+,{"stream_name":"stdout","time":1676.442276632,"data":"[10:43:30]   đã qua 190000 mục, còn thiếu 1066, 27.8 phút\n"}
+,{"stream_name":"stdout","time":1770.276174314,"data":"[10:45:04]   đã qua 200000 mục, còn thiếu 384, 29.4 phút\n"}
+,{"stream_name":"stdout","time":1813.675063982,"data":"[10:45:47]   đủ file, dừng đọc luồng\n"}
+,{"stream_name":"stdout","time":1815.552734652,"data":"[10:45:49] Ghi /kaggle/working/data/radar_vi.csv: 13438 câu (7000 thật, 6438 giả), 17.04 giờ, dài nhất 45.7 s, tần số lấy mẫu [np.int64(16000)], số kênh [np.int64(1)]\n"}
+,{"stream_name":"stdout","time":1815.806193435,"data":"[10:45:49] Ghi /kaggle/working/data/radar_en_sub.csv: 2000 câu (1000 thật, 1000 giả), 3.02 giờ, dài nhất 51.4 s, tần số lấy mẫu [np.int64(16000)], số kênh [np.int64(1)]\n"}
+,{"stream_name":"stdout","time":1816.296864493,"data":"[10:45:50] In-the-Wild: cần 31779 file, còn thiếu 31779\n"}
+,{"stream_name":"stdout","time":1816.296908452,"data":"[10:45:50]   chỗ trống ở /tmp/orpheus_prep: 1038.2 GB -\u003e chế độ zip\n"}
+,{"stream_name":"stdout","time":1816.296916402,"data":"[10:45:50]   tải zip 8,16 GB\n"}
+,{"stream_name":"stdout","time":1872.793504418,"data":"[10:46:46]   tải xong sau 0.9 phút\n"}
+,{"stream_name":"stdout","time":1884.850799844,"data":"[10:46:58]   2000/31779 file, 0.2 phút\n"}
+,{"stream_name":"stdout","time":1899.855779378,"data":"[10:47:13]   4000/31779 file, 0.4 phút\n"}
+,{"stream_name":"stdout","time":1905.406091892,"data":"[10:47:19]   6000/31779 file, 0.5 phút\n"}
+,{"stream_name":"stdout","time":1911.704788698,"data":"[10:47:25]   8000/31779 file, 0.6 phút\n"}
+,{"stream_name":"stdout","time":1917.642117859,"data":"[10:47:31]   10000/31779 file, 0.7 phút\n"}
+,{"stream_name":"stdout","time":1922.966649465,"data":"[10:47:36]   12000/31779 file, 0.8 phút\n"}
+,{"stream_name":"stdout","time":1928.879105159,"data":"[10:47:42]   14000/31779 file, 0.9 phút\n"}
+,{"stream_name":"stdout","time":1934.245625541,"data":"[10:47:48]   16000/31779 file, 1.0 phút\n"}
+,{"stream_name":"stdout","time":1939.949061683,"data":"[10:47:53]   18000/31779 file, 1.1 phút\n"}
+,{"stream_name":"stdout","time":1944.985981115,"data":"[10:47:58]   20000/31779 file, 1.2 phút\n"}
+,{"stream_name":"stdout","time":1950.973067563,"data":"[10:48:04]   22000/31779 file, 1.3 phút\n"}
+,{"stream_name":"stdout","time":1956.151374019,"data":"[10:48:09]   24000/31779 file, 1.4 phút\n"}
+,{"stream_name":"stdout","time":1964.579470251,"data":"[10:48:18]   26000/31779 file, 1.5 phút\n"}
+,{"stream_name":"stdout","time":1971.414417617,"data":"[10:48:25]   28000/31779 file, 1.6 phút\n"}
+,{"stream_name":"stdout","time":1976.569615679,"data":"[10:48:30]   30000/31779 file, 1.7 phút\n"}
+,{"stream_name":"stdout","time":1982.472437313,"data":"[10:48:36] Ghi /kaggle/working/data/itw_sub.csv: 2000 câu (1000 thật, 1000 giả), 2.43 giờ, dài nhất 24.5 s, tần số lấy mẫu [np.int64(16000)], số kênh [np.int64(1)]\n"}
+,{"stream_name":"stdout","time":1986.181372863,"data":"[10:48:39] Ghi /kaggle/working/data/itw_full.csv: 31779 câu (19963 thật, 11816 giả), 37.85 giờ, dài nhất 25.0 s, tần số lấy mẫu [np.int64(16000)], số kênh [np.int64(1)]\n"}
+,{"stream_name":"stdout","time":1986.254427916,"data":"[10:48:40] Ghi ood_forget.csv: 4000 câu\n"}
+,{"stream_name":"stdout","time":1986.6764397,"data":"[10:48:40] Xong. Tổng dung lượng /kaggle/working/data: 9.96 GB\n"}
+,{"stream_name":"stdout","time":1986.676498286,"data":"[10:48:40] {\"itw_full\": {\"n\": 31779, \"real\": 19963, \"fake\": 11816, \"hours\": 37.852, \"max_sec\": 24.99}, \"itw_sub\": {\"n\": 2000, \"real\": 1000, \"fake\": 1000, \"hours\": 2.434, \"max_sec\": 24.48}, \"ood_forget\": {\"n\": 4000, \"real\": 2000, \"fake\": 2000, \"hours\": 5.457, \"max_sec\": 51.44}, \"radar_en_sub\": {\"n\": 2000, \"real\": 1000, \"fake\": 1000, \"hours\": 3.023, \"max_sec\": 51.44}, \"radar_vi\": {\"n\": 13438, \"real\": 7000, \"fake\": 6438, \"hours\": 17.042, \"max_sec\": 45.72}}\n"}
+,{"stream_name":"stdout","time":1987.124455833,"data":"9.4G\t/kaggle/working/data\n"}
+,{"stream_name":"stderr","time":1990.177827076,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":1990.177878608,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":1990.566245162,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":1990.566286697,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":1991.720452772,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":1992.984674922,"data":"[NbConvertApp] Writing 279173 bytes to __results__.html\n"}
+]

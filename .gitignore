@@ -27,7 +27,7 @@ venv/
 .claude/
 
 # Log tải về từ Colab khi chạy (xem trong VS Code)
-runs/
+/runs/
 
 # Kaggle: thư mục dựng tạm và kết quả thô (lưu bản gọn trong results/zeroshot/)
 build/

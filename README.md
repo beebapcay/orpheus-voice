@@ -9,7 +9,7 @@
 | `src/` | Code của nhóm: `evaluate.py` (EER, minDCF, actDCF), `setup_antideepfake.sh` (dựng môi trường), `prep_data.py` (dữ liệu kiểm tra), `score_zeroshot.py` và `score_w2v2_aasist.py` (chấm zero-shot) |
 | `protocols/ids/` | Danh sách câu cố định của từng tập kiểm tra (RADAR, In-the-Wild) |
 | `kaggle/` | Kernel Kaggle (`prep`, `zeroshot`) và `push.sh` để đẩy, xem trạng thái, tải kết quả |
-| `results/` | Kết quả chạy (điểm, độ đo); embedding và file thô không đưa vào git |
+| `results/` | Kết quả chạy: `zeroshot/` (điểm, độ đo đã gộp), `runs/` (bằng chứng từng lần chạy Kaggle: code đã đẩy, log, môi trường, `RUN.md`); embedding và file thô không đưa vào git |
 | `colab/` | Notebook chạy trên Google Colab |
 | `chore/` | Kế hoạch, đề cương, ghi chép từng giai đoạn |
 | `note/` | Ghi chú kiến thức |
@@ -42,7 +42,7 @@ Xem `chore/Quy-Trinh-Chay-Kaggle.md`. Tóm tắt:
 bash kaggle/push.sh src             # đóng gói code thành dataset riêng tư
 bash kaggle/push.sh push prep       # tải RADAR tiếng Việt, In-the-Wild (CPU)
 bash kaggle/push.sh push zeroshot   # chấm trên 2 GPU T4
-bash kaggle/push.sh output zeroshot # kết quả về results/zeroshot/
+bash kaggle/push.sh output zeroshot N   # version N: kết quả về results/zeroshot/, bằng chứng về results/runs/
 ```
 
 ## Chạy `evaluate.py` trên máy

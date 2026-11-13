@@ -1,0 +1,9 @@
+{
+  "kernel": "orpheus-zeroshot",
+  "version": 2,
+  "pushed_at": {
+    "local": "2026-11-13 khoảng 20:35 +07:00"
+  },
+  "repo_commit": "4405c15",
+  "note": "Ghi lại sau (13/11 tối) từ lịch sử git: run.py và kernel-metadata.json lấy ở commit trên, nội dung giống bản đã đẩy. Lúc đẩy, HEAD là 51222da và run.py chưa commit; commit 4405c15 ngay sau đó chứa đúng bản này."
+}

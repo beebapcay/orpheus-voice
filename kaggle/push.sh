@@ -7,8 +7,12 @@
 #   bash kaggle/push.sh status prep|zeroshot
 #   bash kaggle/push.sh logs prep|zeroshot [-f]   xem log (không tải output)
 #   bash kaggle/push.sh quota               quota GPU còn lại
-#   bash kaggle/push.sh output zeroshot     tải kết quả về results/kaggle-raw/, chép phần
-#                                           cần lưu vào results/zeroshot/
+#   bash kaggle/push.sh output zeroshot N   tải output version N về results/kaggle-raw/,
+#                                           lưu bằng chứng vào results/runs/, kết quả vào results/zeroshot/
+#   bash kaggle/push.sh archive-log prep N  chỉ lưu log version N vào results/runs/ (không tải output)
+#
+# Mỗi lần push lưu run.py + metadata vào results/runs/orpheus-<kernel>-v<N>/; output và
+# archive-log bổ sung log, môi trường, log từng shard và RUN.md. Thư mục này được commit.
 #
 # Dataset và kernel đều riêng tư (is_private mặc định của Kaggle).
 set -euo pipefail
@@ -65,7 +69,15 @@ case "$CMD" in
     d="$BUILD/orpheus-$K"; rm -rf "$d" && mkdir -p "$d"
     cp "$ROOT/kaggle/$K/run.py" "$d/"
     sed "s/KAGGLE_USER/$U/g" "$ROOT/kaggle/$K/kernel-metadata.json" > "$d/kernel-metadata.json"
-    kg kernels push -p "$d"
+    out=$(kg kernels push -p "$d" 2>&1); echo "$out"
+    # Lưu bản đã đẩy vào results/runs/orpheus-<K>-v<N>/ (bằng chứng, để tái hiện)
+    V=$(echo "$out" | sed -n 's/.*Kernel version \([0-9][0-9]*\) successfully pushed.*/\1/p')
+    if [ -n "$V" ]; then
+      python3 -I "$ROOT/kaggle/archive_run.py" pushed --run-dir "$ROOT/results/runs/orpheus-$K-v$V" \
+        --build-dir "$d" --kernel "orpheus-$K" --version "$V"
+    else
+      echo "CẢNH BÁO: không đọc được số version, chưa lưu bản đẩy" >&2
+    fi
     ;;
   status)
     K="${2:?prep hoặc zeroshot}"; U=$(user)
@@ -79,13 +91,28 @@ case "$CMD" in
   quota)
     kg quota
     ;;
+  archive-log)
+    # Chỉ lưu log và bằng chứng (không tải output), dùng cho prep (~10 GB, >45.000 file)
+    K="${2:?prep hoặc zeroshot}"; V="${3:?số version}"; U=$(user)
+    run="$ROOT/results/runs/orpheus-$K-v$V"; mkdir -p "$run"
+    kg kernels logs "$U/orpheus-$K/$V" > "$run/.kernel.log.raw"
+    q=$(mktemp); kg quota > "$q" 2>&1 || true
+    python3 -I "$ROOT/kaggle/archive_run.py" collect --run-dir "$run" --raw "$run" \
+      --log "$run/.kernel.log.raw" --kernel "orpheus-$K" --version "$V" --quota "$q"
+    rm -f "$run/.kernel.log.raw" "$q"
+    ;;
   output)
-    K="${2:?zeroshot}"; U=$(user)
-    [ "$K" = "zeroshot" ] || { echo "Chỉ tải output của zeroshot (prep có ~10 GB âm thanh)"; exit 2; }
-    # Mỗi lần tải vào thư mục riêng, để không mất embedding của lần chạy trước
-    raw="$ROOT/results/kaggle-raw/orpheus-$K-$(date '+%Y%m%d-%H%M')"
+    # bash kaggle/push.sh output zeroshot <version>
+    K="${2:?zeroshot}"; V="${3:?số version (xem results/runs/ hoặc dòng 'Kernel version N' lúc đẩy)}"; U=$(user)
+    [ "$K" = "zeroshot" ] || { echo "Chỉ tải output của zeroshot (prep: dùng archive-log)"; exit 2; }
+    # Mỗi version tải vào thư mục riêng, để không mất embedding của lần chạy trước
+    raw="$ROOT/results/kaggle-raw/orpheus-$K-v$V"
     mkdir -p "$raw"
-    kg kernels output "$U/orpheus-$K" -p "$raw"
+    kg kernels output "$U/orpheus-$K/$V" -p "$raw" --page-size 200
+    q=$(mktemp); kg quota > "$q" 2>&1 || true
+    python3 -I "$ROOT/kaggle/archive_run.py" collect --run-dir "$ROOT/results/runs/orpheus-$K-v$V" \
+      --raw "$raw" --kernel "orpheus-$K" --version "$V" --quota "$q"
+    rm -f "$q"
     # Lưu vào git: tóm tắt, độ đo, file điểm, log cài đặt. Không lưu embedding và shard.
     dst="$ROOT/results/zeroshot"; mkdir -p "$dst"
     # Gộp summary.csv: dòng mới thay dòng cũ cùng (dataset, model), giữ các dòng cũ còn lại
@@ -102,6 +129,6 @@ case "$CMD" in
     ls "$raw"
     ;;
   *)
-    sed -n '2,12p' "$0"
+    sed -n '2,17p' "$0"
     ;;
 esac

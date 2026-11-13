@@ -179,7 +179,7 @@ Code đưa lên Kaggle dưới dạng **dataset riêng tư** thay vì clone GitH
 
 Nếu thiếu quota: bỏ NDA của các bản 1B/2B trước (thứ tự cắt số 4 của plan), giữ NDA của MMS-300M (phát hiện 1).
 
-`push.sh output` tải mỗi lần vào một thư mục riêng `results/kaggle-raw/orpheus-zeroshot-<ngày giờ>/` (giữ embedding của các lần trước) và gộp `summary.csv`: dòng mới thay dòng cũ cùng (tập, mô hình). Output lần 1 nằm ở `results/kaggle-raw/orpheus-zeroshot-run1/`.
+**Lưu bằng chứng mỗi lần chạy** (cho báo cáo và tái hiện): `results/runs/<kernel>-v<N>/` được commit, gồm `run.py` và `kernel-metadata.json` đúng như đã đẩy, log kernel, môi trường, log `main.py` của từng shard, kết quả riêng của lần đó và `RUN.md` (thông tin chạy, job, kết quả, cách tái hiện, ghi chú). `push.sh push` tạo phần đầu; `push.sh output zeroshot N` bổ sung phần còn lại. Output thô có embedding ở `results/kaggle-raw/orpheus-zeroshot-vN/` (không commit). `summary.csv` trong `results/zeroshot/` được gộp: dòng mới thay dòng cũ cùng (tập, mô hình).
 
 **Chạy hai GPU song song:** mỗi GPU lấy job kế tiếp trong hàng đợi. Script giới hạn RAM để không nạp hai bản 2B cùng lúc (mỗi bản cần ~17 GB RAM khi nạp).
 

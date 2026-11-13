@@ -41,7 +41,8 @@ flowchart LR
 | `bash kaggle/push.sh status <kernel>` | `running`, `complete`, `error` |
 | `bash kaggle/push.sh logs <kernel> [-f]` | Xem log (`-f`: theo dõi trực tiếp), không phải tải output |
 | `bash kaggle/push.sh quota` | Quota GPU còn lại |
-| `bash kaggle/push.sh output zeroshot` | Tải output về `results/kaggle-raw/`, chép phần cần lưu vào `results/zeroshot/` |
+| `bash kaggle/push.sh output zeroshot N` | Tải output của version N về `results/kaggle-raw/orpheus-zeroshot-vN/` (có embedding, không commit); lưu bằng chứng vào `results/runs/orpheus-zeroshot-vN/`; chép điểm, độ đo vào `results/zeroshot/` và gộp `summary.csv` |
+| `bash kaggle/push.sh archive-log prep N` | Chỉ lưu log và `RUN.md` của version N vào `results/runs/` (không tải output; dùng cho prep vì output ~10 GB) |
 
 Mỗi kernel in ra `VERSION` của dataset code ở đầu log, để biết đang chạy đúng bản nào.
 

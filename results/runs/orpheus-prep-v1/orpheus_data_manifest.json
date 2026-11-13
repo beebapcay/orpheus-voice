@@ -1,0 +1,41 @@
+{
+  "created": "2026-11-13 10:48:40",
+  "sets": {
+    "itw_full": {
+      "n": 31779,
+      "real": 19963,
+      "fake": 11816,
+      "hours": 37.852,
+      "max_sec": 24.99
+    },
+    "itw_sub": {
+      "n": 2000,
+      "real": 1000,
+      "fake": 1000,
+      "hours": 2.434,
+      "max_sec": 24.48
+    },
+    "ood_forget": {
+      "n": 4000,
+      "real": 2000,
+      "fake": 2000,
+      "hours": 5.457,
+      "max_sec": 51.44
+    },
+    "radar_en_sub": {
+      "n": 2000,
+      "real": 1000,
+      "fake": 1000,
+      "hours": 3.023,
+      "max_sec": 51.44
+    },
+    "radar_vi": {
+      "n": 13438,
+      "real": 7000,
+      "fake": 6438,
+      "hours": 17.042,
+      "max_sec": 45.72
+    }
+  },
+  "bytes": 9957645573
+}
