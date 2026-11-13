@@ -1,0 +1,9 @@
+python       3.9.23
+torch        2.6.0+cu118 | CUDA: True | Tesla T4
+torchaudio   2.6.0+cu118
+fairseq      1.0.0a0+862efab
+speechbrain  1.0.2
+numpy/pandas 1.21.2 1.4.3
+fairseq Wav2Vec2Model import: OK
+AntiDeepfake 86098091c52c5d0e38c44396c95608f93b0f648d
+fairseq      862efab86f649c04ea31545ce28d13c59560113d

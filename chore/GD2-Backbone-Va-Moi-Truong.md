@@ -117,7 +117,7 @@ Chạy bằng notebook `colab/GD2_toy_example.ipynb`. Code đi qua GitHub, kết
 
 Script làm theo `install.sh`, khác ở 4 điểm: dùng micromamba thay conda (Colab không có conda), cố định commit AntiDeepfake, tự kiểm tra cảnh báo nạp trọng số, giữ checkpoint và dữ liệu toy trong cache trên Drive để phiên sau không tải lại. Log ở `<BASE>/setup.log`.
 
-**Kết quả (13/11/2026, Colab T4, notebook ở commit `46e3404`): QUA**
+**Kết quả (13/11/2026, Colab T4, notebook ở commit `46e3404`): QUA.** Bằng chứng: `results/runs/colab-gd2-toy-20261113-0909/` (lần lỗi trước đó: `...-0848/`)
 
 | Mục | Kết quả |
 |---|---|

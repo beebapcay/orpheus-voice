@@ -53,10 +53,10 @@ Không cần tóm tắt lỗi, dán nguyên văn.
 2. Báo Claude các con số in ra (GĐ2: EER, cảnh báo nạp trọng số, thời gian cài, `it/s`).
 3. **Lưu bằng chứng vào git** (quy ước chung ở mục "Lưu bằng chứng" của `chore/Quy-Trinh-Chay-Kaggle.md`):
    - File → Download → **Download .ipynb** (notebook có cả output các ô), và tải thư mục `MyDrive/orpheus/runs/<tên>_<thời gian>/` từ Drive (bỏ checkpoint, embedding).
-   - Đặt vào `results/runs/colab-<tên>-<YYYYMMDD>/` (hoặc đưa đường dẫn cho Claude).
+   - Đặt vào `results/runs/colab-<tên>-<YYYYMMDD>-<HHMM>/` (hoặc đưa đường dẫn cho Claude).
    - Claude viết `RUN.md` (commit code lúc chạy, GPU, thời gian, kết quả, ghi chú), thêm vào `results/runs/README.md`, rồi commit.
 
-**Còn thiếu:** lần chạy toy example ở GĐ2 (13/11, EER 6,11%) chưa có bằng chứng trong git, kết quả chỉ ghi trong `chore/GD2-Backbone-Va-Moi-Truong.md` mục 4.2. Nếu thư mục run trên Drive còn, tải về để bổ sung `results/runs/colab-toy-20261113/`.
+**Đã có:** 2 lần chạy toy example ở GĐ2 (13/11): `results/runs/colab-gd2-toy-20261113-0848/` (lỗi) và `results/runs/colab-gd2-toy-20261113-0909/` (qua, EER 6,11%). Thiếu notebook `.ipynb` kèm output; không bắt buộc vì log đã đủ.
 
 ### Bước 6. Tắt máy
 **Runtime → Disconnect and delete runtime.** Đóng tab không đủ, máy vẫn chạy và tính quota.
