@@ -1,0 +1,4 @@
+- Các hướng trên thế giới cho bài toán này. Trả lời khoản 3 hướng chính.
+- Tại sao chọn giải pháp, hướng giải quyết này?
+- Kiến trúc bên dưới của giải pháp này như nào
+- Sẽ tiếp tục phát triển theo hướng nào?

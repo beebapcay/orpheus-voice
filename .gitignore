@@ -1,0 +1,27 @@
+# Tài liệu tham khảo: PDF có bản quyền và report của bạn, chỉ giữ ở máy
+resource/
+
+# Dữ liệu, checkpoint, kết quả: lưu trên Drive, không đưa vào git
+Data/
+Log/
+downloads/
+work/
+*.ckpt
+*.pt
+*.wav
+*.flac
+*.mp3
+*.tar.gz
+*.pkl
+
+# Python, notebook
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Máy
+.DS_Store
+.vscode/
+.claude/
