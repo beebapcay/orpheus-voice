@@ -10,7 +10,7 @@ Ghi lại mức độ đã đọc của từng phần, để biết phần nào 
 |---|---|---|
 | 1. Bản đồ các hướng | Ngày 1 kỹ; ngày 2, 3 lướt | Đã qua, còn nợ đọc kỹ ngày 2, 3 |
 | 2. Backbone SSL và môi trường | Ngày 1 lướt; ngày 2 xong | **Đã qua** (13/11). Còn nợ đọc kỹ ngày 1 |
-| 3. Post-training và zero-shot | Ngày 1 chưa đọc (đã có tài liệu); ngày 2 lần chấm 1, 2 xong | Đang làm (13/11). Lần 3 (HuBERT-XL, XLS-R-2B) đang chạy |
+| 3. Post-training và zero-shot | Ngày 1 chưa đọc (đã có tài liệu); ngày 2 xong (đủ 14 checkpoint + baseline) | Còn: đọc kỹ ngày 1, tự kiểm tra; quyết định Default hay NDA cho mốc R (phát hiện 1 file GĐ3) |
 | 4–8 | Chưa | |
 
 ## GĐ1. Bản đồ các hướng
@@ -92,5 +92,5 @@ Việc ngày 1:
 Việc ngày 2:
 - [x] Cài Kaggle CLI, đăng nhập OAuth, xác minh số điện thoại, xem quota GPU (30 giờ/tuần)
 - [x] Lần 1: toy 6,1101%; In-the-Wild MMS-300M 2,9016%; RADAR tiếng Việt cho 3 backbone + baseline (W2V-Large tốt nhất, 17,80%)
-- [x] Lần 2 (7 checkpoint, xong 13/11): NDA tốt hơn Default ở 4/5 backbone; bản 1B ~14–16%
-- [ ] Lần 3 (HuBERT-XL, XLS-R-2B, đang chạy)
+- [x] Lần 2 (7 checkpoint, xong 13/11): bản 1B ~14–16%; NDA tốt hơn Default ở cả 3 bản ≤ 317M (bảng đủ ở mục 5.6 file GĐ3)
+- [x] Lần 3 (HuBERT-XL, XLS-R-2B, xong 14/11): XLS-R-2B Default tốt nhất 13,71%; khoảng tin cậy bootstrap cho cả bảng

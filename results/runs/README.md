@@ -9,7 +9,7 @@ Mỗi thư mục `<kernel>-v<N>` là một lần chạy trên Kaggle (một vers
 | `orpheus-prep-v1` | Chuẩn bị dữ liệu kiểm tra (RADAR VI/EN, In-the-Wild) | Xong, ~33 phút |
 | `orpheus-zeroshot-v1` | Kiểm chứng 3 mốc; zero-shot 3 backbone (Default) + baseline; mốc `ood_forget` | Xong, 2,42 giờ; qua 3 mốc |
 | `orpheus-zeroshot-v2` | Zero-shot: MMS-300M NDA, MMS-1B, XLS-R-1B (hai bản), W2V-Large NDA, W2V-Small NDA | Xong, 2,71 giờ; NDA tốt hơn Default ở 4/5 backbone |
-| `orpheus-zeroshot-v3` | Zero-shot: HuBERT-XL, XLS-R-2B (hai bản) | Đang chạy (đẩy 23:29, 13/11) |
+| `orpheus-zeroshot-v3` | Zero-shot: HuBERT-XL, XLS-R-2B (hai bản) | Xong, 5,18 giờ; XLS-R-2B Default tốt nhất (13,71%) |
 
 **Cách sinh:** `kaggle/push.sh` tự tạo khi đẩy kernel (`run.py`, `kernel-metadata.json`, `pushed.json`) và khi tải kết quả (`output zeroshot N` hoặc `archive-log prep N`: log, môi trường, log từng shard, `RUN.md`). Script: `kaggle/archive_run.py`. Mục **Ghi chú** trong `RUN.md` viết tay.
 

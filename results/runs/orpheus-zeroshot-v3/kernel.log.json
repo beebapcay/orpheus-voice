@@ -1,0 +1,148 @@
+[{"stream_name":"stdout","time":3.570479631,"data":"Code: /kaggle/input/datasets/beebapcay/orpheus-src | Dữ liệu: /kaggle/input/notebooks/beebapcay/orpheus-prep/data\n"}
+,{"stream_name":"stdout","time":3.628228773,"data":"git 968f43e\n"}
+,{"stream_name":"stdout","time":3.628259601,"data":"staged 2026-11-13 17:14:30\n"}
+,{"stream_name":"stdout","time":3.628263981,"data":"\n"}
+,{"stream_name":"stdout","time":3.696451475,"data":"{\n"}
+,{"stream_name":"stdout","time":3.696484525,"data":" \"created\": \"2026-11-13 10:48:40\",\n"}
+,{"stream_name":"stdout","time":3.696489661,"data":" \"sets\": {\n"}
+,{"stream_name":"stdout","time":3.696499096,"data":"  \"itw_full\": {\n"}
+,{"stream_name":"stdout","time":3.6965032989999997,"data":"   \"n\": 31779,\n"}
+,{"stream_name":"stdout","time":3.696507574,"data":"   \"real\": 19963,\n"}
+,{"stream_name":"stdout","time":3.696511193,"data":"   \"fake\": 11816,\n"}
+,{"stream_name":"stdout","time":3.696514647,"data":"   \"hours\": 37.852,\n"}
+,{"stream_name":"stdout","time":3.696518266,"data":"   \"max_sec\": 24.99\n"}
+,{"stream_name":"stdout","time":3.6965222620000002,"data":"  },\n"}
+,{"stream_name":"stdout","time":3.696526274,"data":"  \"itw_sub\": {\n"}
+,{"stream_name":"stdout","time":3.696529575,"data":"   \"n\": 2000,\n"}
+,{"stream_name":"stdout","time":3.696533081,"data":"   \"real\": 1000,\n"}
+,{"stream_name":"stdout","time":3.696536479,"data":"   \"fake\": 1000,\n"}
+,{"stream_name":"stdout","time":3.696539959,"data":"   \"hours\": 2.434,\n"}
+,{"stream_name":"stdout","time":3.696543268,"data":"   \"max_sec\": 24.48\n"}
+,{"stream_name":"stdout","time":3.696546725,"data":"  },\n"}
+,{"stream_name":"stdout","time":3.696550567,"data":"  \"ood_forget\": {\n"}
+,{"stream_name":"stdout","time":3.696554815,"data":"   \"n\": 4000,\n"}
+,{"stream_name":"stdout","time":3.696575646,"data":"   \"real\": 2000,\n"}
+,{"stream_name":"stdout","time":3.696580141,"data":"   \"fake\": 2000,\n"}
+,{"stream_name":"stdout","time":3.696584556,"data":"   \"hours\": 5.457,\n"}
+,{"stream_name":"stdout","time":3.696588984,"data":"   \"max_sec\": 51.44\n"}
+,{"stream_name":"stdout","time":3.696592786,"data":"  },\n"}
+,{"stream_name":"stdout","time":3.69659675,"data":"  \"radar_en_sub\": {\n"}
+,{"stream_name":"stdout","time":3.696600739,"data":"   \"n\": 2000,\n"}
+,{"stream_name":"stdout","time":3.696605031,"data":"   \"real\": 1000,\n"}
+,{"stream_name":"stdout","time":3.696609379,"data":"   \"fake\": 1000,\n"}
+,{"stream_name":"stdout","time":3.696613306,"data":"   \"hours\": 3.023,\n"}
+,{"stream_name":"stdout","time":3.696617175,"data":"   \"max_sec\": 51.44\n"}
+,{"stream_name":"stdout","time":3.696621039,"data":"  },\n"}
+,{"stream_name":"stdout","time":3.696625598,"data":"  \"radar_vi\": {\n"}
+,{"stream_name":"stdout","time":3.696629619,"data":"   \"n\": 13438,\n"}
+,{"stream_name":"stdout","time":3.696633815,"data":"   \"real\": 7000,\n"}
+,{"stream_name":"stdout","time":3.696638158,"data":"   \"fake\": 6438,\n"}
+,{"stream_name":"stdout","time":3.696642405,"data":"   \"hours\": 17.042,\n"}
+,{"stream_name":"stdout","time":3.696665099,"data":"   \"max_sec\": 45.72\n"}
+,{"stream_name":"stdout","time":3.696669665,"data":"  }\n"}
+,{"stream_name":"stdout","time":3.696673575,"data":" },\n"}
+,{"stream_name":"stdout","time":3.696677291,"data":" \"bytes\": 9957645573\n"}
+,{"stream_name":"stdout","time":3.696681201,"data":"}\n"}
+,{"stream_name":"stdout","time":3.696685169,"data":"+ nvidia-smi --query-gpu=name,memory.total --format=csv; free -g; df -h /kaggle/working /tmp; echo nproc=$(nproc); lscpu | grep -E 'Model name|^CPU\\(s\\)'\n"}
+,{"stream_name":"stdout","time":3.730117719,"data":"name, memory.total [MiB]\n"}
+,{"stream_name":"stdout","time":3.730155333,"data":"Tesla T4, 15360 MiB\n"}
+,{"stream_name":"stdout","time":3.7301614130000003,"data":"Tesla T4, 15360 MiB\n"}
+,{"stream_name":"stdout","time":3.765146138,"data":"               total        used        free      shared  buff/cache   available\n"}
+,{"stream_name":"stdout","time":3.76518089,"data":"Mem:              31           1          26           0           4          30\n"}
+,{"stream_name":"stdout","time":3.765220806,"data":"Swap:              0           0           0\n"}
+,{"stream_name":"stdout","time":3.76984968,"data":"Filesystem      Size  Used Avail Use% Mounted on\n"}
+,{"stream_name":"stdout","time":3.769873846,"data":"/dev/loop2       20G  136K   20G   1% /kaggle/working\n"}
+,{"stream_name":"stdout","time":3.76987996,"data":"overlay         8.0T  7.1T  967G  89% /\n"}
+,{"stream_name":"stdout","time":3.772774316,"data":"nproc=4\n"}
+,{"stream_name":"stdout","time":3.781253669,"data":"CPU(s):                                  4\n"}
+,{"stream_name":"stdout","time":3.78130591,"data":"Model name:                              Intel(R) Xeon(R) CPU @ 2.00GHz\n"}
+,{"stream_name":"stdout","time":4.743302689,"data":"+ bash /tmp/orpheus/src/setup_antideepfake.sh /tmp/orpheus/work env\n"}
+,{"stream_name":"stdout","time":4.763570847,"data":"[16:29:25] Tải micromamba\n"}
+,{"stream_name":"stdout","time":6.688444466,"data":"[16:29:27] Tạo env Python 3.9, pip 24.0\n"}
+,{"stream_name":"stdout","time":15.140383373,"data":"[16:29:35] Cài torch 2.6.0 + torchaudio 2.6.0 (cu118)\n"}
+,{"stream_name":"stdout","time":138.154897035,"data":"[16:31:38] Clone fairseq\n"}
+,{"stream_name":"stdout","time":141.450005716,"data":"[16:31:41] Cài fairseq 862efab86f649c04ea31545ce28d13c59560113d (biên dịch, mất vài phút)\n"}
+,{"stream_name":"stdout","time":185.604187989,"data":"[16:32:26] Cài speechbrain 1.0.2 và các gói phụ\n"}
+,{"stream_name":"stdout","time":235.735003708,"data":"[16:33:16] Clone AntiDeepfake\n"}
+,{"stream_name":"stdout","time":242.297000034,"data":"[16:33:22] Kiểm tra môi trường\n"}
+,{"stream_name":"stderr","time":246.849414208,"data":"2026-11-13 16:33:27 | INFO | speechbrain.utils.quirks | Applied quirks (see `speechbrain.utils.quirks`): [allow_tf32, disable_jit_profiling]\n"}
+,{"stream_name":"stderr","time":246.84945845,"data":"2026-11-13 16:33:27 | INFO | speechbrain.utils.quirks | Excluded quirks specified by the `SB_DISABLE_QUIRKS` environment (comma-separated list): []\n"}
+,{"stream_name":"stdout","time":247.050064781,"data":"python       3.9.23\n"}
+,{"stream_name":"stdout","time":247.050122987,"data":"torch        2.6.0+cu118 | CUDA: True | Tesla T4\n"}
+,{"stream_name":"stdout","time":247.050130458,"data":"torchaudio   2.6.0+cu118\n"}
+,{"stream_name":"stdout","time":247.050136954,"data":"fairseq      1.0.0a0+862efab\n"}
+,{"stream_name":"stdout","time":247.0501428,"data":"speechbrain  1.0.2\n"}
+,{"stream_name":"stdout","time":247.050147935,"data":"numpy/pandas 1.21.2 1.4.3\n"}
+,{"stream_name":"stdout","time":247.050153476,"data":"fairseq Wav2Vec2Model import: OK\n"}
+,{"stream_name":"stdout","time":248.40659645,"data":"[16:33:28] Dựng môi trường mất 4 phút\n"}
+,{"stream_name":"stdout","time":248.409790069,"data":"[16:33:28] Xong bước env. Log đầy đủ: /tmp/orpheus/work/setup.log\n"}
+,{"stream_name":"stdout","time":248.411416638,"data":"Dựng môi trường xong sau 4.1 phút\n"}
+,{"stream_name":"stdout","time":257.682716095,"data":"+ /usr/bin/python3 /tmp/orpheus/src/score_zeroshot.py --base /tmp/orpheus/work --data-root /kaggle/input/notebooks/beebapcay/orpheus-prep/data --out /kaggle/working/results --cache /tmp/orpheus/cache --gpus 0,1 --shard-size 2000 --jobs radar_vi:hubert_xl,hubert_xl_nda,xlsr_2b,xlsr_2b_nda\n"}
+,{"stream_name":"stdout","time":257.792779325,"data":"[16:33:38] 4 job, GPU 0,1, ngân sách RAM 27 GB\n"}
+,{"stream_name":"stdout","time":259.189397837,"data":"[16:33:39] [hubert_xl/radar_vi] GPU 0: 13438 câu, 7 shard, còn 7\n"}
+,{"stream_name":"stdout","time":259.189442236,"data":"[16:33:39] [hubert_xl] tải checkpoint từ Hugging Face (hubert-xlarge-anti-deepfake)\n"}
+,{"stream_name":"stdout","time":262.840181056,"data":"[16:33:43] [hubert_xl_nda/radar_vi] GPU 1: 13438 câu, 7 shard, còn 7\n"}
+,{"stream_name":"stdout","time":262.84049572,"data":"[16:33:43] [hubert_xl_nda] tải checkpoint từ Hugging Face (hubert-xlarge-anti-deepfake-nda)\n"}
+,{"stream_name":"stdout","time":294.273539958,"data":"[16:34:14]   tải hubert_xl.safetensors: 3.86 GB, 35 s (110 MB/s)\n"}
+,{"stream_name":"stdout","time":326.493717038,"data":"[16:34:46] [hubert_xl] đã chuyển safetensors -\u003e hubert_xl.ckpt (804 tensor)\n"}
+,{"stream_name":"stdout","time":343.295963222,"data":"[16:35:03]   tải hubert_xl_nda.safetensors: 3.86 GB, 80 s (48 MB/s)\n"}
+,{"stream_name":"stdout","time":356.786124717,"data":"[16:35:17] [hubert_xl_nda] đã chuyển safetensors -\u003e hubert_xl_nda.ckpt (804 tensor)\n"}
+,{"stream_name":"stdout","time":946.410314918,"data":"[16:45:06] [hubert_xl/radar_vi] shard 1/7: 2000 câu, 620 s, nhanh 14.9x thời gian thực\n"}
+,{"stream_name":"stdout","time":946.479883707,"data":"[16:45:06] [hubert_xl_nda/radar_vi] shard 1/7: 2000 câu, 589 s, nhanh 15.7x thời gian thực\n"}
+,{"stream_name":"stdout","time":1543.812263511,"data":"[16:55:04] [hubert_xl_nda/radar_vi] shard 2/7: 2000 câu, 597 s, nhanh 15.1x thời gian thực\n"}
+,{"stream_name":"stdout","time":1543.904408231,"data":"[16:55:04] [hubert_xl/radar_vi] shard 2/7: 2000 câu, 597 s, nhanh 15.1x thời gian thực\n"}
+,{"stream_name":"stdout","time":2126.92803212,"data":"[17:04:47] [hubert_xl/radar_vi] shard 3/7: 2000 câu, 583 s, nhanh 15.2x thời gian thực\n"}
+,{"stream_name":"stdout","time":2127.012714273,"data":"[17:04:47] [hubert_xl_nda/radar_vi] shard 3/7: 2000 câu, 583 s, nhanh 15.2x thời gian thực\n"}
+,{"stream_name":"stdout","time":2725.125761474,"data":"[17:14:45] [hubert_xl/radar_vi] shard 4/7: 2000 câu, 598 s, nhanh 15.2x thời gian thực\n"}
+,{"stream_name":"stdout","time":2725.21612984,"data":"[17:14:45] [hubert_xl_nda/radar_vi] shard 4/7: 2000 câu, 598 s, nhanh 15.2x thời gian thực\n"}
+,{"stream_name":"stdout","time":3329.100076467,"data":"[17:24:49] [hubert_xl/radar_vi] shard 5/7: 2000 câu, 604 s, nhanh 15.2x thời gian thực\n"}
+,{"stream_name":"stdout","time":3329.204816751,"data":"[17:24:49] [hubert_xl_nda/radar_vi] shard 5/7: 2000 câu, 604 s, nhanh 15.2x thời gian thực\n"}
+,{"stream_name":"stdout","time":3932.091576376,"data":"[17:34:52] [hubert_xl/radar_vi] shard 6/7: 2000 câu, 603 s, nhanh 15.4x thời gian thực\n"}
+,{"stream_name":"stdout","time":3932.176045833,"data":"[17:34:52] [hubert_xl_nda/radar_vi] shard 6/7: 2000 câu, 603 s, nhanh 15.4x thời gian thực\n"}
+,{"stream_name":"stdout","time":4373.522908465,"data":"[17:42:13] [hubert_xl/radar_vi] shard 7/7: 1438 câu, 441 s, nhanh 15.1x thời gian thực\n"}
+,{"stream_name":"stdout","time":4373.739537884,"data":"[17:42:14] [hubert_xl_nda/radar_vi] shard 7/7: 1438 câu, 442 s, nhanh 15.0x thời gian thực\n"}
+,{"stream_name":"stdout","time":4373.94141179,"data":"[17:42:14] [hubert_xl] xong mọi tập, xoá checkpoint khỏi cache\n"}
+,{"stream_name":"stdout","time":4374.143426939,"data":"[17:42:14] [hubert_xl_nda] xong mọi tập, xoá checkpoint khỏi cache\n"}
+,{"stream_name":"stdout","time":4375.314805909,"data":"[17:42:15] [hubert_xl_nda/radar_vi] KẾT QUẢ: {\"dataset\": \"radar_vi\", \"model\": \"hubert_xl_nda\", \"n\": 13438, \"audio_h\": 17.042, \"gpu_seconds\": 4017, \"x_realtime\": 15.3, \"n_real\": 7000, \"n_fake\": 6438, \"eer_%\": 30.674328762259798, \"minDCF\": 0.6569678693471797, \"actDCF\": 0.9929197488128522, \"eer_threshold\": -1.2028607726097107}\n"}
+,{"stream_name":"stdout","time":4375.320657099,"data":"[17:42:15] [hubert_xl/radar_vi] KẾT QUẢ: {\"dataset\": \"radar_vi\", \"model\": \"hubert_xl\", \"n\": 13438, \"audio_h\": 17.042, \"gpu_seconds\": 4047, \"x_realtime\": 15.2, \"n_real\": 7000, \"n_fake\": 6438, \"eer_%\": 20.486721697066525, \"minDCF\": 0.4422530643944437, \"actDCF\": 0.4591316513557892, \"eer_threshold\": 2.604546546936035}\n"}
+,{"stream_name":"stdout","time":4375.377596978,"data":"[17:42:15] [xlsr_2b/radar_vi] GPU 1: 13438 câu, 7 shard, còn 7\n"}
+,{"stream_name":"stdout","time":4375.377651451,"data":"[17:42:15] [xlsr_2b] tải checkpoint từ Hugging Face (xls-r-2b-anti-deepfake)\n"}
+,{"stream_name":"stdout","time":4375.381171055,"data":"[17:42:15] [xlsr_2b_nda/radar_vi] GPU 0: 13438 câu, 7 shard, còn 7\n"}
+,{"stream_name":"stdout","time":4375.381206857,"data":"[17:42:15] [xlsr_2b_nda] tải checkpoint từ Hugging Face (xls-r-2b-anti-deepfake-nda)\n"}
+,{"stream_name":"stdout","time":4458.911357012,"data":"[17:43:39]   tải xlsr_2b.safetensors: 8.65 GB, 84 s (104 MB/s)\n"}
+,{"stream_name":"stdout","time":4509.831918327,"data":"[17:44:30] [xlsr_2b] đã chuyển safetensors -\u003e xlsr_2b.ckpt (815 tensor)\n"}
+,{"stream_name":"stdout","time":4603.262206044,"data":"[17:46:03]   tải xlsr_2b_nda.safetensors: 8.65 GB, 228 s (38 MB/s)\n"}
+,{"stream_name":"stdout","time":4658.680907751,"data":"[17:46:59] [xlsr_2b_nda] đã chuyển safetensors -\u003e xlsr_2b_nda.ckpt (815 tensor)\n"}
+,{"stream_name":"stdout","time":5568.632511185,"data":"[18:02:09] [xlsr_2b/radar_vi] shard 1/7: 2000 câu, 1059 s, nhanh 8.7x thời gian thực\n"}
+,{"stream_name":"stdout","time":6586.949178786,"data":"[18:19:07] [xlsr_2b_nda/radar_vi] shard 1/7: 2000 câu, 1018 s, nhanh 9.1x thời gian thực\n"}
+,{"stream_name":"stdout","time":7626.56521817,"data":"[18:36:27] [xlsr_2b/radar_vi] shard 2/7: 2000 câu, 1040 s, nhanh 8.7x thời gian thực\n"}
+,{"stream_name":"stdout","time":8672.579728266,"data":"[18:53:53] [xlsr_2b_nda/radar_vi] shard 2/7: 2000 câu, 1046 s, nhanh 8.6x thời gian thực\n"}
+,{"stream_name":"stdout","time":9697.921960142,"data":"[19:10:58] [xlsr_2b/radar_vi] shard 3/7: 2000 câu, 1025 s, nhanh 8.6x thời gian thực\n"}
+,{"stream_name":"stdout","time":10735.673745536,"data":"[19:28:16] [xlsr_2b_nda/radar_vi] shard 3/7: 2000 câu, 1038 s, nhanh 8.5x thời gian thực\n"}
+,{"stream_name":"stdout","time":11781.055261227,"data":"[19:45:41] [xlsr_2b/radar_vi] shard 4/7: 2000 câu, 1045 s, nhanh 8.7x thời gian thực\n"}
+,{"stream_name":"stdout","time":12834.748488626,"data":"[20:03:15] [xlsr_2b_nda/radar_vi] shard 4/7: 2000 câu, 1054 s, nhanh 8.6x thời gian thực\n"}
+,{"stream_name":"stdout","time":13905.859320704,"data":"[20:21:06] [xlsr_2b/radar_vi] shard 5/7: 2000 câu, 1071 s, nhanh 8.6x thời gian thực\n"}
+,{"stream_name":"stdout","time":14967.774813055,"data":"[20:38:48] [xlsr_2b_nda/radar_vi] shard 5/7: 2000 câu, 1062 s, nhanh 8.7x thời gian thực\n"}
+,{"stream_name":"stdout","time":16042.011783107,"data":"[20:56:42] [xlsr_2b/radar_vi] shard 6/7: 2000 câu, 1074 s, nhanh 8.6x thời gian thực\n"}
+,{"stream_name":"stdout","time":17115.261697373,"data":"[21:14:35] [xlsr_2b_nda/radar_vi] shard 6/7: 2000 câu, 1073 s, nhanh 8.7x thời gian thực\n"}
+,{"stream_name":"stdout","time":17900.554012771,"data":"[21:27:41] [xlsr_2b/radar_vi] shard 7/7: 1438 câu, 785 s, nhanh 8.5x thời gian thực\n"}
+,{"stream_name":"stdout","time":17901.538094345,"data":"[21:27:41] [xlsr_2b] xong mọi tập, xoá checkpoint khỏi cache\n"}
+,{"stream_name":"stdout","time":17903.940695385,"data":"[21:27:44] [xlsr_2b/radar_vi] KẾT QUẢ: {\"dataset\": \"radar_vi\", \"model\": \"xlsr_2b\", \"n\": 13438, \"audio_h\": 17.042, \"gpu_seconds\": 7100, \"x_realtime\": 8.6, \"n_real\": 7000, \"n_fake\": 6438, \"eer_%\": 13.71486264589713, \"minDCF\": 0.3322657657657658, \"actDCF\": 0.3454641547951892, \"eer_threshold\": 4.349101305007935}\n"}
+,{"stream_name":"stdout","time":18654.322503713,"data":"[21:40:14] [xlsr_2b_nda/radar_vi] shard 7/7: 1438 câu, 754 s, nhanh 8.8x thời gian thực\n"}
+,{"stream_name":"stdout","time":18655.107944057,"data":"[21:40:15] [xlsr_2b_nda] xong mọi tập, xoá checkpoint khỏi cache\n"}
+,{"stream_name":"stdout","time":18656.00563252,"data":"[21:40:16] [xlsr_2b_nda/radar_vi] KẾT QUẢ: {\"dataset\": \"radar_vi\", \"model\": \"xlsr_2b_nda\", \"n\": 13438, \"audio_h\": 17.042, \"gpu_seconds\": 7045, \"x_realtime\": 8.7, \"n_real\": 7000, \"n_fake\": 6438, \"eer_%\": 14.228296276572138, \"minDCF\": 0.3570894954067368, \"actDCF\": 0.3745996849065814, \"eer_threshold\": 4.538882732391357}\n"}
+,{"stream_name":"stdout","time":18656.048709658,"data":"[21:40:16] Tất cả job xong\n"}
+,{"stream_name":"stdout","time":18659.6584665,"data":"+ cat /kaggle/working/results/summary.csv\n"}
+,{"stream_name":"stdout","time":18659.697196215,"data":"dataset,model,n,audio_h,gpu_seconds,x_realtime,n_real,n_fake,eer_%,minDCF,actDCF,eer_threshold\n"}
+,{"stream_name":"stdout","time":18659.697227681,"data":"radar_vi,hubert_xl_nda,13438,17.042,4017,15.3,7000,6438,30.6743287622598,0.6569678693471797,0.9929197488128522,-1.2028607726097107\n"}
+,{"stream_name":"stdout","time":18659.697234562,"data":"radar_vi,hubert_xl,13438,17.042,4047,15.2,7000,6438,20.486721697066525,0.4422530643944437,0.4591316513557892,2.604546546936035\n"}
+,{"stream_name":"stdout","time":18659.697240328,"data":"radar_vi,xlsr_2b,13438,17.042,7100,8.6,7000,6438,13.71486264589713,0.3322657657657658,0.3454641547951892,4.349101305007935\n"}
+,{"stream_name":"stdout","time":18659.697245871,"data":"radar_vi,xlsr_2b_nda,13438,17.042,7045,8.7,7000,6438,14.228296276572138,0.3570894954067368,0.3745996849065814,4.538882732391357\n"}
+,{"stream_name":"stdout","time":18659.697798271998,"data":"Tổng thời gian 5.18 giờ\n"}
+,{"stream_name":"stderr","time":18662.763217065,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":18662.763302643,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":18663.113725504,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":18663.11376631,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":18664.977344362,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":18666.08217873,"data":"[NbConvertApp] Writing 291513 bytes to __results__.html\n"}
+]

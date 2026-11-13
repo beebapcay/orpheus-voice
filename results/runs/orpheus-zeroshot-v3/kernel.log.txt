@@ -1,0 +1,147 @@
+      3.6s Code: /kaggle/input/datasets/beebapcay/orpheus-src | Dữ liệu: /kaggle/input/notebooks/beebapcay/orpheus-prep/data
+      3.6s git 968f43e
+      3.6s staged 2026-11-13 17:14:30
+      3.6s 
+      3.7s {
+      3.7s  "created": "2026-11-13 10:48:40",
+      3.7s  "sets": {
+      3.7s   "itw_full": {
+      3.7s    "n": 31779,
+      3.7s    "real": 19963,
+      3.7s    "fake": 11816,
+      3.7s    "hours": 37.852,
+      3.7s    "max_sec": 24.99
+      3.7s   },
+      3.7s   "itw_sub": {
+      3.7s    "n": 2000,
+      3.7s    "real": 1000,
+      3.7s    "fake": 1000,
+      3.7s    "hours": 2.434,
+      3.7s    "max_sec": 24.48
+      3.7s   },
+      3.7s   "ood_forget": {
+      3.7s    "n": 4000,
+      3.7s    "real": 2000,
+      3.7s    "fake": 2000,
+      3.7s    "hours": 5.457,
+      3.7s    "max_sec": 51.44
+      3.7s   },
+      3.7s   "radar_en_sub": {
+      3.7s    "n": 2000,
+      3.7s    "real": 1000,
+      3.7s    "fake": 1000,
+      3.7s    "hours": 3.023,
+      3.7s    "max_sec": 51.44
+      3.7s   },
+      3.7s   "radar_vi": {
+      3.7s    "n": 13438,
+      3.7s    "real": 7000,
+      3.7s    "fake": 6438,
+      3.7s    "hours": 17.042,
+      3.7s    "max_sec": 45.72
+      3.7s   }
+      3.7s  },
+      3.7s  "bytes": 9957645573
+      3.7s }
+      3.7s + nvidia-smi --query-gpu=name,memory.total --format=csv; free -g; df -h /kaggle/working /tmp; echo nproc=$(nproc); lscpu | grep -E 'Model name|^CPU\(s\)'
+      3.7s name, memory.total [MiB]
+      3.7s Tesla T4, 15360 MiB
+      3.7s Tesla T4, 15360 MiB
+      3.8s                total        used        free      shared  buff/cache   available
+      3.8s Mem:              31           1          26           0           4          30
+      3.8s Swap:              0           0           0
+      3.8s Filesystem      Size  Used Avail Use% Mounted on
+      3.8s /dev/loop2       20G  136K   20G   1% /kaggle/working
+      3.8s overlay         8.0T  7.1T  967G  89% /
+      3.8s nproc=4
+      3.8s CPU(s):                                  4
+      3.8s Model name:                              Intel(R) Xeon(R) CPU @ 2.00GHz
+      4.7s + bash /tmp/orpheus/src/setup_antideepfake.sh /tmp/orpheus/work env
+      4.8s [16:29:25] Tải micromamba
+      6.7s [16:29:27] Tạo env Python 3.9, pip 24.0
+     15.1s [16:29:35] Cài torch 2.6.0 + torchaudio 2.6.0 (cu118)
+    138.2s [16:31:38] Clone fairseq
+    141.5s [16:31:41] Cài fairseq 862efab86f649c04ea31545ce28d13c59560113d (biên dịch, mất vài phút)
+    185.6s [16:32:26] Cài speechbrain 1.0.2 và các gói phụ
+    235.7s [16:33:16] Clone AntiDeepfake
+    242.3s [16:33:22] Kiểm tra môi trường
+    246.8s [stderr] 2026-11-13 16:33:27 | INFO | speechbrain.utils.quirks | Applied quirks (see `speechbrain.utils.quirks`): [allow_tf32, disable_jit_profiling]
+    246.8s [stderr] 2026-11-13 16:33:27 | INFO | speechbrain.utils.quirks | Excluded quirks specified by the `SB_DISABLE_QUIRKS` environment (comma-separated list): []
+    247.1s python       3.9.23
+    247.1s torch        2.6.0+cu118 | CUDA: True | Tesla T4
+    247.1s torchaudio   2.6.0+cu118
+    247.1s fairseq      1.0.0a0+862efab
+    247.1s speechbrain  1.0.2
+    247.1s numpy/pandas 1.21.2 1.4.3
+    247.1s fairseq Wav2Vec2Model import: OK
+    248.4s [16:33:28] Dựng môi trường mất 4 phút
+    248.4s [16:33:28] Xong bước env. Log đầy đủ: /tmp/orpheus/work/setup.log
+    248.4s Dựng môi trường xong sau 4.1 phút
+    257.7s + /usr/bin/python3 /tmp/orpheus/src/score_zeroshot.py --base /tmp/orpheus/work --data-root /kaggle/input/notebooks/beebapcay/orpheus-prep/data --out /kaggle/working/results --cache /tmp/orpheus/cache --gpus 0,1 --shard-size 2000 --jobs radar_vi:hubert_xl,hubert_xl_nda,xlsr_2b,xlsr_2b_nda
+    257.8s [16:33:38] 4 job, GPU 0,1, ngân sách RAM 27 GB
+    259.2s [16:33:39] [hubert_xl/radar_vi] GPU 0: 13438 câu, 7 shard, còn 7
+    259.2s [16:33:39] [hubert_xl] tải checkpoint từ Hugging Face (hubert-xlarge-anti-deepfake)
+    262.8s [16:33:43] [hubert_xl_nda/radar_vi] GPU 1: 13438 câu, 7 shard, còn 7
+    262.8s [16:33:43] [hubert_xl_nda] tải checkpoint từ Hugging Face (hubert-xlarge-anti-deepfake-nda)
+    294.3s [16:34:14]   tải hubert_xl.safetensors: 3.86 GB, 35 s (110 MB/s)
+    326.5s [16:34:46] [hubert_xl] đã chuyển safetensors -> hubert_xl.ckpt (804 tensor)
+    343.3s [16:35:03]   tải hubert_xl_nda.safetensors: 3.86 GB, 80 s (48 MB/s)
+    356.8s [16:35:17] [hubert_xl_nda] đã chuyển safetensors -> hubert_xl_nda.ckpt (804 tensor)
+    946.4s [16:45:06] [hubert_xl/radar_vi] shard 1/7: 2000 câu, 620 s, nhanh 14.9x thời gian thực
+    946.5s [16:45:06] [hubert_xl_nda/radar_vi] shard 1/7: 2000 câu, 589 s, nhanh 15.7x thời gian thực
+   1543.8s [16:55:04] [hubert_xl_nda/radar_vi] shard 2/7: 2000 câu, 597 s, nhanh 15.1x thời gian thực
+   1543.9s [16:55:04] [hubert_xl/radar_vi] shard 2/7: 2000 câu, 597 s, nhanh 15.1x thời gian thực
+   2126.9s [17:04:47] [hubert_xl/radar_vi] shard 3/7: 2000 câu, 583 s, nhanh 15.2x thời gian thực
+   2127.0s [17:04:47] [hubert_xl_nda/radar_vi] shard 3/7: 2000 câu, 583 s, nhanh 15.2x thời gian thực
+   2725.1s [17:14:45] [hubert_xl/radar_vi] shard 4/7: 2000 câu, 598 s, nhanh 15.2x thời gian thực
+   2725.2s [17:14:45] [hubert_xl_nda/radar_vi] shard 4/7: 2000 câu, 598 s, nhanh 15.2x thời gian thực
+   3329.1s [17:24:49] [hubert_xl/radar_vi] shard 5/7: 2000 câu, 604 s, nhanh 15.2x thời gian thực
+   3329.2s [17:24:49] [hubert_xl_nda/radar_vi] shard 5/7: 2000 câu, 604 s, nhanh 15.2x thời gian thực
+   3932.1s [17:34:52] [hubert_xl/radar_vi] shard 6/7: 2000 câu, 603 s, nhanh 15.4x thời gian thực
+   3932.2s [17:34:52] [hubert_xl_nda/radar_vi] shard 6/7: 2000 câu, 603 s, nhanh 15.4x thời gian thực
+   4373.5s [17:42:13] [hubert_xl/radar_vi] shard 7/7: 1438 câu, 441 s, nhanh 15.1x thời gian thực
+   4373.7s [17:42:14] [hubert_xl_nda/radar_vi] shard 7/7: 1438 câu, 442 s, nhanh 15.0x thời gian thực
+   4373.9s [17:42:14] [hubert_xl] xong mọi tập, xoá checkpoint khỏi cache
+   4374.1s [17:42:14] [hubert_xl_nda] xong mọi tập, xoá checkpoint khỏi cache
+   4375.3s [17:42:15] [hubert_xl_nda/radar_vi] KẾT QUẢ: {"dataset": "radar_vi", "model": "hubert_xl_nda", "n": 13438, "audio_h": 17.042, "gpu_seconds": 4017, "x_realtime": 15.3, "n_real": 7000, "n_fake": 6438, "eer_%": 30.674328762259798, "minDCF": 0.6569678693471797, "actDCF": 0.9929197488128522, "eer_threshold": -1.2028607726097107}
+   4375.3s [17:42:15] [hubert_xl/radar_vi] KẾT QUẢ: {"dataset": "radar_vi", "model": "hubert_xl", "n": 13438, "audio_h": 17.042, "gpu_seconds": 4047, "x_realtime": 15.2, "n_real": 7000, "n_fake": 6438, "eer_%": 20.486721697066525, "minDCF": 0.4422530643944437, "actDCF": 0.4591316513557892, "eer_threshold": 2.604546546936035}
+   4375.4s [17:42:15] [xlsr_2b/radar_vi] GPU 1: 13438 câu, 7 shard, còn 7
+   4375.4s [17:42:15] [xlsr_2b] tải checkpoint từ Hugging Face (xls-r-2b-anti-deepfake)
+   4375.4s [17:42:15] [xlsr_2b_nda/radar_vi] GPU 0: 13438 câu, 7 shard, còn 7
+   4375.4s [17:42:15] [xlsr_2b_nda] tải checkpoint từ Hugging Face (xls-r-2b-anti-deepfake-nda)
+   4458.9s [17:43:39]   tải xlsr_2b.safetensors: 8.65 GB, 84 s (104 MB/s)
+   4509.8s [17:44:30] [xlsr_2b] đã chuyển safetensors -> xlsr_2b.ckpt (815 tensor)
+   4603.3s [17:46:03]   tải xlsr_2b_nda.safetensors: 8.65 GB, 228 s (38 MB/s)
+   4658.7s [17:46:59] [xlsr_2b_nda] đã chuyển safetensors -> xlsr_2b_nda.ckpt (815 tensor)
+   5568.6s [18:02:09] [xlsr_2b/radar_vi] shard 1/7: 2000 câu, 1059 s, nhanh 8.7x thời gian thực
+   6586.9s [18:19:07] [xlsr_2b_nda/radar_vi] shard 1/7: 2000 câu, 1018 s, nhanh 9.1x thời gian thực
+   7626.6s [18:36:27] [xlsr_2b/radar_vi] shard 2/7: 2000 câu, 1040 s, nhanh 8.7x thời gian thực
+   8672.6s [18:53:53] [xlsr_2b_nda/radar_vi] shard 2/7: 2000 câu, 1046 s, nhanh 8.6x thời gian thực
+   9697.9s [19:10:58] [xlsr_2b/radar_vi] shard 3/7: 2000 câu, 1025 s, nhanh 8.6x thời gian thực
+  10735.7s [19:28:16] [xlsr_2b_nda/radar_vi] shard 3/7: 2000 câu, 1038 s, nhanh 8.5x thời gian thực
+  11781.1s [19:45:41] [xlsr_2b/radar_vi] shard 4/7: 2000 câu, 1045 s, nhanh 8.7x thời gian thực
+  12834.7s [20:03:15] [xlsr_2b_nda/radar_vi] shard 4/7: 2000 câu, 1054 s, nhanh 8.6x thời gian thực
+  13905.9s [20:21:06] [xlsr_2b/radar_vi] shard 5/7: 2000 câu, 1071 s, nhanh 8.6x thời gian thực
+  14967.8s [20:38:48] [xlsr_2b_nda/radar_vi] shard 5/7: 2000 câu, 1062 s, nhanh 8.7x thời gian thực
+  16042.0s [20:56:42] [xlsr_2b/radar_vi] shard 6/7: 2000 câu, 1074 s, nhanh 8.6x thời gian thực
+  17115.3s [21:14:35] [xlsr_2b_nda/radar_vi] shard 6/7: 2000 câu, 1073 s, nhanh 8.7x thời gian thực
+  17900.6s [21:27:41] [xlsr_2b/radar_vi] shard 7/7: 1438 câu, 785 s, nhanh 8.5x thời gian thực
+  17901.5s [21:27:41] [xlsr_2b] xong mọi tập, xoá checkpoint khỏi cache
+  17903.9s [21:27:44] [xlsr_2b/radar_vi] KẾT QUẢ: {"dataset": "radar_vi", "model": "xlsr_2b", "n": 13438, "audio_h": 17.042, "gpu_seconds": 7100, "x_realtime": 8.6, "n_real": 7000, "n_fake": 6438, "eer_%": 13.71486264589713, "minDCF": 0.3322657657657658, "actDCF": 0.3454641547951892, "eer_threshold": 4.349101305007935}
+  18654.3s [21:40:14] [xlsr_2b_nda/radar_vi] shard 7/7: 1438 câu, 754 s, nhanh 8.8x thời gian thực
+  18655.1s [21:40:15] [xlsr_2b_nda] xong mọi tập, xoá checkpoint khỏi cache
+  18656.0s [21:40:16] [xlsr_2b_nda/radar_vi] KẾT QUẢ: {"dataset": "radar_vi", "model": "xlsr_2b_nda", "n": 13438, "audio_h": 17.042, "gpu_seconds": 7045, "x_realtime": 8.7, "n_real": 7000, "n_fake": 6438, "eer_%": 14.228296276572138, "minDCF": 0.3570894954067368, "actDCF": 0.3745996849065814, "eer_threshold": 4.538882732391357}
+  18656.0s [21:40:16] Tất cả job xong
+  18659.7s + cat /kaggle/working/results/summary.csv
+  18659.7s dataset,model,n,audio_h,gpu_seconds,x_realtime,n_real,n_fake,eer_%,minDCF,actDCF,eer_threshold
+  18659.7s radar_vi,hubert_xl_nda,13438,17.042,4017,15.3,7000,6438,30.6743287622598,0.6569678693471797,0.9929197488128522,-1.2028607726097107
+  18659.7s radar_vi,hubert_xl,13438,17.042,4047,15.2,7000,6438,20.486721697066525,0.4422530643944437,0.4591316513557892,2.604546546936035
+  18659.7s radar_vi,xlsr_2b,13438,17.042,7100,8.6,7000,6438,13.71486264589713,0.3322657657657658,0.3454641547951892,4.349101305007935
+  18659.7s radar_vi,xlsr_2b_nda,13438,17.042,7045,8.7,7000,6438,14.228296276572138,0.3570894954067368,0.3745996849065814,4.538882732391357
+  18659.7s Tổng thời gian 5.18 giờ
+  18662.8s [stderr] /usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+  18662.8s [stderr]   cells[i][c] = re.sub('\\\\\|', '|', cell)
+  18663.1s [stderr] /usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+  18663.1s [stderr]   text = re.sub(r'_', '\_', text) # Escape underscores in display text
+  18665.0s [stderr] [NbConvertApp] Converting notebook __script__.ipynb to html
+  18666.1s [stderr] [NbConvertApp] Writing 291513 bytes to __results__.html
