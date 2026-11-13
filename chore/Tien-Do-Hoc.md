@@ -69,6 +69,6 @@ Tài liệu: `note/Backbone-SSL.md`; `chore/GD2-Backbone-Va-Moi-Truong.md`; `src
 - [x] Ô 4: toy example; EER đúng 6,11%, không có cảnh báo nạp trọng số
 - [x] Ô 5: lưu log về Drive
 - [x] Ghi thời gian cài đặt, tốc độ `it/s`
-- [ ] Kiểm tra quota GPU
+- [x] Kiểm tra quota GPU: Colab miễn phí, phiên tối đa khoảng 4 giờ
 
 Hướng dẫn chi tiết từng ô ở mục 4.2 của `chore/GD2-Backbone-Va-Moi-Truong.md`.

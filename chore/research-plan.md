@@ -86,7 +86,9 @@ GRPO giữ thêm hai bản mô hình chỉ chạy inference (mô hình tham chi�
 | **1. Mục tiêu** | GPU 16 GB | Fine-tune MMS-300M, W2V-Large, W2V-Small; so SFT với GRPO | Đủ ablation và cải tiến |
 | 2. Mở rộng | GPU từ 40 GB (Colab Pro) | Fine-tune XLS-R-1B | Không bắt buộc |
 
-**Quota:** theo hiểu biết hiện tại, Kaggle cho khoảng 30 giờ GPU mỗi tuần cho mỗi tài khoản. Cần kiểm tra lại. Mỗi thành viên dùng tài khoản riêng của mình.
+**Quota:** Colab miễn phí (kiểm tra 13/11): 0 compute unit, mỗi phiên T4 tối đa khoảng 4 giờ, không bảo đảm được cấp GPU. Kaggle: theo hiểu biết hiện tại khoảng 30 giờ GPU mỗi tuần cho mỗi tài khoản, cần kiểm tra lại. Mỗi thành viên dùng tài khoản riêng của mình.
+
+**Hệ quả:** việc dài phải chạy được qua nhiều phiên: lưu file điểm lên Drive sau mỗi checkpoint (GĐ3), đặt thư mục thí nghiệm trên Drive để huấn luyện chạy tiếp từ checkpoint cuối (GĐ5–6). Checkpoint lớn không lưu trên Drive (15 GB): tải vào máy Colab mỗi phiên, dùng xong xoá.
 
 ## 3. Danh sách đọc
 

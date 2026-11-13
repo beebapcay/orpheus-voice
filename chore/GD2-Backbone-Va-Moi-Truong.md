@@ -170,4 +170,4 @@ Script chỉ chạy trên Linux có GPU NVIDIA (bản torch cu118), không chạ
 - [x] `evaluate.py` có EER, minDCF, actDCF, qua self-test
 - [x] Chạy `setup_antideepfake.sh` trên Colab (notebook `colab/GD2_toy_example.ipynb`)
 - [x] Toy example cho EER đúng 6,11%, không có cảnh báo nạp trọng số
-- [ ] Kiểm tra quota GPU (việc chạy nền ở mục 5 của plan)
+- [x] Kiểm tra quota GPU: Colab miễn phí, 0 compute unit, mỗi phiên tối đa khoảng 4 giờ, không bảo đảm được cấp GPU (13/11). Kaggle chưa kiểm tra
