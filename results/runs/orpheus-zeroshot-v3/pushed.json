@@ -1,0 +1,11 @@
+{
+  "kernel": "orpheus-zeroshot",
+  "version": "3",
+  "pushed_at": {
+    "local": "2026-11-13T23:29:18+07:00",
+    "utc": "2026-11-13T16:29:18+00:00"
+  },
+  "repo_commit": "2c76db8",
+  "repo_dirty_kaggle_src": true,
+  "note": "run.py và kernel-metadata.json trong thư mục này là bản đã đẩy lên Kaggle (KAGGLE_USER đã được thay bằng tên tài khoản)."
+}

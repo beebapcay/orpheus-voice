@@ -18,9 +18,12 @@ import time
 #   mms_300m, w2v_small, w2v_large, w2v2_aasist; itw_full:mms_300m,w2v2_aasist.
 # Lần 2: bản NDA của 3 backbone nhỏ + MMS-1B, XLS-R-1B (cả hai bản).
 #   mms_300m_nda đứng đầu: cần cho phát hiện 1 (RawBoost có lợi trên tiếng Việt không).
-# Lần 3: hubert_xl, hubert_xl_nda, xlsr_2b, xlsr_2b_nda.
+#   (xong 13/11, version 2)
+# Lần 3: hubert_xl, hubert_xl_nda (song song, 9 + 9 GB RAM), rồi xlsr_2b, xlsr_2b_nda.
+#   Bản 2B giữ 19 GB trong ngân sách 27 GB nên không chạy song song với bản nào >= 9 GB;
+#   xếp HuBERT trước để hai GPU cùng làm việc ở nửa đầu.
 JOBS = [
-    "radar_vi:mms_300m_nda,mms_1b,xlsr_1b,mms_1b_nda,xlsr_1b_nda,w2v_large_nda,w2v_small_nda",
+    "radar_vi:hubert_xl,hubert_xl_nda,xlsr_2b,xlsr_2b_nda",
 ]
 SHARD_SIZE = 2000
 # -------------------------------------------------------------------------------
@@ -48,7 +51,8 @@ for f in ("VERSION", ):
     if os.path.exists(p):
         print(open(p).read(), flush=True)
 print(open(os.path.join(data, "orpheus_data_manifest.json")).read(), flush=True)
-sh("nvidia-smi --query-gpu=name,memory.total --format=csv; free -g; df -h /kaggle/working /tmp")
+sh("nvidia-smi --query-gpu=name,memory.total --format=csv; free -g; df -h /kaggle/working /tmp; "
+   "echo nproc=$(nproc); lscpu | grep -E 'Model name|^CPU\\(s\\)'")
 
 work = "/tmp/orpheus"
 base, cache, out = f"{work}/work", f"{work}/cache", "/kaggle/working/results"
