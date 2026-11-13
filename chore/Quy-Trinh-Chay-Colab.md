@@ -71,3 +71,5 @@ Không cần tóm tắt lỗi, dán nguyên văn.
 |---|---|---|
 | 13/11 | `module 'fairseq' has no attribute '__version__'`: kiểm tra "đã cài" chạy trong thư mục chứa bản clone fairseq, nên bước cài fairseq bị bỏ qua | Kiểm tra từ thư mục `/`, kiểm tra `fairseq.models.wav2vec`; cài lại gói cố định sau fairseq |
 | 13/11 | Lỗi `pip` không báo ở bước nào | Script in `LỖI ở dòng ...` kèm lệnh; dự phòng `--no-build-isolation` khi build fairseq lỗi |
+| 13/11 | Ô 4: `REPO_URL` còn chỗ trống, và token bị in ra trong thông báo lỗi git | Điền `beebapcay`; token truyền qua biến môi trường của git, lỗi được che token |
+| 13/11 | `LỖI: cài fairseq thất bại` dù `pip install` thành công: fairseq dùng `np.float` (bị xoá từ numpy 1.24), nên chỉ import được sau khi numpy về 1.21.2 | Kiểm tra "đã cài" bằng `pip show`; chỉ thử `import` sau bước cài gói cố định, lỗi thì in traceback |

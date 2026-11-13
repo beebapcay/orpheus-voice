@@ -42,6 +42,10 @@ RUN="$MM run -n antideepfake"
 # Kiểm tra gói đã cài chưa. Chạy từ "/" để Python không nhầm thư mục
 # $BASE/fairseq (repo vừa clone) với gói fairseq đã cài.
 has() { (cd / && $RUN python -c "import $1" >/dev/null 2>&1); }
+# Gói đã được pip cài chưa (không cần import được). Dùng cho fairseq: fairseq
+# chỉ import được SAU khi numpy được hạ về 1.21.2 ở bước 4 (fairseq dùng np.float,
+# đã bị xoá từ numpy 1.24).
+installed() { $RUN pip show "$1" >/dev/null 2>&1; }
 LOG="$BASE/setup.log"
 log() { echo "[$(date +%H:%M:%S)] $*" | tee -a "$LOG"; }
 # Lệnh nào lỗi thì in ra dòng và lệnh đó trước khi dừng (set -E để áp dụng cả trong hàm).
@@ -88,7 +92,7 @@ setup_env() {
     git clone -q https://github.com/pytorch/fairseq "$BASE/fairseq"
   fi
   local fairseq_new=0
-  if ! has fairseq.models.wav2vec; then
+  if ! installed fairseq; then
     log "Cài fairseq $FAIRSEQ_COMMIT (biên dịch, mất vài phút)"
     (cd "$BASE/fairseq" && git checkout -q "$FAIRSEQ_COMMIT")
     # Cách của install.sh. Nếu setuptools mới không build được (môi trường build
@@ -98,7 +102,7 @@ setup_env() {
       $RUN pip install cython "numpy<2" >>"$LOG" 2>&1
       (cd "$BASE/fairseq" && $RUN pip install --no-build-isolation --editable . >>"$LOG" 2>&1)
     fi
-    has fairseq.models.wav2vec || { log "LỖI: cài fairseq thất bại, xem $LOG"; exit 1; }
+    installed fairseq || { log "LỖI: pip không cài được fairseq, xem $LOG"; exit 1; }
     fairseq_new=1
   fi
 
@@ -110,6 +114,14 @@ setup_env() {
     $RUN pip install speechbrain==1.0.2 >>"$LOG" 2>&1
     $RUN pip install tensorboard tensorboardX soundfile pandarallel scikit-learn \
       numpy==1.21.2 pandas==1.4.3 scipy==1.7.2 >>"$LOG" 2>&1
+  fi
+
+  # Giờ mới import thử fairseq (sau khi numpy đã về 1.21.2). Lỗi thì in cả
+  # traceback ra màn hình và vào log.
+  if ! has fairseq.models.wav2vec; then
+    log "LỖI: không import được fairseq.models.wav2vec. Traceback:"
+    (cd / && $RUN python -c "import numpy; print('numpy', numpy.__version__); import fairseq.models.wav2vec") 2>&1 | tail -n 25 | tee -a "$LOG" || true
+    exit 1
   fi
 
   # 5. Code AntiDeepfake ở commit cố định.
