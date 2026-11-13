@@ -1,6 +1,6 @@
 # Tiến độ học
 
-Ghi lại mức độ đã đọc của từng phần, để biết phần nào cần quay lại đọc kỹ. Cập nhật lần cuối: 13/11/2026.
+Ghi lại mức độ đã đọc của từng phần, để biết phần nào cần quay lại đọc kỹ. Cập nhật lần cuối: 13/11/2026 (qua GĐ2).
 
 **Mức đọc:** **Kỹ** = đọc bài gốc, tự trả lời được câu hỏi. **Lướt** = chỉ đọc tóm tắt hoặc note, chưa đối chiếu bài gốc hay code. **Chưa** = chưa đọc.
 
@@ -9,7 +9,7 @@ Ghi lại mức độ đã đọc của từng phần, để biết phần nào 
 | GĐ | Mức | Trạng thái |
 |---|---|---|
 | 1. Bản đồ các hướng | Ngày 1 kỹ; ngày 2, 3 lướt | Đã qua, còn nợ đọc kỹ ngày 2, 3 |
-| 2. Backbone SSL và môi trường | Ngày 1 lướt | **Đang làm ngày 2: chạy toy example** |
+| 2. Backbone SSL và môi trường | Ngày 1 lướt; ngày 2 xong | **Đã qua** (13/11). Còn nợ đọc kỹ ngày 1 |
 | 3–8 | Chưa | |
 
 ## GĐ1. Bản đồ các hướng
@@ -33,7 +33,7 @@ Việc còn nợ của GĐ1:
 |---|---|---|---|
 | 1 sáng | wav2vec 2.0, XLS-R, MMS | Lướt (đọc summary tổng quan) | Đối chiếu bài gốc theo bảng trang cần đọc |
 | 1 chiều | Lần theo code AntiDeepfake | Lướt (đọc tóm tắt kèm code) | Đọc code thật theo bảng 8 file |
-| 2 | Dựng môi trường, toy example | **Đang làm** | |
+| 2 | Dựng môi trường, toy example | **Xong**: EER 6,11%, khớp README | |
 
 Tài liệu: `note/Backbone-SSL.md`; `chore/GD2-Backbone-Va-Moi-Truong.md`; `src/setup_antideepfake.sh`; `src/evaluate.py`.
 
@@ -62,13 +62,13 @@ Tài liệu: `note/Backbone-SSL.md`; `chore/GD2-Backbone-Va-Moi-Truong.md`; `src
 
 **Tự kiểm tra:** 8 câu ở mục 11 của `note/Backbone-SSL.md`; vẽ lại luồng dữ liệu ở mục 1 của file GĐ2; nói lại nháp câu vấn đáp 3 ở mục 5 của file GĐ2.
 
-### Ngày 2 (đang làm)
+### Ngày 2 (xong 13/11)
 
-- [ ] Ô 1–2: bật GPU T4, nạp Drive, chép 2 script
-- [ ] Ô 3: dựng môi trường; ghi phiên bản Python, torch, CUDA, GPU
-- [ ] Ô 4: toy example; EER đúng 6,11%, không có cảnh báo nạp trọng số
-- [ ] Ô 5: lưu log về Drive
-- [ ] Ghi thời gian cài đặt, tốc độ `it/s`
+- [x] Ô 1–2: bật GPU T4, nạp Drive, chép 2 script
+- [x] Ô 3: dựng môi trường; ghi phiên bản Python, torch, CUDA, GPU
+- [x] Ô 4: toy example; EER đúng 6,11%, không có cảnh báo nạp trọng số
+- [x] Ô 5: lưu log về Drive
+- [x] Ghi thời gian cài đặt, tốc độ `it/s`
 - [ ] Kiểm tra quota GPU
 
 Hướng dẫn chi tiết từng ô ở mục 4.2 của `chore/GD2-Backbone-Va-Moi-Truong.md`.

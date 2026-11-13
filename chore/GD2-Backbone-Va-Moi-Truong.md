@@ -9,7 +9,7 @@ Kiến thức chung về wav2vec 2.0, XLS-R, MMS nằm trong `note/Backbone-SSL.
 | 1 | Đọc wav2vec 2.0, XLS-R, MMS | PDF trong `resource/paper/`; `note/Backbone-SSL.md` | Xong |
 | 1 | Lần theo code AntiDeepfake | Mục 1–3 dưới đây | Xong (đọc code, chưa chạy) |
 | 2 | `evaluate.py` | `src/evaluate.py`, self-test qua 11/11 | Xong trên máy M1 |
-| 2 | Dựng môi trường, chạy toy example | `src/setup_antideepfake.sh` | **Đã viết, chưa chạy** trên Colab/Kaggle |
+| 2 | Dựng môi trường, chạy toy example | `src/setup_antideepfake.sh`, `colab/GD2_toy_example.ipynb` | **Qua** (13/11): EER 6,11% |
 
 Code đã đọc ở commit `86098091c52c5d0e38c44396c95608f93b0f648d` (HEAD của `main` ngày 12/11/2026). Repo đã đổi sau lần kiểm tra trong plan (thêm W&B, GRPO), nên mọi lần chạy phải dùng đúng commit này.
 
@@ -102,7 +102,7 @@ Chưa có: hiệu chuẩn (học $a, b$ trên dev), để GĐ6.
 
 Thử trên file điểm giả lập theo đúng protocol toy (16 thật, 134 giả): chạy đủ bảng gộp, theo tiền tố và theo 13 hệ thống A07–A19.
 
-### 4.2. Môi trường và toy example (chưa chạy)
+### 4.2. Môi trường và toy example
 
 Chạy bằng notebook `colab/GD2_toy_example.ipynb`. Code đi qua GitHub, kết quả lưu trên Drive (xem README ở gốc repo).
 
@@ -117,14 +117,23 @@ Chạy bằng notebook `colab/GD2_toy_example.ipynb`. Code đi qua GitHub, kết
 
 Script làm theo `install.sh`, khác ở 4 điểm: dùng micromamba thay conda (Colab không có conda), cố định commit AntiDeepfake, tự kiểm tra cảnh báo nạp trọng số, giữ checkpoint và dữ liệu toy trong cache trên Drive để phiên sau không tải lại. Log ở `<BASE>/setup.log`.
 
-**Cần ghi lại khi chạy:**
+**Kết quả (13/11/2026, Colab T4, notebook ở commit `46e3404`): QUA**
 
-- [ ] Phiên bản in ra: Python 3.9, torch 2.6.0, CUDA `True`, tên GPU, import `Wav2Vec2Model` OK
-- [ ] Thời gian cài đặt (phút) và dung lượng thư mục `<BASE>`
-- [ ] Log inference không có dòng cảnh báo trọng số
-- [ ] `evaluation.py` cho `eer` = **0,0611**; `evaluate.py` cho EER 6,11% (phải trùng)
-- [ ] Tốc độ inference (it/s ở thanh tiến trình) → ước lượng thời gian chấm 13.438 câu RADAR tiếng Việt
-- [ ] Lỗi gặp phải, nguyên văn
+| Mục | Kết quả |
+|---|---|
+| Phiên bản | Python 3.9.23; torch 2.6.0+cu118, CUDA `True`, Tesla T4 (15 GB); fairseq 1.0.0a0+862efab; speechbrain 1.0.2; numpy 1.21.2; pandas 1.4.3 |
+| Nạp trọng số | Không có cảnh báo |
+| `evaluation.py` (repo) | EER **0,0611**, AUC 0,993, khớp README |
+| `evaluate.py` (nhóm) | EER **6,1101%**, minDCF 0,0597, actDCF 0,1710. Ngưỡng EER −1,2741 (log-odds) = 0,2186 (xác suất) của repo, vì σ(−1,2741) ≈ 0,2186: cùng một điểm |
+| Thời gian cài lần đầu | torch ~2,5 phút; build fairseq ~1 phút; tổng một lần cài mới ước khoảng 5 phút (lần chạy cuối dùng lại phần đã cài nên chỉ 1 phút) |
+| Tải về | Toy 25 MB: ~40 giây. Checkpoint `mms_300m.ckpt` 1,27 GB: ~9 phút (~2,4 MB/s), đã lưu cache trên Drive |
+| Chấm 150 câu | 33 giây, gồm cả nạp mô hình |
+
+**Ước lượng cho GĐ3 (thô):** 33 giây cho 150 câu là chặn trên, vì gồm cả nạp mô hình, tức ~0,22 giây/câu. 13.438 câu RADAR tiếng Việt → **dưới khoảng 50 phút** cho một checkpoint cỡ 300M, chưa tính độ dài câu khác nhau. Checkpoint 1B, 2B chậm hơn nhiều; cần đo riêng.
+
+**Ghi nhận phụ (không phải kết quả, vì toy thuộc dữ liệu huấn luyện của AntiDeepfake):** actDCF 0,171 so với minDCF 0,060, tức điểm log-odds chưa hiệu chuẩn ngay cả trong miền. Đây là lý do GĐ6 có bước hiệu chuẩn.
+
+**Lỗi đã gặp và đã sửa:** xem bảng lịch sử lỗi trong `chore/Quy-Trinh-Chay-Colab.md` (3 lỗi script, 1 lỗi notebook).
 
 **Nếu không dựng được sau 1 ngày** (theo plan): dừng và đánh giá lại. Phương án inference thay thế: script inference trên trang Hugging Face của từng checkpoint (README repo nói mỗi model có sẵn), hoặc wrapper của `SpeechAntiSpoofingBenchmarks`.
 
@@ -159,6 +168,6 @@ Script chỉ chạy trên Linux có GPU NVIDIA (bản torch cu118), không chạ
 - [x] Đọc wav2vec 2.0, XLS-R, MMS; viết note
 - [x] Lần theo 4 khối code và luồng dữ liệu
 - [x] `evaluate.py` có EER, minDCF, actDCF, qua self-test
-- [ ] Chạy `setup_antideepfake.sh` trên Colab hoặc Kaggle
-- [ ] Toy example cho EER đúng 6,11%, không có cảnh báo nạp trọng số
+- [x] Chạy `setup_antideepfake.sh` trên Colab (notebook `colab/GD2_toy_example.ipynb`)
+- [x] Toy example cho EER đúng 6,11%, không có cảnh báo nạp trọng số
 - [ ] Kiểm tra quota GPU (việc chạy nền ở mục 5 của plan)

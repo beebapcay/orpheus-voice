@@ -370,8 +370,8 @@ Hỏi chéo trong nhóm theo mục 7, sau đó ôn thêm nội dung môn học. 
 | Đọc toàn văn | AntiDeepfake, GRPO, VietPrism, RADAR, wav2vec 2.0 (mục 2–5), XLS-R (bảng ngôn ngữ, mục 3–4, 5.2.5), MMS (mục 3.1, 4), VSASV (phương pháp tấn công), ALLM4ADD (toàn bài, 11/11), PartialSpoof (phần dữ liệu, mô hình, kết quả, 11/11), DFALLM, ASVspoof 5, Speech DF Arena |
 | Đọc phần tóm tắt (đã kiểm tra lại 11/11) | BAM, LlamaPartialSpoof, PartialEdit, FT-GRPO, SARA |
 | Đọc phần tóm tắt | Các bài còn lại trong mục 3 và phụ lục. Cần đọc toàn văn trước khi trích số liệu |
-| Chạy thử | `src/evaluate.py` (self-test 11/11 trên M1) |
-| **Chưa kiểm tra** | **Chưa chạy code AntiDeepfake hay nạp model thật** (`src/setup_antideepfake.sh` đã viết, chưa chạy). Bộ nhớ và tốc độ thực tế trên GPU (bảng bộ nhớ ở mục 2 là ước lượng). Quota GPU hiện tại. Nội dung bên trong SEA-Spoof và MLAAD (cần quyền truy cập). Phiên bản MLAAD mà AntiDeepfake đã dùng có chứa tiếng Việt hay không. Hạng Q trên SCImago của TASLP, IEEE SPL, TIFS (chỉ có từ nguồn thứ cấp). Nơi đăng của Codecfake |
+| Chạy thử | `src/evaluate.py` (self-test 11/11 trên M1). **13/11: dựng môi trường AntiDeepfake trên Colab T4 và chạy toy example với `mms_300m.ckpt`: EER 6,11% khớp README, không cảnh báo nạp trọng số** (`chore/GD2-Backbone-Va-Moi-Truong.md` mục 4.2) |
+| **Chưa kiểm tra** | Chưa fine-tune lần nào; chưa nạp checkpoint nào ngoài `mms_300m`. Bộ nhớ và tốc độ thực tế trên GPU (bảng bộ nhớ ở mục 2 là ước lượng). Quota GPU hiện tại. Nội dung bên trong SEA-Spoof và MLAAD (cần quyền truy cập). Phiên bản MLAAD mà AntiDeepfake đã dùng có chứa tiếng Việt hay không. Hạng Q trên SCImago của TASLP, IEEE SPL, TIFS (chỉ có từ nguồn thứ cấp). Nơi đăng của Codecfake |
 
 ## Phụ lục. Danh mục phương pháp và mô hình (tính đến 2026)
 
