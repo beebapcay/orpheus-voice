@@ -1,0 +1,18 @@
+Score: higher = real. beta = 1.900, actDCF threshold = -0.642
+EER in %, lower is better. minDCF/actDCF: lower is better, 1.0 = no better than accepting everything.
+   subset  n_real  n_fake   eer_%  minDCF  actDCF  eer_threshold
+   Pooled      16     134  6.1101  0.0597  0.1710        -1.2741
+group:A07      16       7  0.0000  0.0000  0.1187        -5.2488
+group:A08      16      11  0.0000  0.0000  0.1187        -3.4221
+group:A09      16       9  0.0000  0.0000  0.1187        -4.8148
+group:A10      16      10 11.2500  0.2000  0.3187         1.1324
+group:A11      16      14  6.6964  0.1429  0.2616         0.7317
+group:A12      16       6  0.0000  0.0000  0.1187        -5.2907
+group:A13      16       6  3.1250  0.1187  0.2854         0.8208
+group:A14      16      15  6.4583  0.0667  0.1854        -1.2741
+group:A15      16      10  0.0000  0.0000  0.1187        -3.5214
+group:A16      16      12  7.2917  0.0833  0.2021        -1.2741
+group:A17      16      13  0.0000  0.0000  0.1187        -2.8853
+group:A18      16      12  0.0000  0.0000  0.1187        -4.3596
+group:A19      16       9  8.6806  0.1111  0.1187        -1.2741
+Saved to /kaggle/working/results/mms_300m/toy/metrics.csv

@@ -82,13 +82,23 @@ case "$CMD" in
   output)
     K="${2:?zeroshot}"; U=$(user)
     [ "$K" = "zeroshot" ] || { echo "Chỉ tải output của zeroshot (prep có ~10 GB âm thanh)"; exit 2; }
-    raw="$ROOT/results/kaggle-raw/orpheus-$K"
-    rm -rf "$raw" && mkdir -p "$raw"
+    # Mỗi lần tải vào thư mục riêng, để không mất embedding của lần chạy trước
+    raw="$ROOT/results/kaggle-raw/orpheus-$K-$(date '+%Y%m%d-%H%M')"
+    mkdir -p "$raw"
     kg kernels output "$U/orpheus-$K" -p "$raw"
     # Lưu vào git: tóm tắt, độ đo, file điểm, log cài đặt. Không lưu embedding và shard.
-    mkdir -p "$ROOT/results/zeroshot"
-    rsync -a --exclude 'emb.npy' --exclude 'shards/' "$raw/results/" "$ROOT/results/zeroshot/"
-    echo "Đã chép vào results/zeroshot/. Embedding ở $raw/results/*/*/emb.npy"
+    dst="$ROOT/results/zeroshot"; mkdir -p "$dst"
+    # Gộp summary.csv: dòng mới thay dòng cũ cùng (dataset, model), giữ các dòng cũ còn lại
+    merged=$(mktemp)
+    if [ -f "$dst/summary.csv" ]; then
+      { cat "$raw/results/summary.csv"; tail -n +2 "$dst/summary.csv"; } \
+        | awk -F, 'NR == 1 || !seen[$1 "," $2]++' > "$merged"
+    else
+      cp "$raw/results/summary.csv" "$merged"
+    fi
+    rsync -a --exclude 'emb.npy' --exclude 'shards/' "$raw/results/" "$dst/"
+    mv "$merged" "$dst/summary.csv"
+    echo "Đã chép vào results/zeroshot/ (summary.csv đã gộp). Embedding ở $raw/results/*/*/emb.npy"
     ls "$raw"
     ;;
   *)

@@ -9,8 +9,11 @@ Kiến thức chung nằm trong `note/Post-Training-SSL.md` (bài AntiDeepfake) 
 | 1 | Tóm tắt AntiDeepfake, RawBoost | `note/Post-Training-SSL.md`, `note/RawBoost.md`, mục 1–3 dưới đây | Có tài liệu (13/11), **chưa đọc** |
 | 1 | Tải PDF RawBoost | `resource/paper/RawBoost-2111.04433.pdf` | Xong |
 | 2 | Chọn tập kiểm tra | `protocols/ids/*.tsv`, `stats.json` (chạy `prep_data.py select` trên máy) | Xong |
-| 2 | Code chuẩn bị dữ liệu và chấm | `src/prep_data.py`, `src/score_zeroshot.py`, `src/score_w2v2_aasist.py`, `kaggle/` | Viết xong, thử trên máy với `main.py` giả; **chưa chạy trên Kaggle** |
-| 2 | Chạy trên Kaggle | `results/zeroshot/` | Chờ người dùng cài Kaggle CLI (mục 5.5) |
+| 2 | Code chuẩn bị dữ liệu và chấm | `src/prep_data.py`, `src/score_zeroshot.py`, `src/score_w2v2_aasist.py`, `kaggle/` | Xong, đã chạy trên Kaggle |
+| 2 | Kernel `orpheus-prep` | Output kernel (~10 GB) | Xong (13/11, 33 phút) |
+| 2 | Lần 1: kiểm chứng + 3 backbone + baseline | `results/zeroshot/` | **Xong (13/11, 2,42 giờ), qua cả 3 mốc kiểm chứng** (mục 5.6) |
+| 2 | Lần 2: NDA của 3 backbone nhỏ, MMS-1B, XLS-R-1B | `results/zeroshot/` | Đang chạy (đẩy 20:35, 13/11) |
+| 2 | Lần 3: HuBERT-XL, XLS-R-2B (cả hai bản) | `results/zeroshot/` | Chưa |
 
 Bài AntiDeepfake đọc ở bản **arXiv v4 (21/10/2025)**, tức sau khi repo sửa cách tính EER (16/10/2025). Số MMS-300M trong Bảng II khớp từng ô với bảng trên trang Hugging Face của checkpoint. Code đối chiếu ở commit `86098091` như GĐ2.
 
@@ -72,7 +75,8 @@ Bài AntiDeepfake đọc ở bản **arXiv v4 (21/10/2025)**, tức sau khi repo
 | Định dạng | `.ckpt` (state_dict PyTorch), repo nạp trực tiếp | `model.safetensors` + `config.json`, nạp bằng `PyTorchModelHubMixin` |
 | Tên khoá | `m_ssl.model.*`, `proj_fc.*` | Cùng lớp `DeepfakeDetector` với cùng tên module trong script inference trên card |
 | Dung lượng 14 file | 0,38–8,65 GB, tổng ~46 GB | Như Zenodo |
-| Tốc độ tải đo được | ~2,4 MB/s trên Colab (GĐ2) → ~5,4 giờ cho 46 GB | Chưa đo trên Kaggle |
+| Tốc độ tải đo được | ~2,4 MB/s trên Colab (GĐ2) → ~5,4 giờ cho 46 GB | **~95 MB/s trên Kaggle** (13/11) |
+| Giống nhau? | | **Có**: toy với bản HF ra EER 6,1101%, minDCF 0,0597, actDCF 0,1710, đúng như bản Zenodo ở GĐ2; không cảnh báo nạp trọng số. Từ nay dùng bản HF |
 
 Cách dùng: tải `model.safetensors` từ Hugging Face, chuyển sang `.ckpt` (`torch.save` của state_dict), rồi nạp bằng code gốc. **Kiểm chứng bắt buộc:** chấm toy example với `mms_300m` lấy từ HF phải ra đúng EER 6,11% như GĐ2, và log không có cảnh báo nạp trọng số. Nếu HF lỗi, script tự chuyển sang Zenodo.
 
@@ -89,6 +93,11 @@ Cách dùng: tải `model.safetensors` từ Hugging Face, chuyển sang `.ckpt` 
 | 7 | Chế độ `analysis` ghi cả file điểm lẫn embedding sau lớp trung bình (`.pkl`), nhưng **chỉ ghi khi chạy xong cả tập** | Mất phiên giữa chừng là mất hết | `score_zeroshot.py` chia shard 2.000 câu; shard xong thì lưu ngay |
 | 8 | W2V2-AASIST (baseline): repo HF có `LA_model.pth` và bản ONNX; **không có** `w2v2_aasist.py`, `_net.py` mà model card nhắc tới. Chỉ nhìn **4,04 s đầu** của câu (64.600 mẫu, câu ngắn thì lặp lại), không chuẩn hoá biên độ, điểm = logit lớp thật (đã đối chiếu `data_utils_SSL.py` và `main_SSL_LA.py` của repo gốc) | So với AntiDeepfake (nhìn cả câu) là không cùng điều kiện đầu vào. actDCF của baseline vô nghĩa vì điểm không phải log-odds | Dùng ONNX; báo EER và minDCF; ghi rõ khác biệt. Đối chiếu: In-the-Wild đủ bộ phải gần **11,22%** như card công bố |
 | 9 | Kết quả có RawBoost / không RawBoost đổi chiều theo tập và theo backbone (note, mục 5) | Không suy được tác dụng trên tiếng Việt từ số tiếng Anh | Bảng zero-shot RADAR tiếng Việt cần đủ Default và NDA (thứ tự cắt số 4 của plan chỉ dùng khi thiếu quota) |
+| 10 | **RADAR tiếng Anh khó ngang hoặc khó hơn RADAR tiếng Việt** (lần 1, mục 5.6): MMS-300M 26,2% (EN) so với 20,1% (VI); W2V-Large 23,5% so với 17,8% | Mức giảm từ In-the-Wild (~2–4%) xuống RADAR tiếng Việt (~18–27%) **không chỉ do ngôn ngữ**: phần lớn do các hệ thống sinh của RADAR. Lưu ý: tập EN chỉ 1.000 + 1.000 câu, nguồn tiếng thật khác (Common Voice + People's Speech) | Khi viết câu hỏi nghiên cứu "yếu tố quyết định", phải tách yếu tố ngôn ngữ khỏi yếu tố hệ thống sinh. RADAR VI và EN là cặp so sánh gần nhất hiện có (cùng benchmark, cùng năm) |
+| 11 | **W2V-Large (pre-train chỉ tiếng Anh) tốt hơn MMS-300M (đa ngôn ngữ, có tiếng Việt) trên RADAR tiếng Việt**: 17,80% so với 20,08%. Hai mô hình cùng kiến trúc, cùng 317M (GĐ2 mục 2) | Pre-train đa ngôn ngữ **không** tự động có lợi khi zero-shot. Nhưng đây là bản Default (có RawBoost), và MMS-300M Default là ngoại lệ xấu trên In-the-Wild (phát hiện 1) | Chờ bản NDA (lần 2) rồi mới kết luận. Là giả thuyết đáng kiểm tra lại sau fine-tune (B2 so với R ở GĐ5) |
+| 12 | **Lỗi chủ yếu là tiếng giả lọt qua.** Ở ngưỡng log-odds 0, MMS-300M nhận nhầm 37,1% câu giả tiếng Việt là thật, nhưng chỉ 4,8% câu thật bị coi là giả (In-the-Wild: 3,6% và 2,2%). Ngưỡng EER trên RADAR VI là 3,69, trên In-the-Wild là 0,51 | Điểm của tiếng giả tiếng Việt dồn về phía "thật" (trung vị −2,93 so với −5,99 trên In-the-Wild). Vừa khó phân biệt, vừa lệch hiệu chuẩn | Báo cả EER (không phụ thuộc ngưỡng) lẫn actDCF. Fine-tune ở GĐ5 cần cải thiện cả hai |
+| 13 | **W2V2-AASIST gần như đoán ngẫu nhiên trên RADAR**: 30,1% (VI), 43,6% (EN, minDCF 0,998); actDCF > 1 | Baseline chuyên biệt hỏng nặng khi gặp hệ thống sinh mới, khớp với nhận định của bài AntiDeepfake | Ghi vào báo cáo làm luận cứ cho việc dùng mô hình post-trained |
+| 14 | Tốc độ không tỉ lệ với kích thước: W2V-Large (317M) chạy 42,9x thời gian thực, W2V-Small (95M) 30,9x, MMS-300M 30,4x | Nút thắt nhiều khả năng ở bước đọc dữ liệu trên CPU, không ở GPU (hai GPU dùng chung CPU của một máy; số nhân chưa ghi lại) | Lấy tốc độ thật của bản 1B ở lần 2 để chia job cho lần 3 |
 
 ## 4. Dữ liệu kiểm tra
 
@@ -129,7 +138,7 @@ Nếu phải quay về Colab (Drive 15 GB): bỏ `itw_full`, chỉ lấy `radar_
 |---|---|---|
 | GPU | 1 × T4, không bảo đảm được cấp | **2 × T4** (`NvidiaTeslaT4`) |
 | Phiên | ~4 giờ, phải giữ tab mở | 12 giờ, chạy nền ("Save & Run"), đóng trình duyệt vẫn chạy |
-| Quota | Không rõ | Thường báo ~30 giờ/tuần; cần xem trên trang Settings của tài khoản |
+| Quota | Không rõ | **30 giờ GPU/tuần**, làm mới 00:00 UTC thứ Bảy (7 giờ sáng giờ Việt Nam); xem bằng `push.sh quota` (đã kiểm 13/11) |
 | Điều khiển từ máy | CLI chập chờn (GĐ2) | Kaggle CLI: đẩy kernel, xem trạng thái, tải kết quả |
 | Ổ đĩa | Drive 15 GB | `/kaggle/working` ~20 GB giữ lại sau phiên |
 
@@ -162,7 +171,15 @@ Code đưa lên Kaggle dưới dạng **dataset riêng tư** thay vì clone GitH
 
 Ước lượng thô từ GĐ2 (~0,22 s/câu với bản 300M, gồm cả nạp mô hình): `radar_vi` ~50 phút, `itw_full` ~2 giờ, `ood_forget` ~15 phút cho MMS-300M. Lần 1 khoảng 3–3,5 giờ kể cả dựng môi trường (~5 phút). Mỗi job ghi tốc độ thực tế (`x_realtime` trong `summary.csv`).
 
-**Lần 2 trở đi:** 11 checkpoint còn lại trên `radar_vi` (bản NDA của 3 backbone nhỏ; MMS-1B, XLS-R-1B, HuBERT-XL, XLS-R-2B cả hai bản). Chia số job theo tốc độ đo ở lần 1, mỗi lần dưới ~9 giờ. Nếu thiếu quota: bỏ NDA của các bản 1B/2B trước (thứ tự cắt số 4 của plan), giữ NDA của MMS-300M (phát hiện 1).
+**Thực tế lần 1:** 2,42 giờ (dựng môi trường 4 phút), tốn 2,43 giờ quota. Bản 300M chạy ~30–45x thời gian thực, `radar_vi` 21–34 phút mỗi mô hình, `itw_full` ~70 phút. Nhanh hơn ước lượng thô khoảng 30%.
+
+**Lần 2 trở đi:** 11 checkpoint còn lại trên `radar_vi`, chia hai lần vì chưa biết tốc độ bản 1B/2B và một lần vượt 12 giờ thì có thể mất cả output:
+- Lần 2 (đẩy 20:35, 13/11): `mms_300m_nda` (đứng đầu, cho phát hiện 1), `mms_1b`, `xlsr_1b`, `mms_1b_nda`, `xlsr_1b_nda`, `w2v_large_nda`, `w2v_small_nda`.
+- Lần 3: `hubert_xl`, `hubert_xl_nda`, `xlsr_2b`, `xlsr_2b_nda`; chia lại theo tốc độ bản 1B đo ở lần 2.
+
+Nếu thiếu quota: bỏ NDA của các bản 1B/2B trước (thứ tự cắt số 4 của plan), giữ NDA của MMS-300M (phát hiện 1).
+
+`push.sh output` tải mỗi lần vào một thư mục riêng `results/kaggle-raw/orpheus-zeroshot-<ngày giờ>/` (giữ embedding của các lần trước) và gộp `summary.csv`: dòng mới thay dòng cũ cùng (tập, mô hình). Output lần 1 nằm ở `results/kaggle-raw/orpheus-zeroshot-run1/`.
 
 **Chạy hai GPU song song:** mỗi GPU lấy job kế tiếp trong hàng đợi. Script giới hạn RAM để không nạp hai bản 2B cùng lúc (mỗi bản cần ~17 GB RAM khi nạp).
 
@@ -180,12 +197,54 @@ Code đưa lên Kaggle dưới dạng **dataset riêng tư** thay vì clone GitH
 
 ### 5.5. Việc người dùng cần làm trước lần chạy đầu
 
-1. ~~Cài Kaggle CLI~~: đã cài (bản 2.2.5, 13/11).
-2. Đăng nhập: `kaggle auth login` (OAuth qua trình duyệt; CLI 2.x không dùng `kaggle.json`).
-3. Xác minh số điện thoại trên Kaggle (bắt buộc để bật internet và GPU cho kernel).
-4. Báo Claude. Claude kiểm tra đăng nhập và quota (`push.sh quota`). Claude sẽ chạy: `push.sh src` → `push.sh push prep` → chờ xong → `push.sh push zeroshot` → `push.sh status` → `push.sh output zeroshot`.
+Đã xong hết (13/11): cài Kaggle CLI 2.2.5, đăng nhập `kaggle auth login` (OAuth), xác minh số điện thoại. Hướng dẫn chung: `chore/Quy-Trinh-Chay-Kaggle.md`.
 
-Hướng dẫn chung: `chore/Quy-Trinh-Chay-Kaggle.md`.
+### 5.6. Kết quả lần 1 (13/11)
+
+**Ba mốc kiểm chứng: qua cả ba.**
+
+| Mốc | Công bố | Đo được | Ghi chú |
+|---|---|---|---|
+| Toy, MMS-300M (checkpoint HF) | 6,11% (README; GĐ2 đo bằng bản Zenodo) | **6,1101%** | Trùng đến 4 chữ số, cả minDCF và actDCF. Bản HF giống bản Zenodo |
+| In-the-Wild đủ bộ, MMS-300M Default | 2,90% (Bảng II, có RawBoost) | **2,9016%** | **Đạt điều kiện qua GĐ3 của plan** |
+| In-the-Wild đủ bộ, W2V2-AASIST | 11,22% (model card) | **11,2122%** | Lệch 0,008 điểm %, nhiều khả năng do chi tiết cách tính EER |
+
+**Zero-shot trên RADAR tiếng Việt** (13.438 câu: 7.000 thật / 6.438 giả). EER, minDCF, actDCF: thấp hơn là tốt hơn.
+
+| Mô hình | Tham số | Pre-train | EER (%) | minDCF | actDCF |
+|---|---|---|---|---|---|
+| **W2V-Large** (Default) | 317M | Anh | **17,80** | **0,384** | **0,389** |
+| MMS-300M (Default) | 317M | 1.406 ngôn ngữ | 20,08 | 0,461 | 0,469 |
+| W2V-Small (Default) | 95M | Anh | 27,21 | 0,572 | 0,587 |
+| W2V2-AASIST (baseline) | chưa kiểm | chưa kiểm | 30,12 | 0,802 | 1,246 (vô nghĩa, mục 3 #8) |
+
+Front-end và dữ liệu pre-train của W2V2-AASIST cần kiểm trong bài gốc của Tak (2022) trước khi ghi vào báo cáo. Baseline này chỉ nhìn 4 s đầu của câu (mục 3 #8).
+
+**Tập `ood_forget`** (mốc đo mức quên cho GĐ5–6), EER (%):
+
+| Mô hình | Gộp (4.000) | In-the-Wild (1.000 + 1.000) | RADAR EN (1.000 + 1.000) |
+|---|---|---|---|
+| W2V-Large | 15,3 | 2,0 | 23,5 |
+| MMS-300M | 15,5 | 2,6 | 26,2 |
+| W2V-Small | 16,2 | 4,0 | 27,2 |
+| W2V2-AASIST | 27,1 | 10,8 | 43,6 |
+
+**Tỉ lệ lỗi ở ngưỡng log-odds 0** (ngưỡng tự nhiên của mô hình, chưa hiệu chuẩn):
+
+| Tập | Mô hình | Giả bị nhận là thật | Thật bị nhận là giả |
+|---|---|---|---|
+| RADAR VI | W2V-Large | 26,8% | 7,1% |
+| RADAR VI | MMS-300M | 37,1% | 4,8% |
+| RADAR VI | W2V-Small | 40,5% | 10,8% |
+| RADAR EN | MMS-300M | 49,0% | 5,5% |
+| In-the-Wild | MMS-300M | 3,6% | 2,2% |
+
+Nhận xét: phát hiện 10–14 ở mục 3. Ba ý chính:
+1. Mô hình post-trained dùng thẳng tốt hơn baseline chuyên biệt rõ rệt trên tiếng Việt (17,8–27,2% so với 30,1%), nhưng còn xa mức In-the-Wild (2–4%). Còn chỗ cho fine-tune.
+2. RADAR tiếng Anh còn khó hơn tiếng Việt, nên khoảng cách lớn chủ yếu do hệ thống sinh mới, không chỉ do ngôn ngữ.
+3. W2V-Large (chỉ tiếng Anh) hơn MMS-300M (đa ngôn ngữ) ở cùng kiến trúc. Chờ bản NDA trước khi kết luận.
+
+Số liệu gốc: `results/zeroshot/summary.csv`, `results/zeroshot/<mô hình>/<tập>/metrics.csv`. Tỉ lệ lỗi ở ngưỡng 0 tính lại từ `scores.csv` (log-odds = logit thật − logit giả, như `src/evaluate.py`).
 
 ## 6. Nháp câu vấn đáp 3: kiến trúc bên dưới (phần post-training)
 
@@ -216,10 +275,10 @@ Hướng dẫn chung: `chore/Quy-Trinh-Chay-Kaggle.md`.
 - [ ] Đọc kỹ AntiDeepfake và RawBoost theo mục 1; tự trả lời câu hỏi cuối hai note
 - [x] Chọn tập kiểm tra, cố định danh sách câu (`protocols/ids/`)
 - [x] Script chuẩn bị dữ liệu và chấm, thử trên máy với `main.py` giả (chia shard, chạy tiếp, gộp, độ đo theo từng nguồn)
-- [ ] Kaggle CLI và token (mục 5.5)
-- [ ] Kernel `orpheus-prep` chạy xong: `radar_vi` đúng 7.000 / 6.438, `itw_full` đúng 19.963 / 11.816
-- [ ] Toy với checkpoint từ HF: EER đúng 6,11%, không cảnh báo nạp trọng số
-- [ ] **In-the-Wild của MMS-300M bản Default gần 2,90%** (điều kiện của plan)
-- [ ] W2V2-AASIST trên In-the-Wild gần 11,22%
-- [ ] Bảng EER zero-shot trên RADAR tiếng Việt: 14 checkpoint và baseline
-- [ ] Mốc `ood_forget` cho MMS-300M, W2V-Large, W2V-Small
+- [x] Kaggle CLI và đăng nhập OAuth (mục 5.5)
+- [x] Kernel `orpheus-prep` chạy xong: `radar_vi` đúng 7.000 / 6.438, `itw_full` đúng 19.963 / 11.816
+- [x] Toy với checkpoint từ HF: EER đúng 6,11%, không cảnh báo nạp trọng số: 6,1101%
+- [x] **In-the-Wild của MMS-300M bản Default gần 2,90%** (điều kiện của plan): 2,9016%
+- [x] W2V2-AASIST trên In-the-Wild gần 11,22%: 11,2122%
+- [ ] Bảng EER zero-shot trên RADAR tiếng Việt: 14 checkpoint và baseline (lần 1 xong 3 checkpoint + baseline; lần 2 đang chạy 7; lần 3 còn 4)
+- [x] Mốc `ood_forget` cho MMS-300M, W2V-Large, W2V-Small (và W2V2-AASIST)

@@ -1,0 +1,2 @@
+subset,n_real,n_fake,eer_%,minDCF,actDCF,eer_threshold
+Pooled,7000,6438,30.11616739892602,0.8018446855722717,1.245522021035814,-4.065777

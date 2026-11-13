@@ -1,0 +1,24 @@
+[0;93m2026-11-13 12:08:24.374189333 [W:onnxruntime:, transformer_memcpy.cc:111 ApplyImpl] 24 Memcpy nodes are added to the graph main_graph for CUDAExecutionProvider. It might have negative impact on performance (including unable to run CUDA graph). Set session_options.log_severity_level=1 to see the detail logs before this message.[m
+[0;93m2026-11-13 12:08:24.797268159 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799165730 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799208973 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799236090 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799260281 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799363832 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799391373 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799416144 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799440200 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799527646 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799551831 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799577913 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799602015 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799716211 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799741047 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799765169 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+[0;93m2026-11-13 12:08:24.799790307 [W:onnxruntime:Default, scatter_nd.h:50 ScatterNDWithAtomicReduction] ScatterND with reduction=='none' only guarantees to be correct if indices are not duplicated.[m
+ONNX providers: ['CUDAExecutionProvider', 'CPUExecutionProvider']
+4000 câu, đã có 0, còn 4000
+  16/4000 câu, 1 s
+  1616/4000 câu, 101 s
+  3216/4000 câu, 202 s
+Xong 4000 câu sau 252 s

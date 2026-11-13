@@ -1,6 +1,6 @@
 # Tiến độ học
 
-Ghi lại mức độ đã đọc của từng phần, để biết phần nào cần quay lại đọc kỹ. Cập nhật lần cuối: 13/11/2026 (vào GĐ3).
+Ghi lại mức độ đã đọc của từng phần, để biết phần nào cần quay lại đọc kỹ. Cập nhật lần cuối: 13/11/2026 (GĐ3, xong lần chấm zero-shot đầu tiên).
 
 **Mức đọc:** **Kỹ** = đọc bài gốc, tự trả lời được câu hỏi. **Lướt** = chỉ đọc tóm tắt hoặc note, chưa đối chiếu bài gốc hay code. **Chưa** = chưa đọc.
 
@@ -79,7 +79,7 @@ Hướng dẫn chi tiết từng ô ở mục 4.2 của `chore/GD2-Backbone-Va-M
 | Ngày | Nội dung | Mức | Cần quay lại |
 |---|---|---|---|
 | 1 | AntiDeepfake, RawBoost (nhóm B) | Chưa (tài liệu sẵn 13/11) | Đọc theo bảng trang ở mục 1 của file GĐ3: lượt 1 (kiến trúc, kết quả) trước, lượt 2 (dữ liệu, siêu tham số) sau |
-| 2 | Chuẩn bị dữ liệu, chấm zero-shot trên Kaggle | Code xong, thử trên máy | Cài Kaggle CLI và token (mục 5.5 file GĐ3), rồi chạy lần 1 |
+| 2 | Chuẩn bị dữ liệu, chấm zero-shot trên Kaggle | Lần 1 xong (13/11): qua 3 mốc kiểm chứng; lần 2 đang chạy | Đọc kết quả ở mục 5.6 và phát hiện 10–14 (mục 3) file GĐ3 |
 
 Tài liệu: `note/Post-Training-SSL.md`, `note/RawBoost.md`, `chore/GD3-Post-Training-Va-Zero-Shot.md`, `chore/Quy-Trinh-Chay-Kaggle.md`.
 
@@ -90,6 +90,6 @@ Việc ngày 1:
 - [ ] Nói lại nháp vấn đáp 3 (mục 6 file GĐ3)
 
 Việc ngày 2:
-- [ ] Cài Kaggle CLI, đặt `~/.kaggle/kaggle.json`, xác minh số điện thoại, xem quota GPU
-- [ ] Lần 1: toy 6,11%; In-the-Wild MMS-300M gần 2,90%; RADAR tiếng Việt cho 3 backbone + baseline
-- [ ] Lần 2 trở đi: 11 checkpoint còn lại trên RADAR tiếng Việt
+- [x] Cài Kaggle CLI, đăng nhập OAuth, xác minh số điện thoại, xem quota GPU (30 giờ/tuần)
+- [x] Lần 1: toy 6,1101%; In-the-Wild MMS-300M 2,9016%; RADAR tiếng Việt cho 3 backbone + baseline (W2V-Large tốt nhất, 17,80%)
+- [ ] Lần 2 (đang chạy, 7 checkpoint) và lần 3 (4 checkpoint) trên RADAR tiếng Việt

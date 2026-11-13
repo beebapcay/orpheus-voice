@@ -14,11 +14,13 @@ import time
 
 # ---- Sửa phần này cho mỗi lần chạy -------------------------------------------
 # <tập>:<mô hình>,<mô hình>. Thứ tự = thứ tự ưu tiên; hai GPU lấy job lần lượt.
+# Lần 1 (13/11, xong 2,42 giờ): toy:mms_300m; radar_vi và ood_forget cho
+#   mms_300m, w2v_small, w2v_large, w2v2_aasist; itw_full:mms_300m,w2v2_aasist.
+# Lần 2: bản NDA của 3 backbone nhỏ + MMS-1B, XLS-R-1B (cả hai bản).
+#   mms_300m_nda đứng đầu: cần cho phát hiện 1 (RawBoost có lợi trên tiếng Việt không).
+# Lần 3: hubert_xl, hubert_xl_nda, xlsr_2b, xlsr_2b_nda.
 JOBS = [
-    "toy:mms_300m",                                   # kiểm tra: phải ra EER 6,11%
-    "radar_vi:mms_300m,w2v_small,w2v_large,w2v2_aasist",
-    "ood_forget:mms_300m,w2v_small,w2v_large,w2v2_aasist",
-    "itw_full:mms_300m,w2v2_aasist",                  # đối chiếu số công bố: 2,90% và 11,22%
+    "radar_vi:mms_300m_nda,mms_1b,xlsr_1b,mms_1b_nda,xlsr_1b_nda,w2v_large_nda,w2v_small_nda",
 ]
 SHARD_SIZE = 2000
 # -------------------------------------------------------------------------------
