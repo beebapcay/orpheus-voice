@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# Điều khiển Kaggle từ máy (Claude chạy). Cần Kaggle CLI và ~/.kaggle/kaggle.json.
+#
+#   bash kaggle/push.sh src                 tạo/cập nhật dataset riêng tư <user>/orpheus-src
+#                                           (src/*.py, src/*.sh, protocols/ids/*, VERSION)
+#   bash kaggle/push.sh push prep|zeroshot  đẩy kernel và bắt đầu chạy
+#   bash kaggle/push.sh status prep|zeroshot
+#   bash kaggle/push.sh output zeroshot     tải kết quả về results/kaggle-raw/, chép phần
+#                                           cần lưu vào results/zeroshot/
+#
+# Dataset và kernel đều riêng tư (is_private mặc định của Kaggle).
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUILD="$ROOT/build/kaggle"
+CMD="${1:-help}"
+KAGGLE="${KAGGLE:-kaggle}"
+
+user() {
+  # Tên người dùng lấy từ cấu hình của CLI (không đọc khoá API).
+  local u
+  u=$($KAGGLE config view 2>/dev/null | sed -n 's/^- username: //p' | head -1)
+  [ -n "$u" ] || { echo "Không lấy được username: kiểm tra ~/.kaggle/kaggle.json" >&2; exit 1; }
+  echo "$u"
+}
+
+stage_src() {
+  local d="$BUILD/orpheus-src" u="$1"
+  rm -rf "$d" && mkdir -p "$d"
+  cp "$ROOT"/src/*.py "$ROOT"/src/*.sh "$d"/
+  cp "$ROOT"/protocols/ids/* "$d"/
+  {
+    echo "git $(git -C "$ROOT" rev-parse --short HEAD)$(git -C "$ROOT" diff --quiet -- src protocols || echo ' (có thay đổi chưa commit)')"
+    echo "staged $(date '+%Y-%m-%d %H:%M:%S')"
+  } > "$d/VERSION"
+  cat > "$d/dataset-metadata.json" <<EOF
+{"title": "orpheus-src", "id": "$u/orpheus-src", "licenses": [{"name": "other"}]}
+EOF
+  echo "$d"
+}
+
+case "$CMD" in
+  src)
+    U=$(user); D=$(stage_src "$U")
+    if $KAGGLE datasets status "$U/orpheus-src" >/dev/null 2>&1; then
+      $KAGGLE datasets version -p "$D" -m "$(git -C "$ROOT" log -1 --format=%s)"
+    else
+      $KAGGLE datasets create -p "$D"
+    fi
+    for _ in $(seq 1 30); do
+      s=$($KAGGLE datasets status "$U/orpheus-src" 2>/dev/null || true)
+      echo "trạng thái dataset: $s"
+      [ "$s" = "ready" ] && break
+      sleep 10
+    done
+    ;;
+  push)
+    K="${2:?prep hoặc zeroshot}"; U=$(user)
+    d="$BUILD/orpheus-$K"; rm -rf "$d" && mkdir -p "$d"
+    cp "$ROOT/kaggle/$K/run.py" "$d/"
+    sed "s/KAGGLE_USER/$U/g" "$ROOT/kaggle/$K/kernel-metadata.json" > "$d/kernel-metadata.json"
+    $KAGGLE kernels push -p "$d"
+    ;;
+  status)
+    K="${2:?prep hoặc zeroshot}"; U=$(user)
+    $KAGGLE kernels status "$U/orpheus-$K"
+    ;;
+  output)
+    K="${2:?zeroshot}"; U=$(user)
+    [ "$K" = "zeroshot" ] || { echo "Chỉ tải output của zeroshot (prep có ~10 GB âm thanh)"; exit 2; }
+    raw="$ROOT/results/kaggle-raw/orpheus-$K"
+    rm -rf "$raw" && mkdir -p "$raw"
+    $KAGGLE kernels output "$U/orpheus-$K" -p "$raw"
+    # Lưu vào git: tóm tắt, độ đo, file điểm, log cài đặt. Không lưu embedding và shard.
+    mkdir -p "$ROOT/results/zeroshot"
+    rsync -a --exclude 'emb.npy' --exclude 'shards/' "$raw/results/" "$ROOT/results/zeroshot/"
+    echo "Đã chép vào results/zeroshot/. Embedding ở $raw/results/*/*/emb.npy"
+    ls "$raw"
+    ;;
+  *)
+    sed -n '2,12p' "$0"
+    ;;
+esac

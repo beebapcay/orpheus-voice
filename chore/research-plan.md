@@ -160,7 +160,7 @@ Mỗi giai đoạn trả lời một câu hỏi, và câu trả lời là đầu
 - [x] Xin quyền [SEA-Spoof](https://huggingface.co/datasets/Jack-ppkdczgx/SEA-Spoof) (tác giả duyệt thủ công).
 - [ ] Xin quyền [MLAAD](https://huggingface.co/datasets/mueller91/MLAAD) (duyệt tự động), phòng trường hợp SEA-Spoof chưa được duyệt.
 - [ ] Xin quyền [F5-TTS Vietnamese](https://huggingface.co/hynt/F5-TTS-Vietnamese-ViVoice) bằng email trường, vì email cá nhân bị từ chối.
-- [ ] Tải [RADAR 2026](https://zenodo.org/records/22110815) và [In-the-Wild](https://huggingface.co/datasets/mueller91/In-The-Wild) vào nơi Colab/Kaggle đọc được. Với RADAR, chỉ giữ phần tiếng Việt và phần tiếng Anh cần dùng.
+- [ ] Tải [RADAR 2026](https://zenodo.org/records/22110815) và [In-the-Wild](https://huggingface.co/datasets/mueller91/In-The-Wild) vào nơi Colab/Kaggle đọc được. Với RADAR, chỉ giữ phần tiếng Việt và phần tiếng Anh cần dùng. (13/11: đã có `src/prep_data.py` và kernel Kaggle `orpheus-prep`; chờ chạy.)
 - [ ] Kiểm tra quota GPU của Kaggle/Colab trên tài khoản của từng thành viên. Máy M1 Pro dùng để đọc code, xử lý dữ liệu và chạy tầng 0.
 
 ## 6. Chi tiết từng giai đoạn
@@ -217,11 +217,11 @@ Lần theo `models/W2V.py` và `models/W2V_configs.py` của [AntiDeepfake](http
 
 **Ngày 1: Đọc nhóm B (AntiDeepfake, RawBoost) và `protocols/README.md`**, để biết dữ liệu nào không được dùng làm tập kiểm tra.
 
-**Ngày 2: Chạy zero-shot**, chỉ inference:
-- Chấm 14 checkpoint AntiDeepfake và W2V2-AASIST trên RADAR tiếng Việt (13.438 câu).
-- In-the-Wild dùng số đã công bố trong bài; chỉ chạy lại MMS-300M bản Default để đối chiếu.
-- Chấm MMS-300M chưa fine-tune trên một tập con cân bằng của In-the-Wild và RADAR tiếng Anh, làm mốc đo mức quên ở GĐ5.
-- Lưu embedding bằng chế độ `analysis` để dùng cho tầng 0 nếu cần.
+**Ngày 2: Chạy zero-shot**, chỉ inference, trên Kaggle (chi tiết ở `chore/GD3-Post-Training-Va-Zero-Shot.md` mục 4–5):
+- Chấm 14 checkpoint AntiDeepfake và W2V2-AASIST trên RADAR tiếng Việt (13.438 câu, 17,04 giờ).
+- In-the-Wild dùng số đã công bố trong bài; chỉ chạy lại MMS-300M bản Default (và W2V2-AASIST) để đối chiếu.
+- Chấm MMS-300M, W2V-Large, W2V-Small chưa fine-tune trên tập `ood_forget` (1.000 + 1.000 câu In-the-Wild, 1.000 + 1.000 câu RADAR **eval** tiếng Anh), làm mốc đo mức quên ở GĐ5. Không dùng RADAR dev: tiếng thật lấy từ LibriTTS, có trong dữ liệu post-training.
+- Lưu embedding bằng chế độ `analysis` (cho điểm và embedding trong một lượt) để dùng cho tầng 0 nếu cần.
 
 **Đầu ra:** bảng EER theo backbone và Default/NDA trên RADAR tiếng Việt.
 
@@ -369,11 +369,12 @@ Hỏi chéo trong nhóm theo mục 7, sau đó ôn thêm nội dung môn học. 
 |---|---|
 | Kiểm tra trực tiếp | Sự tồn tại, dung lượng, giấy phép của các repo, checkpoint và dữ liệu ở mục 2; tên tensor của checkpoint W2V-Small; số câu tiếng Việt trong nhãn RADAR; danh sách hệ thống sinh trong `fake/vi` của MLAAD; hạng CORE 2023 (Interspeech A, ICML A*, ACM MM A*, ICASSP B; Odyssey và APSIPA không có); các file cấu hình SFT và GRPO cho MMS-300M, W2V-Large, W2V-Small |
 | Đọc code | `models/W2V.py`, `W2V_configs.py`, `algo/rl.py`, `install.sh`, các file `hparams`, `protocols/README.md` của AntiDeepfake. GĐ2 (13/11, commit `86098091`): thêm `main.py`, `dataio/dataio.py`, `utils.py`, `evaluation.py`, `utils_wandb.py`, `README_grpo.md`, `protocols/toy_example*`; giá trị mặc định `Wav2Vec2Config` của fairseq `862efab` |
-| Đọc toàn văn | AntiDeepfake, GRPO, VietPrism, RADAR, wav2vec 2.0 (mục 2–5), XLS-R (bảng ngôn ngữ, mục 3–4, 5.2.5), MMS (mục 3.1, 4), VSASV (phương pháp tấn công), ALLM4ADD (toàn bài, 11/11), PartialSpoof (phần dữ liệu, mô hình, kết quả, 11/11), DFALLM, ASVspoof 5, Speech DF Arena |
+| Kiểm tra trực tiếp (13/11, GĐ3) | Nhãn RADAR eval theo ngôn ngữ (VI 7.000 / 6.438; câu dài nhất 45,7 s); nguồn tiếng thật RADAR (Bảng II bài RADAR); RADAR dev lấy tiếng thật từ LibriTTS; meta.csv In-the-Wild (19.963 / 11.816, 16 kHz); 14 checkpoint trên HF là `model.safetensors`, Zenodo là `.ckpt`; model card W2V2-AASIST và cách cắt 4 s trong repo gốc của Tak |
+| Đọc toàn văn | RawBoost (13/11), AntiDeepfake, GRPO, VietPrism, RADAR, wav2vec 2.0 (mục 2–5), XLS-R (bảng ngôn ngữ, mục 3–4, 5.2.5), MMS (mục 3.1, 4), VSASV (phương pháp tấn công), ALLM4ADD (toàn bài, 11/11), PartialSpoof (phần dữ liệu, mô hình, kết quả, 11/11), DFALLM, ASVspoof 5, Speech DF Arena |
 | Đọc phần tóm tắt (đã kiểm tra lại 11/11) | BAM, LlamaPartialSpoof, PartialEdit, FT-GRPO, SARA |
 | Đọc phần tóm tắt | Các bài còn lại trong mục 3 và phụ lục. Cần đọc toàn văn trước khi trích số liệu |
 | Chạy thử | `src/evaluate.py` (self-test 11/11 trên M1). **13/11: dựng môi trường AntiDeepfake trên Colab T4 và chạy toy example với `mms_300m.ckpt`: EER 6,11% khớp README, không cảnh báo nạp trọng số** (`chore/GD2-Backbone-Va-Moi-Truong.md` mục 4.2) |
-| **Chưa kiểm tra** | Chưa fine-tune lần nào; chưa nạp checkpoint nào ngoài `mms_300m`. Bộ nhớ và tốc độ thực tế trên GPU (bảng bộ nhớ ở mục 2 là ước lượng). Quota GPU hiện tại. Nội dung bên trong SEA-Spoof và MLAAD (cần quyền truy cập). Phiên bản MLAAD mà AntiDeepfake đã dùng có chứa tiếng Việt hay không. Hạng Q trên SCImago của TASLP, IEEE SPL, TIFS (chỉ có từ nguồn thứ cấp). Nơi đăng của Codecfake |
+| **Chưa kiểm tra** | Chưa fine-tune lần nào; chưa nạp checkpoint nào ngoài `mms_300m`; chưa chạy trên Kaggle (quota, ổ đĩa, tốc độ tải HF). Checkpoint HF có giống hệt bản Zenodo không (kiểm bằng toy 6,11%). FLEURS trong dữ liệu post-training có tiếng Việt không. Bộ nhớ và tốc độ thực tế trên GPU (bảng bộ nhớ ở mục 2 là ước lượng). Quota GPU hiện tại. Nội dung bên trong SEA-Spoof và MLAAD (cần quyền truy cập). Phiên bản MLAAD mà AntiDeepfake đã dùng có chứa tiếng Việt hay không. Hạng Q trên SCImago của TASLP, IEEE SPL, TIFS (chỉ có từ nguồn thứ cấp). Nơi đăng của Codecfake |
 
 ## Phụ lục. Danh mục phương pháp và mô hình (tính đến 2026)
 

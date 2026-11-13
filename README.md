@@ -6,7 +6,10 @@
 
 | Thư mục | Nội dung |
 |---|---|
-| `src/` | Code của nhóm: `evaluate.py` (EER, minDCF, actDCF), `setup_antideepfake.sh` (dựng môi trường) |
+| `src/` | Code của nhóm: `evaluate.py` (EER, minDCF, actDCF), `setup_antideepfake.sh` (dựng môi trường), `prep_data.py` (dữ liệu kiểm tra), `score_zeroshot.py` và `score_w2v2_aasist.py` (chấm zero-shot) |
+| `protocols/ids/` | Danh sách câu cố định của từng tập kiểm tra (RADAR, In-the-Wild) |
+| `kaggle/` | Kernel Kaggle (`prep`, `zeroshot`) và `push.sh` để đẩy, xem trạng thái, tải kết quả |
+| `results/` | Kết quả chạy (điểm, độ đo); embedding và file thô không đưa vào git |
 | `colab/` | Notebook chạy trên Google Colab |
 | `chore/` | Kế hoạch, đề cương, ghi chép từng giai đoạn |
 | `note/` | Ghi chú kiến thức |
@@ -30,6 +33,17 @@ Không sửa code trực tiếp trên Colab: thay đổi sẽ mất khi hết ph
 4. Sửa `REPO_URL` ở ô Cấu hình, rồi Runtime → Run all.
 
 Kết quả mong đợi: EER = 6,11%, không có cảnh báo nạp trọng số.
+
+## Chấm zero-shot trên Kaggle (GĐ3)
+
+Xem `chore/Quy-Trinh-Chay-Kaggle.md`. Tóm tắt:
+
+```bash
+bash kaggle/push.sh src             # đóng gói code thành dataset riêng tư
+bash kaggle/push.sh push prep       # tải RADAR tiếng Việt, In-the-Wild (CPU)
+bash kaggle/push.sh push zeroshot   # chấm trên 2 GPU T4
+bash kaggle/push.sh output zeroshot # kết quả về results/zeroshot/
+```
 
 ## Chạy `evaluate.py` trên máy
 

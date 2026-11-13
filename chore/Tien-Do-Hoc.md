@@ -1,6 +1,6 @@
 # Tiến độ học
 
-Ghi lại mức độ đã đọc của từng phần, để biết phần nào cần quay lại đọc kỹ. Cập nhật lần cuối: 13/11/2026 (qua GĐ2).
+Ghi lại mức độ đã đọc của từng phần, để biết phần nào cần quay lại đọc kỹ. Cập nhật lần cuối: 13/11/2026 (vào GĐ3).
 
 **Mức đọc:** **Kỹ** = đọc bài gốc, tự trả lời được câu hỏi. **Lướt** = chỉ đọc tóm tắt hoặc note, chưa đối chiếu bài gốc hay code. **Chưa** = chưa đọc.
 
@@ -10,7 +10,8 @@ Ghi lại mức độ đã đọc của từng phần, để biết phần nào 
 |---|---|---|
 | 1. Bản đồ các hướng | Ngày 1 kỹ; ngày 2, 3 lướt | Đã qua, còn nợ đọc kỹ ngày 2, 3 |
 | 2. Backbone SSL và môi trường | Ngày 1 lướt; ngày 2 xong | **Đã qua** (13/11). Còn nợ đọc kỹ ngày 1 |
-| 3–8 | Chưa | |
+| 3. Post-training và zero-shot | Ngày 1 chưa đọc (đã có tài liệu); ngày 2 code xong, chưa chạy | Đang làm (13/11). Chờ Kaggle CLI |
+| 4–8 | Chưa | |
 
 ## GĐ1. Bản đồ các hướng
 
@@ -72,3 +73,23 @@ Tài liệu: `note/Backbone-SSL.md`; `chore/GD2-Backbone-Va-Moi-Truong.md`; `src
 - [x] Kiểm tra quota GPU: Colab miễn phí, phiên tối đa khoảng 4 giờ
 
 Hướng dẫn chi tiết từng ô ở mục 4.2 của `chore/GD2-Backbone-Va-Moi-Truong.md`.
+
+## GĐ3. Post-training và zero-shot
+
+| Ngày | Nội dung | Mức | Cần quay lại |
+|---|---|---|---|
+| 1 | AntiDeepfake, RawBoost (nhóm B) | Chưa (tài liệu sẵn 13/11) | Đọc theo bảng trang ở mục 1 của file GĐ3: lượt 1 (kiến trúc, kết quả) trước, lượt 2 (dữ liệu, siêu tham số) sau |
+| 2 | Chuẩn bị dữ liệu, chấm zero-shot trên Kaggle | Code xong, thử trên máy | Cài Kaggle CLI và token (mục 5.5 file GĐ3), rồi chạy lần 1 |
+
+Tài liệu: `note/Post-Training-SSL.md`, `note/RawBoost.md`, `chore/GD3-Post-Training-Va-Zero-Shot.md`, `chore/Quy-Trinh-Chay-Kaggle.md`.
+
+Việc ngày 1:
+- [ ] Lượt 1 AntiDeepfake: Hình 1–2, Bảng II, Bảng III, mục V
+- [ ] Lượt 1 RawBoost: Hình 1, Bảng 2
+- [ ] Tự trả lời 7 câu cuối mỗi note
+- [ ] Nói lại nháp vấn đáp 3 (mục 6 file GĐ3)
+
+Việc ngày 2:
+- [ ] Cài Kaggle CLI, đặt `~/.kaggle/kaggle.json`, xác minh số điện thoại, xem quota GPU
+- [ ] Lần 1: toy 6,11%; In-the-Wild MMS-300M gần 2,90%; RADAR tiếng Việt cho 3 backbone + baseline
+- [ ] Lần 2 trở đi: 11 checkpoint còn lại trên RADAR tiếng Việt

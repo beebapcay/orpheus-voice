@@ -1,0 +1,28 @@
+{
+ "radar_vi": {
+  "n": 13438,
+  "real": 7000,
+  "fake": 6438,
+  "hours": 17.04,
+  "max_sec": 45.72
+ },
+ "radar_en_sub": {
+  "n": 2000,
+  "real": 1000,
+  "fake": 1000,
+  "hours": 3.02,
+  "max_sec": 51.44
+ },
+ "itw_full": {
+  "n": 31779,
+  "real": 19963,
+  "fake": 11816
+ },
+ "itw_sub": {
+  "n": 2000,
+  "real": 1000,
+  "fake": 1000
+ },
+ "seed": 2026,
+ "note": "RADAR: Zenodo 22110815, eval set. In-the-Wild: HF mueller91/In-The-Wild. Chọn ngẫu nhiên theo lớp, pandas.sample(random_state=seed+i), i=0 thật, 1 giả."
+}

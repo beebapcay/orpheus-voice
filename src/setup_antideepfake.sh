@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Dựng môi trường AntiDeepfake trên Colab/Kaggle (Linux + GPU NVIDIA) và chạy toy example.
-# CHƯA CHẠY THỬ: viết theo install.sh và README của repo, cần kiểm chứng ở GĐ2 ngày 2.
+# Đã chạy trên Colab T4 ngày 13/11/2026 (GĐ2, toy example EER 6,11%). Kaggle dùng bước env.
 #
 # Cách dùng (thường gọi từ colab/GD2_toy_example.ipynb):
 #   bash src/setup_antideepfake.sh <BASE> [all|env|toy]

@@ -28,3 +28,9 @@ venv/
 
 # Log tải về từ Colab khi chạy (xem trong VS Code)
 runs/
+
+# Kaggle: thư mục dựng tạm và kết quả thô (lưu bản gọn trong results/zeroshot/)
+build/
+results/kaggle-raw/
+results/**/shards/
+*.npy
