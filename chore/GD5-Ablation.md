@@ -23,7 +23,7 @@ Câu hỏi của giai đoạn: yếu tố nào quyết định kết quả trên
 | Dữ liệu fine-tune | `seaspoof_vi_train` 17,88 giờ (8.910 thật VIVOS + 8.910 giả, 5 hệ thống: VITS, Edge-TTS, ChatGPT, ElevenLabs, HeyGen) | GĐ4 mục 3 |
 | Tập kiểm tra SEA-Spoof | `test_seen`, `test_f5` (F5-TTS để riêng), `test_minimax` (MiniMax để riêng), `test_cvreal` (tiếng thật Common Voice) | GĐ4 mục 3 |
 | Tập ngoài miền | RADAR tiếng Việt (13.438 câu), `ood_forget` (In-the-Wild 1.000 + 1.000, RADAR EN 1.000 + 1.000) | GĐ3 mục 4.1 |
-| Cấu hình SFT | 3 epoch, `max_batch_length` 50, lr đỉnh 1e-6, warmup 460 / 4.600 bước, chỉ kiểm tra dev sau epoch cuối (lưu mô hình cuối) | GĐ4 mục 4.2 (E1–E3) |
+| Cấu hình SFT | 3 epoch, `max_batch_length` 50, lr đỉnh 1e-6, warmup 460 / 4.600 bước, chỉ kiểm tra dev sau epoch cuối (lưu mô hình cuối). **Lịch learning rate thực tế khác E1** (`total_steps` vẫn 50.000, lr cuối 6,83e-7): phát hiện 1, quyết định E1' mục 4.1 | GĐ4 mục 4.2 (E1–E3) |
 | S0 (dùng thẳng) trên RADAR tiếng Việt | MMS-300M 20,08%; W2V-Large 17,80%; W2V-Small 27,21%; MMS-300M NDA 18,07% | GĐ3 mục 5.6 |
 | S0 trên `ood_forget` (In-the-Wild / RADAR EN) | MMS-300M 2,6 / 26,2; W2V-Large 2,0 / 23,5; W2V-Small 4,0 / 27,2 | GĐ3 mục 5.6 |
 | Dòng tham chiếu | XLS-R-2B dùng thẳng: 13,71% trên RADAR tiếng Việt | GĐ3 mục 5.6 |
@@ -32,7 +32,7 @@ Câu hỏi của giai đoạn: yếu tố nào quyết định kết quả trên
 
 **Kiểm lại trước lần 1 (14/11, code gốc):**
 - Với `valid_step` = 10⁹, `main.py` (`fit`, `_fit_train_customized`) không kiểm tra dev giữa chừng; `_fit_valid` gọi một lần sau epoch cuối và `save_and_keep_only(num_to_keep=1)` lưu đúng mô hình đó. E3 (chọn mô hình cuối) khớp code.
-- Lịch learning rate (`WarmAndExpDecayLRSchedule`, SpeechBrain 1.0.2, `speechbrain/nnet/schedulers.py`): tăng tuyến tính `lr × bước / 460` trong 460 bước, sau đó `lr × 0,01^((bước − 460) / 4.140)`. Cuối 3 epoch (~4.563 bước) còn ~1,0 × 10⁻⁸. Khớp E1.
+- Lịch learning rate (`WarmAndExpDecayLRSchedule`, SpeechBrain 1.0.2, `speechbrain/nnet/schedulers.py`): tăng tuyến tính `lr × bước / 460` trong 460 bước, sau đó `lr × 0,01^((bước − 460) / 4.140)`. Cuối 3 epoch (~4.563 bước) còn ~1,0 × 10⁻⁸. Khớp E1. **Sửa sau lần 1:** công thức đúng, nhưng lần chạy không dùng `total_steps` = 4.600 như giả định ở đây: SpeechBrain giữ `optimizer_step_limit` (nên cả `total_steps`) = 50.000 của YAML. Kiểm trước lần 1 chỉ đọc code và lệnh truyền vào, không đọc `hyperparams.yaml` đã giải; pilot GĐ4 (300 bước, nằm trong warmup) không lộ ra. Phát hiện 1, mục 4.1.
 - Ba file `hparams/ft_grpo/{mms_300m,w2v_large,w2v_small}_pre-post-sft.yaml` giống nhau, chỉ khác tên backbone (đường dẫn thư mục, `ckpt_path`, `model_name`). B1, B2 chỉ đổi backbone, giữ nguyên mọi siêu tham số.
 
 ## 1. Các cấu hình

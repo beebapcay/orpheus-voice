@@ -257,6 +257,8 @@ Thông tin SEA-Spoof đã kiểm (README công khai, 14/11): 553.746 câu, tiế
 
 ### GĐ5. Ablation (4 ngày)
 
+**Trạng thái (14/11): đang chạy.** Lần 1 (R, A0 seed 1) xong. Lịch learning rate thực tế lệch E1 của GĐ4 (`total_steps` không ghi đè được, lr cuối 6,83e-7 thay vì ~1e-8); đã chốt giữ cho cả GĐ5–6 (E1'). Thêm tập kiểm tra MLAAD `fake/vi` vì hệ thống để riêng của SEA-Spoof đã bão hoà từ S0. Kết quả, phát hiện, quyết định: `chore/GD5-Ablation.md`.
+
 Đổi một yếu tố mỗi lần. Fine-tune trên tiếng Việt. R chạy 3 seed; các cấu hình khác chạy 1 seed trước, thêm seed nếu còn quota.
 
 | Mã | Backbone | Khởi tạo | Fine-tune | RawBoost | So với | Câu hỏi trả lời |

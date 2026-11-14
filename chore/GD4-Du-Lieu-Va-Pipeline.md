@@ -212,6 +212,8 @@ Tất cả ở `max_batch_length` = 50 (tự giảm sau khi 100 hết bộ nhớ
 
 ### 4.2. Cấu hình huấn luyện cho GĐ5–6 (**đã chốt 14/11**: người dùng chọn đề xuất ở E1, E2, E3)
 
+> **Sửa 14/11 (sau GĐ5 lần 1):** lịch learning rate chạy thực tế khác E1. `--optimizer_step_limit 4600` không được ghi vào YAML (SpeechBrain coi là tham số chạy), nên `lr_scheduler.total_steps` vẫn 50.000: learning rate lên 1e-6 trong 460 bước rồi chỉ giảm còn 6,83e-7 ở bước cuối, thay vì ~1e-8. Người dùng giao Claude quyết; đã chốt giữ lịch thực tế cho cả GĐ5–6 (E1'). Chi tiết: `chore/GD5-Ablation.md` phát hiện 1, mục 4.1.
+
 | # | Câu hỏi | Đã chốt | Lý do | Phương án đã bỏ |
 |---|---|---|---|---|
 | E1 | Lịch learning rate | **Đỉnh `lr` = 1e-6 (giá trị trong YAML), `warmup` = 10% tổng số bước, rồi giảm theo hàm mũ còn 1e-8 ở cuối** (`decay_factor` 0,01 của YAML) | Phát hiện 9: lịch gốc với ~4.500 bước chỉ lên tới ~5,7 × 10⁻⁸, gần bằng learning rate post-train, nên SFT gần như không đổi mô hình và không trả lời được câu hỏi 2. Cùng lớp lịch của SpeechBrain, chỉ đổi `warmup` và `optimizer_step_limit` | Giữ cấu hình gốc; bám learning rate cuối của bài (~2,5 × 10⁻⁷) |
