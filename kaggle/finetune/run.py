@@ -13,28 +13,28 @@ import threading
 import time
 
 # ---- Sửa phần này cho mỗi lần chạy -------------------------------------------
-# GĐ4 ngày 2, lần 1: pilot đo đạc (không phải thí nghiệm GĐ5).
-#   GPU 0: R giới hạn 300 bước, có RawBoost (cấu hình gốc) -> tốc độ, bộ nhớ, CPU.
-#   GPU 1: overfit 100 câu (n50, không RawBoost, lr 1e-5) -> pipeline học được không;
-#          rồi A0 giới hạn 300 bước (không RawBoost) -> chi phí RawBoost; chấm lại dev
-#          qua score_zeroshot để đối chiếu EER dev lúc huấn luyện (cùng trọng số, dev sạch).
-#   Hai GPU chạy song song: đo luôn 4 nhân CPU có đủ cho hai lần huấn luyện không.
-PILOT = ["number_of_epochs=1", "optimizer_step_limit=300", "valid_step=100000", "num_workers=2"]
+# GĐ5, lần 1 (chore/GD5-Ablation.md mục 2): R seed 1 và A0 seed 1, hai GPU song song.
+#   Cấu hình SFT đã chốt ở GĐ4 (chore/GD4-Du-Lieu-Va-Pipeline.md mục 4.2, E1–E3): 3 epoch trên
+#   toàn bộ train (17,88 giờ), batch 50 giây, lr đỉnh 1e-6, warmup 10% (460 / 4.600 bước), chỉ
+#   kiểm tra dev một lần sau epoch cuối nên checkpoint lưu là mô hình cuối.
+#   Sau khi cả hai GPU xong: chấm S0 (dùng thẳng, không fine-tune) trên SEA-Spoof dev/test cho
+#   3 backbone sẽ fine-tune ở GĐ5 và MMS-300M bản NDA (mốc của N0).
+SFT = ["max_batch_length=50", "number_of_epochs=3", "optimizer_step_limit=4600", "warmup=460",
+       "lr=1e-6", "valid_step=1000000000", "num_workers=2"]
+SCORE = ["seaspoof_vi_dev", "seaspoof_vi_test", "radar_vi", "ood_forget"]
 RUNS = {
     0: [
-        {"run": "pilot_R", "model": "mms_300m", "train": "seaspoof_vi_train",
-         "valid": "seaspoof_vi_dev", "set": PILOT, "score": ["seaspoof_vi_dev"]},
+        {"run": "R_s1", "model": "mms_300m", "train": "seaspoof_vi_train",
+         "valid": "seaspoof_vi_dev", "set": SFT + ["seed=1"], "score": SCORE},
     ],
     1: [
-        {"run": "overfit_n50", "model": "mms_300m", "train": "seaspoof_vi_train_n50",
-         "valid": "seaspoof_vi_train_n50",
-         "set": ["number_of_epochs=30", "valid_step=25", "use_da=False", "lr=1e-5", "warmup=1",
-                 "num_workers=2"], "score": []},
-        {"run": "pilot_A0", "model": "mms_300m", "train": "seaspoof_vi_train",
-         "valid": "seaspoof_vi_dev", "set": PILOT + ["use_da=False"],
-         "score": ["seaspoof_vi_dev", "ood_forget"]},
+        {"run": "A0_s1", "model": "mms_300m", "train": "seaspoof_vi_train",
+         "valid": "seaspoof_vi_dev", "set": SFT + ["seed=1", "use_da=False"], "score": SCORE},
     ],
 }
+# Chấm zero-shot sau khi mọi lần huấn luyện xong (score_zeroshot.py, hai GPU), vào results/zeroshot/
+ZEROSHOT = ["seaspoof_vi_dev:mms_300m,w2v_large,w2v_small,mms_300m_nda",
+            "seaspoof_vi_test:mms_300m,w2v_large,w2v_small,mms_300m_nda"]
 # -------------------------------------------------------------------------------
 
 T0 = time.time()
@@ -118,7 +118,22 @@ for t in threads:
     time.sleep(20)
 for t in threads:
     t.join()
-for f in ("train_summary.csv", "scores/summary.csv"):
+print(f"Huấn luyện và chấm sau fine-tune xong sau {(time.time() - T0) / 3600:.2f} giờ", flush=True)
+
+if ZEROSHOT:
+    cmd = [sys.executable, f"{code}/score_zeroshot.py", "--base", base, "--data-root", sea, prep,
+           "--out", f"{out}/zeroshot", "--cache", cache, "--gpus", "0,1", "--jobs", *ZEROSHOT]
+    logf = f"{out}/zeroshot.driver.log"
+    t0 = time.time()
+    print(f"Chấm zero-shot: {' '.join(ZEROSHOT)}", flush=True)
+    with open(logf, "w") as lf:
+        rc = subprocess.run(cmd, stdout=lf, stderr=subprocess.STDOUT).returncode
+    print(f"Chấm zero-shot xong (mã {rc}) sau {(time.time() - t0) / 60:.1f} phút", flush=True)
+    sh(f"grep -E 'KẾT QUẢ|THẤT BẠI|lỗi|Lỗi' {logf} | tail -12")
+    if rc != 0:
+        failures.append("zeroshot")
+
+for f in ("train_summary.csv", "scores/summary.csv", "zeroshot/summary.csv"):
     sh(f"cat {out}/{f}")
 sh(f"du -sh {out}/*")
 print(f"Thất bại: {failures}" if failures else "Mọi lần chạy xong", flush=True)

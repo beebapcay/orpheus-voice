@@ -154,14 +154,12 @@ EOF
     fi
     # Lưu vào git: tóm tắt, độ đo, file điểm, log cài đặt. Không lưu embedding và shard.
     dst="$ROOT/results/zeroshot"; mkdir -p "$dst"
-    # Gộp summary.csv: dòng mới thay dòng cũ cùng (dataset, model), giữ các dòng cũ còn lại
+    # Gộp summary.csv: dòng mới thay dòng cũ cùng (dataset, model), giữ các dòng cũ còn lại;
+    # gộp theo tên cột (từ GĐ5 bảng có thêm cột source), không theo vị trí
     merged=$(mktemp)
-    if [ -f "$dst/summary.csv" ]; then
-      { cat "$raw/results/summary.csv"; tail -n +2 "$dst/summary.csv"; } \
-        | awk -F, 'NR == 1 || !seen[$1 "," $2]++' > "$merged"
-    else
-      cp "$raw/results/summary.csv" "$merged"
-    fi
+    [ -f "$dst/summary.csv" ] && cp "$dst/summary.csv" "$merged"
+    python3 -I "$ROOT/kaggle/archive_run.py" merge-csv --src "$raw/results/summary.csv" --dst "$merged" \
+      --key dataset,model --tag "source=orpheus-zeroshot-v$V"
     rsync -a --exclude 'emb.npy' --exclude 'shards/' "$raw/results/" "$dst/"
     mv "$merged" "$dst/summary.csv"
     echo "Đã chép vào results/zeroshot/ (summary.csv đã gộp). Embedding ở $raw/results/*/*/emb.npy"

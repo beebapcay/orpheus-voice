@@ -94,7 +94,22 @@ def cmd_collect(a):
                     f.write(f"{float(e.get('time', 0)):9.1f}s {tag}{line}\n")
         copied += ["kernel.log.json", "kernel.log.txt"]
 
-    # 2. Môi trường và tóm tắt của riêng lần chạy này
+    # 2. Môi trường và tóm tắt của riêng lần chạy này. Kernel fine-tune có hai bảng: chấm sau
+    # fine-tune (results/scores/) và chấm zero-shot (results/zeroshot/); chép tường minh để
+    # không lẫn (glob đệ quy bên dưới lấy file đầu tiên tìm thấy).
+    for rel, name in (("scores/summary.csv", "summary.csv"),
+                      ("zeroshot/summary.csv", "zeroshot_summary.csv"),
+                      ("zeroshot.driver.log", "zeroshot.driver.log")):
+        p = os.path.join(res, rel)
+        if os.path.exists(p):
+            shutil.copy(p, os.path.join(a.run_dir, name))
+            copied.append(name)
+    # Độ đo theo tập con SEA-Spoof (src/eval_seaspoof.py), mỗi (mô hình, tập) một file
+    for p in sorted(glob.glob(os.path.join(res, "*", "*", "seaspoof_vi_*", "metrics_subsets.csv"))):
+        model, dataset = p.split(os.sep)[-3:-1]
+        dst = os.path.join(a.run_dir, "subsets", f"{model}__{dataset}.csv")
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copy(p, dst)
     for f in ("summary.csv", "train_summary.csv", "setup.log", "versions.txt", "pip-freeze.txt",
               "failures.json", "orpheus_data_manifest.json"):
         for p in glob.glob(os.path.join(res, f)) + glob.glob(os.path.join(a.raw, "**", f), recursive=True)[:1]:
@@ -163,11 +178,21 @@ def write_run_md(a, entries, copied, n_shard):
         m = re.search(r"^(PILOT = .*?\n)?^RUNS = \{(.*?)^\}", src, re.S | re.M)
         if m:
             jobs = "```python\n" + m.group(0).strip() + "\n```"
+        # Kernel fine-tune: lấy cả khối cấu hình giữa hai dòng đánh dấu (SFT, SCORE, RUNS, ZEROSHOT)
+        m = re.search(r"^# ---- Sửa phần này[^\n]*\n(.*?)^# -{20,}", src, re.S | re.M)
+        if m and "RUNS = {" in m.group(1):
+            jobs = "```python\n" + m.group(1).strip() + "\n```"
 
     rows = []
-    sp = os.path.join(a.run_dir, "summary.csv")
-    if os.path.exists(sp):
-        rows = list(csv.DictReader(open(sp, encoding="utf-8")))
+    for name in ("summary.csv", "zeroshot_summary.csv"):
+        sp = os.path.join(a.run_dir, name)
+        if os.path.exists(sp):
+            rows += list(csv.DictReader(open(sp, encoding="utf-8")))
+    subsets = []
+    for p in sorted(glob.glob(os.path.join(a.run_dir, "subsets", "*.csv"))):
+        model, dataset = os.path.basename(p)[:-4].split("__", 1)
+        eer = {r["subset"]: r["eer_%"] for r in csv.DictReader(open(p, encoding="utf-8"))}
+        subsets.append((model, dataset, eer))
     trows = []
     tp = os.path.join(a.run_dir, "train_summary.csv")
     if os.path.exists(tp):
@@ -206,6 +231,14 @@ def write_run_md(a, entries, copied, n_shard):
                      f"{r['x_realtime']} | {float(r['eer_%']):.4f} | {float(r['minDCF']):.4f} | "
                      f"{float(r['actDCF']):.4f} |")
         L.append("")
+    if subsets:
+        cols = ["pooled", "test_seen", "test_f5", "test_minimax", "test_cvreal"]
+        L += ["## Tập con SEA-Spoof (EER %, thấp hơn là tốt hơn; `subsets/`)", "",
+              "| Mô hình | Tập | " + " | ".join(cols) + " |", "|---|---|" + "---|" * len(cols)]
+        for model, dataset, eer in subsets:
+            L.append(f"| {model} | {dataset} | "
+                     + " | ".join(f"{float(eer[c]):.2f}" if c in eer else "" for c in cols) + " |")
+        L.append("")
     L += ["## Dòng log đáng chú ý", "",
           "Các dòng chứa Traceback, Error hoặc cảnh báo nạp trọng số (đã bỏ SyntaxWarning của nbconvert):", ""]
     L += (["```"] + warn[:50] + ["```"]) if warn else ["Không có."]
@@ -239,55 +272,77 @@ def write_run_md(a, entries, copied, n_shard):
     open(path, "w", encoding="utf-8").write("\n".join(L))
 
 
+def merge_csv(src, dst, key, tag):
+    """Gộp src vào dst: dòng mới thay dòng cũ cùng khoá. Cột tag=(tên, giá trị) chỉ gán cho dòng
+    mới (dòng cũ giữ nguồn của nó, để trống nếu chưa có cột này). Hợp cột của hai file."""
+    if not os.path.exists(src):
+        return
+    new = list(csv.DictReader(open(src, encoding="utf-8")))
+    old = list(csv.DictReader(open(dst, encoding="utf-8"))) if os.path.exists(dst) else []
+    k = lambda r: tuple(r.get(x) for x in key)  # noqa: E731
+    seen = {k(r) for r in new}
+    for r in new:
+        r[tag[0]] = tag[1]
+    rows = new + [r for r in old if k(r) not in seen]
+    fields = []
+    for r in rows:
+        fields += [f for f in r if f not in fields]
+    with open(dst, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        w.writerows(rows)
+
+
+def cmd_merge_csv(a):
+    """push.sh output zeroshot: gộp summary.csv của một lần chạy vào results/zeroshot/summary.csv."""
+    merge_csv(a.src, a.dst, a.key.split(","), tuple(a.tag.split("=", 1)))
+
+
 def cmd_merge_finetune(a):
     """Chép kết quả kernel fine-tune vào results/finetune/ (commit): train_summary.csv và
     summary.csv gộp (dòng mới thay dòng cũ cùng khoá), điểm và độ đo từng (lần chạy, tập).
     Không chép embedding, shard, checkpoint."""
     res = os.path.join(a.raw, "results")
 
-    def merge(src, dst, key):
-        if not os.path.exists(src):
-            return
-        new = list(csv.DictReader(open(src, encoding="utf-8")))
-        old = list(csv.DictReader(open(dst, encoding="utf-8"))) if os.path.exists(dst) else []
-        k = lambda r: tuple(r.get(x) for x in key)  # noqa: E731
-        seen = {k(r) for r in new}
-        rows = new + [r for r in old if k(r) not in seen]
-        for r in rows:
-            r.setdefault("kaggle_version", a.version)
-        fields = []
-        for r in rows:
-            fields += [f for f in r if f not in fields]
-        with open(dst, "w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=fields)
-            w.writeheader()
-            w.writerows(rows)
-    merge(os.path.join(res, "train_summary.csv"), os.path.join(a.dst, "train_summary.csv"), ["run"])
-    merge(os.path.join(res, "scores", "summary.csv"), os.path.join(a.dst, "summary.csv"),
-          ["dataset", "model"])
-    n = 0
-    for p in glob.glob(os.path.join(res, "scores", "*", "*", "*")):
-        if os.path.basename(p) in ("scores.csv", "metrics.csv", "metrics.txt"):
-            dst = os.path.join(a.dst, os.path.relpath(p, os.path.join(res, "scores")))
-            os.makedirs(os.path.dirname(dst), exist_ok=True)
-            shutil.copy(p, dst)
-            n += 1
-    print(f"Đã gộp train_summary.csv, summary.csv và {n} file điểm/độ đo vào {a.dst}")
+    merge_csv(os.path.join(res, "train_summary.csv"), os.path.join(a.dst, "train_summary.csv"), ["run"],
+              ("kaggle_version", a.version))
+    keep = ("scores.csv", "metrics.csv", "metrics.txt", "metrics_subsets.csv", "metrics_subsets.txt")
+    # Chấm sau fine-tune -> results/finetune/; chấm zero-shot trong cùng kernel (mốc S0) ->
+    # results/zeroshot/ (cạnh kết quả zero-shot GĐ3, cùng cách gộp theo (tập, mô hình))
+    for sub, dst_dir in (("scores", a.dst), ("zeroshot", os.path.join(os.path.dirname(a.dst), "zeroshot"))):
+        if not os.path.isdir(os.path.join(res, sub)):
+            continue
+        tag = ("kaggle_version", a.version) if sub == "scores" else ("source", f"orpheus-finetune-v{a.version}")
+        merge_csv(os.path.join(res, sub, "summary.csv"), os.path.join(dst_dir, "summary.csv"),
+              ["dataset", "model"], tag)
+        n = 0
+        for p in glob.glob(os.path.join(res, sub, "*", "*", "*")):
+            if os.path.basename(p) in keep:
+                dst = os.path.join(dst_dir, os.path.relpath(p, os.path.join(res, sub)))
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                shutil.copy(p, dst)
+                n += 1
+        print(f"Đã gộp {sub}/summary.csv và {n} file điểm/độ đo vào {dst_dir}")
+    print(f"Đã gộp train_summary.csv vào {a.dst}")
 
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("cmd", choices=["pushed", "collect", "merge-finetune"])
+    p.add_argument("cmd", choices=["pushed", "collect", "merge-finetune", "merge-csv"])
+    p.add_argument("--src")
+    p.add_argument("--key", default="dataset,model")
+    p.add_argument("--tag", default="source=?")
     p.add_argument("--dst")
     p.add_argument("--run-dir")
     p.add_argument("--kernel")
-    p.add_argument("--version", required=True)
+    p.add_argument("--version", default="?")
     p.add_argument("--build-dir")
     p.add_argument("--raw")
     p.add_argument("--log")
     p.add_argument("--quota")
     a = p.parse_args()
-    {"pushed": cmd_pushed, "collect": cmd_collect, "merge-finetune": cmd_merge_finetune}[a.cmd](a)
+    {"pushed": cmd_pushed, "collect": cmd_collect, "merge-finetune": cmd_merge_finetune,
+     "merge-csv": cmd_merge_csv}[a.cmd](a)
 
 
 if __name__ == "__main__":

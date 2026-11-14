@@ -289,6 +289,17 @@ def finish(args, dataset, model, outdir, df, shards_dir=None):
     open(os.path.join(outdir, "metrics.txt"), "w").write(out.stdout + out.stderr)
     if out.returncode != 0:
         raise RuntimeError(f"evaluate.py lỗi: {out.stderr[-2000:]}")
+    if dataset.startswith("seaspoof_vi_"):
+        # Tập con của SEA-Spoof (test_seen, test_f5, test_minimax, test_cvreal, theo hệ thống),
+        # kèm tỉ lệ lỗi ở ngưỡng 0; tính từ cùng file điểm (src/eval_seaspoof.py)
+        sub = subprocess.run([sys.executable, os.path.join(HERE, "eval_seaspoof.py"), score_csv,
+                              "--protocol", find_csv(args, dataset),
+                              "--out", os.path.join(outdir, "metrics_subsets.csv")],
+                             capture_output=True, text=True)
+        open(os.path.join(outdir, "metrics_subsets.txt"), "w").write(sub.stdout + sub.stderr)
+        if sub.returncode != 0:
+            log(f"[{model}/{dataset}] eval_seaspoof.py lỗi (bỏ qua, tính lại trên máy được): "
+                f"{sub.stderr[-500:]}")
     m = pd.read_csv(os.path.join(outdir, "metrics.csv"))
     pooled = m.iloc[0].to_dict()
     if shards_dir:
@@ -301,8 +312,12 @@ def finish(args, dataset, model, outdir, df, shards_dir=None):
            "gpu_seconds": round(secs), "x_realtime": round(audio_h * 3600 / max(secs, 1), 1)}
     row.update({k: v for k, v in pooled.items() if k not in ("subset", "group")})
     log(f"[{model}/{dataset}] KẾT QUẢ: {json.dumps(row, ensure_ascii=False)}")
-    with print_lock:
-        path = os.path.join(args.out, "summary.csv")
+    # Khoá file: kernel fine-tune chạy hai tiến trình score_zeroshot.py (mỗi GPU một) cùng ghi
+    # một summary.csv; print_lock chỉ chặn được giữa các luồng trong một tiến trình.
+    import fcntl
+    path = os.path.join(args.out, "summary.csv")
+    with print_lock, open(path + ".lock", "w") as lk:
+        fcntl.flock(lk, fcntl.LOCK_EX)
         old = pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
         if len(old):
             old = old[~((old.dataset == dataset) & (old.model == model))]
