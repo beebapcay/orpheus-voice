@@ -43,7 +43,7 @@ flowchart LR
 | `bash kaggle/push.sh push finetune` | Đẩy kernel fine-tune (GĐ4–6); các lần huấn luyện ở biến `RUNS` (theo GPU) trong `kaggle/finetune/run.py`, mỗi lần gọi `src/finetune.py` |
 | `bash kaggle/push.sh output finetune N` | Như `output zeroshot`, nhưng không tải checkpoint (`*.ckpt`, ở lại output Kaggle); gộp `train_summary.csv`, `summary.csv`, điểm và độ đo vào `results/finetune/` |
 | `bash kaggle/push.sh status <kernel>` | `running`, `complete`, `error` |
-| `bash kaggle/push.sh logs <kernel> [-f]` | Xem log (`-f`: theo dõi trực tiếp), không phải tải output |
+| `bash kaggle/push.sh logs <kernel> [-f]` | Xem log (`-f`: theo dõi trực tiếp), không phải tải output. **Khi kernel đang chạy CLI trả về rỗng** (kiểm 14/11); log chỉ có sau khi kernel dừng. Trong lúc chạy, xem trạng thái (`status`) và quota đã dùng tăng theo thời gian (`quota`) |
 | `bash kaggle/push.sh quota` | Quota GPU còn lại |
 | `bash kaggle/push.sh output zeroshot N` | Tải output của version N về `results/kaggle-raw/orpheus-zeroshot-vN/` (có embedding, không commit); lưu bằng chứng vào `results/runs/orpheus-zeroshot-vN/`; chép điểm, độ đo vào `results/zeroshot/` và gộp `summary.csv` |
 | `bash kaggle/push.sh archive-log prep N` | Chỉ lưu log và `RUN.md` của version N vào `results/runs/` (không tải output; dùng cho prep vì output ~10 GB) |
@@ -76,7 +76,7 @@ Mọi lần chạy GPU, kể cả lần lỗi, đều phải để lại bằng 
 
 **Không commit:** embedding, checkpoint, âm thanh (ghi đường dẫn nơi chúng nằm vào Ghi chú). Output thô ở `results/kaggle-raw/<kernel>-v<N>/` trên máy; bản gốc còn trên Kaggle theo từng version (`kaggle kernels output <user>/<kernel>/<N>`).
 
-**Kernel fine-tune** (từ GĐ4): cùng cơ chế. `output finetune N` lưu thêm `train_summary.csv` (thời gian, số batch mỗi epoch, giây mỗi bước, bộ nhớ GPU đỉnh, mức dùng GPU và CPU, EER dev tốt nhất) và `train_logs/` (log `main.py`, `monitor.csv`, `exp_log.txt`, `hyperparams.yaml`). Checkpoint tốt nhất của mỗi lần nằm ở output Kaggle `ckpt/<run>.ckpt` (~1,3 GB với bản 317M), không tải về máy; ghi tên và dung lượng vào mục Ghi chú của `RUN.md`.
+**Kernel fine-tune** (từ GĐ4): cùng cơ chế. Từ GĐ5 lần 2, `run.py` in ra log chính mỗi 10 phút một khối "tiến độ": batch hiện tại, epoch, giây mỗi bước, loss, bộ nhớ và mức dùng GPU của từng lần huấn luyện, hoặc dòng chấm điểm mới nhất (log huấn luyện chi tiết nằm ở `train/<run>/main.log`, không ở log chính). `output finetune N` lưu thêm `train_summary.csv` (thời gian, số batch mỗi epoch, giây mỗi bước, bộ nhớ GPU đỉnh, mức dùng GPU và CPU, EER dev tốt nhất) và `train_logs/` (log `main.py`, `monitor.csv`, `exp_log.txt`, `hyperparams.yaml`). Checkpoint tốt nhất của mỗi lần nằm ở output Kaggle `ckpt/<run>.ckpt` (~1,3 GB với bản 317M), không tải về máy; ghi tên và dung lượng vào mục Ghi chú của `RUN.md`.
 
 **Các lần đã lưu:** xem `results/runs/README.md`.
 

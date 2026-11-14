@@ -6,6 +6,7 @@
 # Đẩy lên bằng: bash kaggle/push.sh push finetune
 import glob
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -114,6 +115,49 @@ def worker(gpu, runs):
             failures.append(r["run"])
 
 
+HEARTBEAT_SEC = 600   # in tiến độ ra log chính mỗi 10 phút (log huấn luyện nằm ở file riêng)
+BAR = re.compile(r"(\d+)/(\d+) \[([\d:]+)<([\d:?]+),\s+([\d.]+)(s/it|it/s)(?:, train_loss=([\d.]+))?")
+
+
+def tail_text(path, n=20000):
+    try:
+        with open(path, "rb") as f:
+            f.seek(0, 2)
+            f.seek(max(0, f.tell() - n))
+            return f.read().decode("utf-8", "replace")
+    except OSError:
+        return ""
+
+
+def heartbeat(stop):
+    """Mỗi HEARTBEAT_SEC: với mỗi lần chạy, bước huấn luyện mới nhất (thanh tqdm trong main.log),
+    loss, bộ nhớ và mức dùng GPU (monitor.csv), hoặc dòng chấm điểm mới nhất (driver.log)."""
+    while not stop.wait(HEARTBEAT_SEC):
+        lines = [f"--- tiến độ sau {(time.time() - T0) / 60:.0f} phút ---"]
+        for gpu, runs in RUNS.items():
+            for r in runs:
+                d = f"{out}/train/{r['run']}"
+                drv = tail_text(f"{d}.driver.log", 4000).strip().splitlines()
+                if not drv:
+                    continue
+                bars = BAR.findall(tail_text(f"{d}/main.log").replace("\r", "\n"))
+                mon = tail_text(f"{d}/monitor.csv", 200).strip().splitlines()
+                mon = mon[-1].split(",") if mon and not mon[-1].startswith("t,") else []
+                if bars and not any("KẾT QUẢ HUẤN LUYỆN" in l for l in drv):
+                    n, tot, el, rem, rate, unit, loss = bars[-1]
+                    lines.append(f"[GPU {gpu}] {r['run']}: batch {n} (epoch {int(n) // max(int(tot), 1) + 1}, "
+                                 f"{tot} batch/epoch), {rate} {unit}, loss {loss or '?'}"
+                                 + (f", GPU {mon[1]} MiB {mon[2]}%, CPU {mon[3]}%" if len(mon) == 4 else ""))
+                else:
+                    lines.append(f"[GPU {gpu}] {r['run']}: {drv[-1][:200]}")
+        zs = tail_text(f"{out}/zeroshot.driver.log", 4000).strip().splitlines()
+        if zs:
+            lines.append(f"[zero-shot] {zs[-1][:200]}")
+        print("\n".join(lines), flush=True)
+
+
+hb_stop = threading.Event()
+threading.Thread(target=heartbeat, args=(hb_stop,), daemon=True).start()
 threads = [threading.Thread(target=worker, args=(g, runs)) for g, runs in RUNS.items()]
 for t in threads:
     t.start()
@@ -135,6 +179,7 @@ if ZEROSHOT:
     if rc != 0:
         failures.append("zeroshot")
 
+hb_stop.set()
 for f in ("train_summary.csv", "scores/summary.csv", "zeroshot/summary.csv"):
     sh(f"cat {out}/{f}")
 sh(f"du -sh {out}/*")
