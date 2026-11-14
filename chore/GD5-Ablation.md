@@ -60,6 +60,8 @@ Thước đo chính: hệ thống để riêng (`test_f5`, `test_minimax`), RADA
 | 3 | | B1 seed 1 | N0 seed 1 | | ~3,5 giờ |
 | 4 | | R seed 2 | R seed 3 | | ~3,7 giờ |
 
+**Quyết định (14/11, người dùng):** dừng báo kết quả lần 1 và chờ duyệt. Sau khi duyệt, lần 2–4 chạy nối nhau: lần sau được đẩy ngay khi lần trước xong và đã lưu bằng chứng; chỉ dừng báo khi có lỗi, kết quả bất thường, hoặc khi xong cả GĐ5.
+
 Mỗi lần huấn luyện chấm sau fine-tune trên `seaspoof_vi_dev`, `seaspoof_vi_test` (tập con tính ngay trên Kaggle, `metrics_subsets.csv`), `radar_vi`, `ood_forget`. Chấm luôn ở batch 1 trên dữ liệu sạch, không dùng EER dev lúc huấn luyện (GĐ4 phát hiện 10, 13).
 
 **Lần 1, ước tính thời gian** (số đo của pilot): dựng môi trường ~5 phút; huấn luyện 3 × 1.521 bước × 1,93 s ≈ 147 phút; chấm sau fine-tune ~65–80 phút (hai GPU cùng chấm, 4 nhân CPU); chấm S0 (8 job, ~63 giờ âm thanh) ~55–60 phút trên hai GPU. Tổng ~4,8 giờ, còn ~24,5 giờ quota.
