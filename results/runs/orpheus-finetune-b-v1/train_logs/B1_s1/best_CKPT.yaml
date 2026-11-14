@@ -1,0 +1,4 @@
+# yamllint disable
+EqualErrorRate: 0.19361084220622649
+end-of-epoch: false
+unixtime: 1794674353.8672965

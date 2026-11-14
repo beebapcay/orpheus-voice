@@ -10,7 +10,7 @@ Câu hỏi của giai đoạn: yếu tố nào quyết định kết quả trên
 | 1 | **Lần chạy 1: R seed 1, A0 seed 1**, chấm S0 trên SEA-Spoof | `orpheus-finetune` v2, `results/runs/orpheus-finetune-v2/` | **Xong** (14/11, 4,68 giờ); mục 3.1 |
 | 1 | Báo kết quả lần 1 cho người dùng, chờ duyệt trước khi chạy tiếp | Mục 3.1, 4 | Đã báo (14/11); chờ chốt phát hiện 1, 2 |
 | 1–2 | Lần 2: P0, B2 seed 1 | `orpheus-finetune` v3, mục 3.2 | **Xong** (15/11 ~1:46, 4,14 giờ) |
-| 1–2 | Lần 3: B1, N0 seed 1 | `orpheus-finetune-b` v1 | Đang chạy (từ ~22:10) |
+| 1–2 | Lần 3: B1, N0 seed 1 | `orpheus-finetune-b` v1, mục 3.3 | **Xong** (15/11 ~2:03, 3,89 giờ) |
 | 3–4 | Lần 4: R seed 2, 3; MLAAD | `orpheus-finetune` v4 | Đã đẩy 15/11 ~1:50 |
 | Trong lúc chờ GPU | Đọc sâu bài GRPO và `algo/rl.py` (chuẩn bị GĐ6) | Mục 6, `src/grpo_gradient_sim.py` | Xong (14/11) |
 | Trong lúc chờ GPU | Script bảng kết quả trên máy; code cho P0 (khởi tạo fairseq, kiểm nạp trọng số trước khi huấn luyện) | `src/analyze_ablation.py`, `src/finetune.py --init fairseq` | Xong (14/11), thử trên máy; P0 chưa chạy trên Kaggle |
@@ -160,6 +160,39 @@ Mỗi kết quả, một câu giải thích (1 seed):
 4. **W2V-Large (tiếng Anh) fine-tune tốt hơn MMS-300M (đa ngôn ngữ) ở mọi tập ngoài miền**, kể cả RADAR tiếng Việt (−2,04 điểm). Cùng chiều với zero-shot GĐ3 (W2V-Large 17,80 so với MMS-300M 20,08). Ngôn ngữ pre-training "có tiếng Việt" không cho lợi thế.
 5. **Mức quên phụ thuộc backbone:** W2V-Large không quên trên ItW (2,00 → 1,40%), RADAR EN giữ nguyên; MMS-300M quên rõ (2,60 → 7,60%). Nhưng trên RADAR VI cả hai đều kém bản dùng thẳng của chính mình (B2 +3,23, R +2,98): fine-tune trên SEA-Spoof làm kém RADAR VI ở cả hai backbone.
 
+### 3.3. Lần 3 (`orpheus-finetune-b` v1, 14–15/11, 3,89 giờ; `results/runs/orpheus-finetune-b-v1/`)
+
+COMPLETE, 0 cảnh báo nạp trọng số. B1: GPU chỉ dùng 75,8% (CPU 70% trên 4 nhân), tức với mô hình 95M đọc dữ liệu và RawBoost bắt đầu là nút thắt.
+
+**EER (%), thấp hơn là tốt hơn:**
+
+| Cấu hình | test_seen | test_f5 | test_cvreal | **RADAR VI** | **ItW** | RADAR EN |
+|---|---|---|---|---|---|---|
+| B2 seed 1 (W2V-Large, 317M) | 0,04 | 0,00 | 2,59 | 21,03 | 1,40 | 23,40 |
+| **B1** seed 1 (W2V-Small, 95M) | 0,00 | 0,48 | 8,96 | **34,67** | 7,10 | 28,20 |
+| S0 W2V-Small | 0,93 | 2,11 | 6,90 | 27,21 | 4,00 | 27,20 |
+| R seed 1 (MMS-300M Default) | 0,04 | 0,04 | 2,70 | 23,07 | 7,60 | 26,70 |
+| **N0** seed 1 (MMS-300M NDA) | 0,00 | 0,00 | 3,60 | **20,50** | 5,40 | 25,30 |
+| S0 MMS-300M NDA | 0,89 | 0,76 | 2,10 | 18,07 | | |
+| A0 seed 1 (Default, không RawBoost khi fine-tune) | 0,04 | 0,00 | 2,79 | 18,37 | 6,10 | 25,00 |
+
+**Lỗi ở ngưỡng 0 (%):** B1 coi **62,1%** tiếng thật RADAR VI và **78,2%** tiếng thật Common Voice là giả (actDCF − minDCF 0,62); N0 31,3% và 13,4% (0,21).
+
+**Chênh lệch EER, KTC 95% bootstrap ghép cặp:**
+
+| So sánh | RADAR VI | ItW | RADAR EN | test_cvreal |
+|---|---|---|---|---|
+| B1 − B2 (95M thay 317M, cùng tiếng Anh) | **+13,64** [12,83; 14,53] | +5,70 [4,50; 6,80] | +4,80 [2,80; 7,20] | +6,37 [5,45; 7,40] |
+| B1 − S0 W2V-Small | +7,46 [6,62; 8,34] | +3,10 [2,10; 4,20] | +1,00 [−1,10; 3,40] | +2,06 [1,19; 3,24] |
+| N0 − R (post-train không RawBoost) | **−2,57** [−3,13; −2,17] | −2,20 [−3,30; −0,90] | −1,40 [−2,80; 0,20] | +0,89 [0,40; 1,45] |
+| N0 − S0 NDA | +2,43 [1,72; 3,07] | | | +1,50 [1,00; 2,12] |
+| N0 − A0 | +2,13 [1,56; 2,63] | −0,70 [−1,90; 0,80] | +0,30 [−1,00; 2,10] | +0,80 [0,40; 1,39] |
+
+Mỗi kết quả, một câu giải thích (1 seed):
+1. **Kích thước backbone quyết định mạnh:** W2V-Small kém W2V-Large 13,6 điểm trên RADAR VI sau fine-tune (dùng thẳng chỉ kém 9,4 điểm, GĐ3), và coi phần lớn tiếng thật nguồn khác là giả. Mô hình nhỏ bám vào đặc điểm của nguồn tiếng thật duy nhất (VIVOS) mạnh hơn.
+2. **Lợi thế của bản NDA còn nguyên sau fine-tune:** N0 tốt hơn R 2,57 điểm trên RADAR VI (dùng thẳng: 2,02) và 2,20 điểm trên ItW. Cùng chiều với GĐ3: với bản 300M, RawBoost khi post-train làm kém ngoài miền.
+3. **RawBoost lúc nào cũng làm kém RADAR VI ở MMS-300M:** khi post-train (N0 tốt hơn R) và khi fine-tune (A0 tốt hơn R, A0 tốt hơn N0 2,13 điểm). Cấu hình tốt nhất trên RADAR VI đến giờ là A0 (18,37%), tức không dùng RawBoost khi fine-tune.
+
 ## 4. Phát hiện ảnh hưởng thí nghiệm
 
 | # | Phát hiện | Ảnh hưởng | Việc cần làm |
@@ -195,6 +228,7 @@ Mỗi kết quả, một câu giải thích (1 seed):
 Kế hoạch dùng: chấm S0 (4 mô hình) ở lần 4. Nếu S0 cũng gần 0% thì MLAAD không phân biệt được cấu hình và dừng ở đó; nếu đủ khó thì chấm lại checkpoint các lần 1–3 (đang ở output Kaggle).
 
 | 5 | **Fine-tune trên SEA-Spoof làm kém RADAR tiếng Việt ở mọi cấu hình có RawBoost đã chạy** (R +2,98, B2 +3,23 so với bản dùng thẳng của chính backbone; P0 còn tệ hơn); chỉ A0 (không RawBoost) tốt hơn S0 (−1,71) | Câu hỏi 1 phần "dữ liệu": có thêm dữ liệu tiếng Việt cùng hệ thống sinh (ElevenLabs, ChatGPT) vẫn không giúp RADAR VI; tiếng thật một nguồn (phát hiện 3) và RawBoost (phát hiện 4) lấn át lợi ích | Chờ N0, B1, R seed 2–3 để xem có nhất quán; cân nhắc ở GĐ6: so GRPO với cả R và A0 |
+| 7 | **Mọi cấu hình fine-tune có RawBoost đều kém bản dùng thẳng của chính backbone trên RADAR VI**: R +2,98, B2 +3,23, B1 +7,46, N0 +2,43 điểm; chỉ A0 (không RawBoost) tốt hơn (−1,71). B1 lệch hiệu chuẩn nặng nhất (FRR ở ngưỡng 0: 62% RADAR VI, 78% Common Voice) | Kết luận chính cho câu hỏi 2 (SFT làm hại ngoài miền tiếng Việt) và cho câu hỏi 1 phần "cách train" (RawBoost). Tất cả 1 seed; R seed 2–3 (lần 4) cho biết độ lệch giữa seed | Báo cáo cả EER lẫn FRR. GĐ6: cân nhắc dùng A0 làm thêm một mốc so với GRPO (cần người dùng chốt) |
 | 6 | **Post-training gần như không giúp trong miền nhưng quyết định ngoài miền** (P0 − R: test_seen 0,00; RADAR VI +8,39; ItW +7,30; F5 +5,90) | Trả lời trực tiếp "post-training đóng góp bao nhiêu" của câu hỏi 1. Khớp các bài gốc (mục 6.4) | Ghi vào báo cáo kèm cảnh báo 1 seed |
 
 ## 5. Ngân sách quota
@@ -203,7 +237,8 @@ Kế hoạch dùng: chấm S0 (4 mô hình) ở lần 4. Nếu S0 cũng gần 0%
 |---|---|---|---|
 | Trước GĐ5 | 0,74 giờ (pilot GĐ4) | 29,26 giờ đến 21/11 | |
 | 1 (`orpheus-finetune` v2) | 4,68 giờ | 24,58 giờ | Ước 4,8 giờ; khớp |
-| 2 (`orpheus-finetune` v3) | 4,14 giờ | (chạy song song với lần 3; đọc quota sau lần 3) | Xếp hàng ~3,5 giờ không tốn quota |
+| 2 (`orpheus-finetune` v3) | 4,14 giờ | | Xếp hàng ~3,5 giờ không tốn quota |
+| 3 (`orpheus-finetune-b` v1) | 3,89 giờ | ~16,5 giờ (sau lần 2 và 3) | Chạy song song với lần 2 |
 
 ## 6. Chuẩn bị GĐ6: đọc sâu bài GRPO và `algo/rl.py` (làm trong lúc chờ GPU, 14/11)
 

@@ -11,6 +11,7 @@ Mỗi thư mục `<kernel>-v<N>` là một lần chạy trên Kaggle (một vers
 | `orpheus-zeroshot-v2` | Zero-shot: MMS-300M NDA, MMS-1B, XLS-R-1B (hai bản), W2V-Large NDA, W2V-Small NDA | Xong, 2,71 giờ; NDA tốt hơn Default ở 4/5 backbone |
 | `orpheus-zeroshot-v3` | Zero-shot: HuBERT-XL, XLS-R-2B (hai bản) | Xong, 5,18 giờ; XLS-R-2B Default tốt nhất (13,71%) |
 | `orpheus-finetune-v1` | GĐ4 pilot fine-tune: R và A0 300 bước, overfit 100 câu; đo bộ nhớ, tốc độ, CPU | ERROR do một shard chấm chỉ có một lớp (đã sửa); huấn luyện xong cả 3; 0,74 giờ |
+| `orpheus-finetune-b-v1` | GĐ5 lần 3 (kernel thứ hai, song song với v3): B1 seed 1 (W2V-Small), N0 seed 1 (MMS-300M NDA) | Xong, 3,89 giờ; RADAR VI: B1 34,67%, N0 20,50% |
 | `orpheus-finetune-v3` | GĐ5 lần 2: P0 seed 1 (khởi tạo fairseq), B2 seed 1 (W2V-Large) | Xong, 4,14 giờ (xếp hàng ~3,5 giờ); RADAR VI: P0 31,46%, B2 21,03% |
 | `orpheus-finetune-v2` | GĐ5 lần 1: R seed 1, A0 seed 1 (3 epoch); S0 trên SEA-Spoof dev/test (4 mô hình) | Xong, 4,68 giờ; RADAR VI: R 23,07%, A0 18,37% (S0 20,08%); lịch lr lệch E1 (total_steps 50000) |
 
