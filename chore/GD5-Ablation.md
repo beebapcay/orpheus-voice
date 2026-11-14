@@ -131,6 +131,23 @@ Gọi p = p(y_đúng | x), z là log-odds của nhãn đúng. Tại thời đi�
 
 Việc cho GĐ6 rút ra: (a) ghi EER theo từng hệ thống cho G1 so với R, vì giả thuyết 1 dự đoán GRPO kém SFT ở hệ thống mô hình đang sai chắc chắn; (b) cân nhắc thêm một biến thể rẻ, không cần lấy mẫu: SFT với trọng số p(y|x) mỗi câu (đúng bằng kỳ vọng gradient của GRPO trong code, trừ KL và hệ số 1/σ), để kiểm giả thuyết 1–2 trực tiếp. Chưa đưa vào kế hoạch; chờ kết quả GĐ5 và người dùng chốt.
 
+### 6.4. Mốc cho P0: Bảng III bài AntiDeepfake (arXiv v4, mục IV-D)
+
+Fine-tune trên Deepfake-Eval-2024 (90% file train để fine-tune, 10% chọn checkpoint), **6k bước, AdamW, lr 1e-6, có RawBoost**; chấm test DFE24 cắt 4/10/13/30/50 s. EER (%), thấp hơn là tốt hơn:
+
+| Backbone | Post-train + fine-tune (4 / 10 / 13 / 30 / 50 s) | Chỉ pre-train + fine-tune | Post-train giúp (điểm, 4 s / 50 s) |
+|---|---|---|---|
+| W2V-Large | 19,56 / 12,11 / 10,95 / 10,52 / 11,36 | 24,42 / 22,46 / 22,14 / 21,17 / 21,53 | −4,9 / −10,2 |
+| **MMS-300M** | 17,15 / 13,38 / 12,32 / 11,18 / 10,79 | 19,77 / 13,26 / 12,72 / 12,01 / 12,30 | −2,6 / −1,5; **ở 10 s kém hơn 0,12** |
+| MMS-1B | 12,11 / 10,40 / 10,02 / 8,60 / 9,35 | 19,85 / 13,57 / 11,56 / 11,04 / 11,40 | −7,7 / −2,1 |
+| XLS-R-1B | 11,86 / 10,00 / 9,27 / 8,49 / 8,28 | 19,96 / 17,19 / 16,31 / 10,71 / 11,20 | −8,1 / −2,9 |
+| XLS-R-2B | 12,14 / 9,80 / 9,99 / 9,46 / 9,56 | 12,88 / 10,76 / 10,34 / 9,68 / 9,84 | −0,7 / −0,3 |
+
+Cách đọc cho GĐ5:
+1. Bài viết "post-training cải thiện nhất quán và rõ ràng ở mọi mô hình", nhưng với **MMS-300M lợi ích trong miền nhỏ** (≤ 2,6 điểm, ở 10 s còn kém hơn). W2V-Large lợi nhiều nhất (~10 điểm ở 50 s). Dự đoán: P0 so với R **trên test_seen** có thể chênh ít; khác biệt nếu có sẽ ở hệ thống để riêng, RADAR và mức quên. Bài GRPO cho thấy điều này với XLS-R-2B: SFT từ bản chỉ pre-train có ngoài miền trung bình 19,34% so với 6,28% từ bản post-trained (Bảng 1 hàng 10, 2), trong khi trong miền gần như bằng nhau (10,45 so với 10,26).
+2. Công thức fine-tune của Bảng III (lr 1e-6, 6k bước) gần cấu hình E1 của ta (đỉnh 1e-6, 4.600 bước) hơn là cách bài GRPO chạy thực tế (GĐ4 phát hiện 9). Bài không ghi lịch warmup.
+3. Bài không nói rõ bản Default hay NDA được fine-tune ("best-performing post-trained models", mục IV-C).
+
 ## 7. Kiểm tra điều kiện qua GĐ5
 
 - [ ] Seed 1 của 5 cấu hình cần huấn luyện: R, A0, P0, B2, B1

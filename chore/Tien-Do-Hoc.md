@@ -109,5 +109,5 @@ Tài liệu: `chore/GD4-Du-Lieu-Va-Pipeline.md`.
 
 Việc trước ngày 1 (người dùng, mục 1 file GĐ4):
 - [x] Kiểm tra quyền SEA-Spoof: đã được duyệt, đã kiểm bằng tải file (14/11)
-- [ ] Xin quyền MLAAD (dự phòng)
+- [x] Xin quyền MLAAD (dự phòng): có quyền, kiểm 14/11
 - [x] `hf auth login` trên máy (14/11)

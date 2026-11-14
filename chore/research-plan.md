@@ -161,7 +161,7 @@ Mỗi giai đoạn trả lời một câu hỏi, và câu trả lời là đầu
 
 - [x] Xin quyền [SEA-Spoof](https://huggingface.co/datasets/Jack-ppkdczgx/SEA-Spoof) (tác giả duyệt thủ công). **Đã được duyệt, kiểm 14/11.**
   - 14/11: README của SEA-Spoof yêu cầu **gửi email cho tác giả trước khi xin quyền** (wu_jinyang@a-star.edu.sg, imcc.sg@gmail.com), ghi họ tên, đơn vị, mục đích nghiên cứu, cam kết phi thương mại. Cần kiểm tra yêu cầu đã được duyệt chưa; nếu chưa, gửi email.
-- [ ] Xin quyền [MLAAD](https://huggingface.co/datasets/mueller91/MLAAD) (duyệt tự động), phòng trường hợp SEA-Spoof chưa được duyệt. **Làm ngay trước GĐ4.**
+- [x] Xin quyền [MLAAD](https://huggingface.co/datasets/mueller91/MLAAD) (duyệt tự động), phòng trường hợp SEA-Spoof chưa được duyệt. **Đã có quyền (kiểm 14/11):** tải được file trong repo bằng tài khoản HF trên máy; 534.539 file, `fake/vi` có 5.005 file; giấy phép CC BY-NC 4.0 (`NOTICE_NO_COMMERCIAL_USE.txt`).
 - [x] ~~Xin quyền [F5-TTS Vietnamese](https://huggingface.co/hynt/F5-TTS-Vietnamese-ViVoice) bằng email trường, vì email cá nhân bị từ chối.~~ **Không cần nữa (kiểm 14/11):** API HF trả `gated: False`, `model_last.pt` tải được không cần đăng nhập. Giấy phép CC-BY-NC-SA-4.0; README cấm nhái giọng khi không có đồng ý. Việc còn lại: thành viên đồng ý bằng văn bản và thu ~100 câu mỗi người.
 - [x] Tải [RADAR 2026](https://zenodo.org/records/22110815) và [In-the-Wild](https://huggingface.co/datasets/mueller91/In-The-Wild) vào nơi Colab/Kaggle đọc được: output kernel Kaggle `orpheus-prep` (13/11, ~10 GB).
 - [x] Kiểm tra quota GPU: Kaggle 30 giờ/tuần (T4 × 2, 4 nhân CPU, phiên 12 giờ); Colab miễn phí ~4 giờ/phiên. Máy M1 Pro dùng để đọc code, xử lý dữ liệu và chạy tầng 0. (Tài khoản các thành viên khác: chưa kiểm tra.)
