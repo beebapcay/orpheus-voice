@@ -11,7 +11,8 @@ Câu hỏi của giai đoạn: yếu tố nào quyết định kết quả trên
 | 1 | Báo kết quả lần 1 cho người dùng, chờ duyệt trước khi chạy tiếp | Mục 3 | |
 | 1–2 | Lần 2–3: P0, B2, B1 (seed 1); N0 nếu còn quota | | Chưa |
 | 3–4 | Lần 4: R seed 2, 3 | | Chưa |
-| Trong lúc chờ GPU | Đọc sâu bài GRPO và `algo/rl.py` (chuẩn bị GĐ6) | | Chưa |
+| Trong lúc chờ GPU | Đọc sâu bài GRPO và `algo/rl.py` (chuẩn bị GĐ6) | Mục 6, `src/grpo_gradient_sim.py` | Xong (14/11) |
+| Trong lúc chờ GPU | Script bảng kết quả trên máy; code cho P0 (khởi tạo fairseq, kiểm nạp trọng số trước khi huấn luyện) | `src/analyze_ablation.py`, `src/finetune.py --init fairseq` | Xong (14/11), thử trên máy; P0 chưa chạy trên Kaggle |
 
 **Lịch:** hôm nay 14/11, hạn nộp 30/11. Quota Kaggle còn 29,26 giờ đến 7 giờ sáng 21/11 (kiểm 14/11 trước lần 1).
 
@@ -80,7 +81,57 @@ Chấm S0 thêm MMS-300M NDA (ngoài 3 backbone GĐ4 đã định): ~15 phút qu
 |---|---|---|---|
 | Trước GĐ5 | 0,74 giờ (pilot GĐ4) | 29,26 giờ đến 21/11 | |
 
-## 6. Kiểm tra điều kiện qua GĐ5
+## 6. Chuẩn bị GĐ6: đọc sâu bài GRPO và `algo/rl.py` (làm trong lúc chờ GPU, 14/11)
+
+Bài: `resource/paper/GRPO-2603.02914.pdf` (arXiv v1, 3/3/2026), đọc toàn văn kể cả phụ lục. Code: AntiDeepfake commit `86098091`: `algo/rl.py`, `main.py` (`compute_forward`, `compute_objectives`, `__init__`), `models/W2V.py` (`forward_grpo`), `hparams/ft_grpo/mms_300m_pre-post-grpo_v{1,2}.yaml`, `README_grpo.md`.
+
+### 6.1. Số liệu MMS-300M trong Bảng 1 của bài (trung bình 3 lần, EER %, thấp hơn là tốt hơn)
+
+| Hàng | Fine-tune | DFE24 (trong miền, trung bình 5 độ dài) | ADD23 | FoR | DV | ItW | Trung bình ngoài miền |
+|---|---|---|---|---|---|---|---|
+| 17 | Không | 29,23 | 7,96 | 1,51 | 2,35 | 2,91 | 3,68 |
+| 18 | SFT | 12,23 | 8,81 | 3,61 | 4,37 | 14,17 | 7,74 |
+| 19 | GRPO_s (không clip, không mô hình cũ) | 11,65 | 5,70 | 1,40 | 2,91 | 8,31 | 4,58 |
+| 20 | GRPO | 11,94 | 4,99 | 1,57 | 2,64 | 5,91 | 3,78 |
+
+Bài chỉ làm ablation (β = 0, β = 1, không phần thưởng âm) và so pre-train/post-train với XLS-R-2B (hàng 7–12), không với MMS-300M.
+
+### 6.2. Đối chiếu bài và code
+
+| Nội dung | Bài | Code | Khớp? |
+|---|---|---|---|
+| Checkpoint khởi tạo | `mms_300m.ckpt` trên Zenodo (chú thích 4) | YAML ghi `ckpt_path: .../mms_300m_1000k.pt`, nhưng chỉ là giá trị mặc định, bị ghi đè bằng `--ckpt_path` | **Khớp với R của ta** (cùng file, bản Default; bản HF giống Zenodo, GĐ3 mục 2). Củng cố quyết định Q1 của GĐ3 |
+| Công thức fine-tune | Như AntiDeepfake, tối đa 10 epoch, kiểm dev mỗi 20k bước, chọn EER dev thấp nhất; DFE24 ~50 giờ, cắt câu ≤ 15 s; 1 GPU H100 | YAML: `valid_step: 20000`, `number_of_epochs: 10` | Khớp. Ta khác ở lr, batch, số epoch, cách chọn checkpoint (GĐ4 mục 4.2) |
+| Lấy mẫu nhãn | ỹ lấy từ mô hình "cũ" p_Θ̂ (công thức 3) | `forward_grpo`: `torch.multinomial(softmax(logits))` của mô hình **hiện tại**, G = 64 | Lệch nhỏ (Θ̂ chỉ cách Θ tối đa 1.000 bước) |
+| Chuẩn hoá phần thưởng | Theo nhóm G mẫu **của từng câu** (công thức 4, 13) | `(r − r.mean()) / (r.std() + 1e-5)` trên **toàn bộ B × 64 mẫu của batch** | **Không khớp.** Hệ quả ở mục 6.3 |
+| Clip tỉ số chính sách | ε = 0,2 (Bảng 2) | `grpo3_loss`: `min(r·A, clamp(r, 0,8, 1,2)·A)` | Khớp |
+| Phạt lệch mô hình tham chiếu | KL xấp xỉ, β = 0,04 | Ước lượng k3 trên nhãn đã lấy mẫu: `exp(ref − logp) − (ref − logp) − 1`; β = 0,04 | Khớp |
+| Cập nhật mô hình cũ | Mỗi 1k bước (Bảng 2) | `inner_step_size: 1000`, đếm theo `self.step` (số batch) | Khớp |
+| GRPO_s | Bỏ clip và Θ̂ | `grpo2_loss`: `exp(logp − logp.detach())·A` | Khớp |
+| GRPO không phần thưởng âm | A = δ(ỹ = y) | `grpo3_degraded_ref` (phần thưởng 0/1, không chuẩn hoá); **không có file YAML** | Có trong code, phải tự thêm cấu hình nếu dùng |
+| Chú thích 7 | "SFT trên mô hình post-trained (hàng 10) tốt hơn trên mô hình pre-trained (hàng 2)" | Bảng 1: hàng 2 là post-trained, hàng 10 là chỉ pre-train | Bài ghi nhầm số hàng; nội dung vẫn đúng theo bảng (ngoài miền 6,28 so với 19,34) |
+| Bộ nhớ | | `ref_detector`, `old_detector` (GRPO đủ) là hai bản đầy đủ của mô hình trên GPU | GRPO_s chỉ thêm một bản. Pilot SFT đã 14,6 / 15 GB ở batch 50 s, nên GRPO phải giảm batch (GĐ4 mục 4.1) |
+
+### 6.3. Hệ quả của việc chuẩn hoá theo batch (tự suy ra từ code, đã kiểm bằng mô phỏng)
+
+Gọi p = p(y_đúng | x), z là log-odds của nhãn đúng. Tại thời điểm mô hình cũ vừa cập nhật (tỉ số = 1), bỏ KL, kỳ vọng gradient theo z của mỗi câu (`src/grpo_gradient_sim.py`, Monte Carlo 4.000 lượt, B = 10, G = 64, khớp dự đoán đến 3 chữ số):
+
+| Cách fine-tune | Kỳ vọng gradient theo z | Câu được đẩy mạnh nhất |
+|---|---|---|
+| SFT | 1 − p | Câu mô hình đang sai nặng (p → 0) |
+| GRPO trong code (chuẩn hoá theo batch) | p(1 − p) / σ_batch | Câu ở ranh giới (p ≈ 0,5); câu đang sai nặng gần như không đóng góp |
+| GRPO không phần thưởng âm | p(1 − p) | Như trên, nhưng nhỏ hơn 1/σ_batch lần |
+
+σ_batch = độ lệch chuẩn của phần thưởng trên batch, ≈ √(r̄(1 − r̄)) với r̄ là tỉ lệ nhãn lấy mẫu đúng. Batch đúng 95% thì 1/σ ≈ 4,6; đúng 99% thì ≈ 10.
+
+Ý nghĩa (giả thuyết cho GĐ6, chưa kiểm trên dữ liệu):
+1. So với SFT, GRPO nhân trọng số mỗi câu thêm p/σ_batch: bỏ qua câu mô hình đang sai chắc chắn, học chủ yếu từ câu ở ranh giới. Đây là một cơ chế khả dĩ cho việc GRPO quên ít hơn (không bị kéo mạnh bởi câu khác hẳn dữ liệu cũ), khớp nhận xét ở phụ lục A.1 của bài ("ưu tiên các mode xác suất cao, như chính quy hoá ngầm").
+2. Trong code, "phần thưởng âm" không đổi **hướng** kỳ vọng gradient so với biến thể không phần thưởng âm, chỉ đổi **độ lớn** (×1/σ_batch, một kiểu learning rate tự điều chỉnh) và phương sai. Bài kết luận phần thưởng âm là yếu tố then chốt (hàng 9 so với hàng 4, mục 3.5); số liệu của bài chưa tách được phần do độ lớn bước cập nhật.
+3. Với SEA-Spoof, mô hình dùng thẳng đã gần bão hoà (dev ~1,16%, GĐ4 phát hiện 14), nên đa số câu có p gần 1 và σ_batch nhỏ: GRPO sẽ có bước cập nhật hiệu dụng lớn hơn SFT nhiều lần ở câu ranh giới, nhưng gần như không học từ câu giả bị nhận là thật một cách chắc chắn (ví dụ VITS: mô hình pilot GĐ4, gần như chưa đổi so với S0, nhận 42,0% câu giả VITS của dev là thật ở ngưỡng 0, trong khi EER chỉ 1,93%; tính lại 14/11 từ `results/finetune/pilot_R/seaspoof_vi_dev/scores.csv` bằng `src/eval_seaspoof.py`).
+
+Việc cho GĐ6 rút ra: (a) ghi EER theo từng hệ thống cho G1 so với R, vì giả thuyết 1 dự đoán GRPO kém SFT ở hệ thống mô hình đang sai chắc chắn; (b) cân nhắc thêm một biến thể rẻ, không cần lấy mẫu: SFT với trọng số p(y|x) mỗi câu (đúng bằng kỳ vọng gradient của GRPO trong code, trừ KL và hệ số 1/σ), để kiểm giả thuyết 1–2 trực tiếp. Chưa đưa vào kế hoạch; chờ kết quả GĐ5 và người dùng chốt.
+
+## 7. Kiểm tra điều kiện qua GĐ5
 
 - [ ] Seed 1 của 5 cấu hình cần huấn luyện: R, A0, P0, B2, B1
 - [ ] R đủ 3 seed

@@ -85,10 +85,11 @@ if r.returncode != 0:
 print(f"Dựng môi trường xong sau {(time.time() - T0) / 60:.1f} phút", flush=True)
 
 common = ["--base", base, "--data-root", sea, prep, "--out", out, "--cache", cache]
-# Tải trước checkpoint khởi tạo (một lần cho mỗi mô hình), tránh hai GPU cùng tải một file
-for m in sorted({r["model"] for runs in RUNS.values() for r in runs}):
-    sh([sys.executable, f"{code}/finetune.py", *common, "--run", f"prefetch_{m}", "--model", m,
-        "--prefetch"], check=True)
+# Tải trước checkpoint khởi tạo (một lần cho mỗi mô hình và cách khởi tạo), tránh hai GPU cùng
+# tải một file. init: "post" (checkpoint post-trained, mặc định) hoặc "fairseq" (P0)
+for m, ini in sorted({(r["model"], r.get("init", "post")) for runs in RUNS.values() for r in runs}):
+    sh([sys.executable, f"{code}/finetune.py", *common, "--run", f"prefetch_{m}_{ini}", "--model", m,
+        "--init", ini, "--prefetch"], check=True)
 
 failures = []
 
@@ -97,6 +98,7 @@ def worker(gpu, runs):
     for r in runs:
         cmd = [sys.executable, f"{code}/finetune.py", *common, "--gpu", str(gpu),
                "--run", r["run"], "--model", r["model"], "--method", r.get("method", "sft"),
+               "--init", r.get("init", "post"),
                "--train", r["train"], "--valid", r["valid"], "--set", *r["set"]]
         if r["score"]:
             cmd += ["--score", *r["score"]]

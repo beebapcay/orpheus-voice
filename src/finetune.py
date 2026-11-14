@@ -41,6 +41,14 @@ import score_zeroshot as sz  # noqa: E402
 
 OOM_PATTERNS = ("CUDA out of memory", "OutOfMemoryError")
 
+# Trọng số fairseq gốc (chỉ pre-train, chưa post-train) cho cấu hình P0 (--init fairseq).
+# README AntiDeepfake mục "Download checkpoints" trỏ tới trang pretrained models của fairseq;
+# MMS-300M: examples/mms (base_300m.pt, 3,81 GB, kiểm HEAD 14/11/2026).
+FAIRSEQ_URLS = {"mms_300m": "https://dl.fbaipublicfiles.com/mms/pretraining/base_300m.pt"}
+# Khi khởi tạo từ fairseq, các khoá này của checkpoint không có trong mô hình thì vẫn chấp nhận
+# (chỉ dùng cho học tự giám sát, không đi vào nhánh phân loại); khoá khác thiếu là lỗi.
+FAIRSEQ_OK_MISSING = ("quantizer", "project_q", "final_proj", "label_embs", "_float_tensor")
+
 
 def log(msg):
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
@@ -116,7 +124,32 @@ def parse_exp_log(path):
     return rows
 
 
-def run_train(args, ckpt_init, overrides):
+def preflight_load(args, ckpt_init):
+    """Nạp checkpoint khởi tạo vào mô hình bằng đúng hàm của code gốc (utils.load_weights, cùng
+    name_mapper với SSLBrain._init_model) trên CPU, trước khi huấn luyện; trả về các dòng cảnh báo.
+    main.py chỉ in cảnh báo rồi chạy tiếp, nên nếu không kiểm trước thì phải chờ hết lần huấn
+    luyện mới biết trọng số nạp sai."""
+    backbone = args.model.replace("_nda", "")
+    code = ("import sys; sys.path.insert(0, '.'); import torch; from models.W2V import Model; "
+            "from utils import load_weights; m = Model(" + repr(backbone) + "); "
+            "s = m.state_dict(); n = sum(v.numel() for v in s.values()); "
+            "load_weights(s, " + repr(ckpt_init) + ", func_name_change=lambda x: f'm_ssl.model.{x}'); "
+            "print(f'PREFLIGHT_OK {len(s)} tensor, {n} tham số')")
+    log_path = os.path.join(args.out, "train", args.run, "preflight.log")
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    env = dict(os.environ, CUDA_VISIBLE_DEVICES="")
+    rc = sz.run_cmd([args.mm, "run", "-n", "antideepfake", "python", "-c", code],
+                    os.path.join(args.base, "AntiDeepfake"), env, log_path)
+    text = open(log_path, errors="replace").read()
+    if rc != 0 or "PREFLIGHT_OK" not in text:
+        raise RuntimeError(f"[{args.run}] kiểm nạp trọng số lỗi (mã {rc}):\n{sz.tail(log_path)}")
+    warns = [l for l in text.splitlines() if any(p in l for p in sz.WARN_PATTERNS)]
+    log(f"[{args.run}] kiểm nạp trọng số: {len(warns)} cảnh báo; "
+        f"{[l for l in text.splitlines() if 'PREFLIGHT_OK' in l][0]}")
+    return warns
+
+
+def run_train(args, ckpt_init, overrides, allowed_warns=()):
     repo = os.path.join(args.base, "AntiDeepfake")
     yaml = f"hparams/ft_grpo/{args.model.replace('_nda', '')}_pre-post-{args.method}.yaml"
     run_dir = os.path.join(args.out, "train", args.run)
@@ -146,7 +179,8 @@ def run_train(args, ckpt_init, overrides):
         mon.stop_ev.set()
         mon.join()
         text = open(log_path, errors="replace").read()
-        warns = [l for l in text.splitlines() if any(p in l for p in sz.WARN_PATTERNS)]
+        warns = [l for l in text.splitlines() if any(p in l for p in sz.WARN_PATTERNS)
+                 and l.strip() not in allowed_warns]
         if warns:
             raise RuntimeError(f"[{args.run}] cảnh báo nạp trọng số: {warns[:3]}")
         if rc != 0 and any(p in text for p in OOM_PATTERNS):
@@ -215,6 +249,9 @@ def main():
     ap.add_argument("--run", required=True, help="tên lần chạy, ví dụ R_s1")
     ap.add_argument("--model", default="mms_300m", help="checkpoint post-trained khởi tạo (khoá MODELS)")
     ap.add_argument("--method", default="sft", help="sft | grpo_v1 | grpo_v2 (tên file YAML ft_grpo)")
+    ap.add_argument("--init", default="post", choices=["post", "fairseq"],
+                    help="post: checkpoint post-trained AntiDeepfake (mặc định); fairseq: trọng số "
+                         "pre-train gốc, chưa post-train (cấu hình P0)")
     ap.add_argument("--train", default="seaspoof_vi_train")
     ap.add_argument("--valid", default="seaspoof_vi_dev")
     ap.add_argument("--set", nargs="*", default=[], help="ghi đè YAML: khoá=giá trị")
@@ -231,12 +268,34 @@ def main():
     sz.prepare_data_dir(args)
     overrides = dict(kv.split("=", 1) for kv in args.set)
 
-    ckpts = sz.Checkpoints(args.cache, {args.model: 1})
-    ckpt_init = ckpts.get(args.model)
+    if args.init == "fairseq":
+        # P0: khởi tạo từ trọng số fairseq gốc (chưa post-train); lớp FC phân loại khởi tạo ngẫu
+        # nhiên theo seed (main.py: set_random_seed trước khi tạo mô hình)
+        if args.model not in FAIRSEQ_URLS:
+            sys.exit(f"Chưa có URL fairseq cho {args.model}")
+        url = FAIRSEQ_URLS[args.model]
+        ckpt_init = sz.download(url, os.path.join(args.cache, "fairseq_" + os.path.basename(url)))
+    else:
+        ckpts = sz.Checkpoints(args.cache, {args.model: 1})
+        ckpt_init = ckpts.get(args.model)
     if args.prefetch:
         log(f"Đã có checkpoint khởi tạo {ckpt_init}")
         return
-    info, ckpt = run_train(args, ckpt_init, overrides)
+    warns = preflight_load(args, ckpt_init)
+    allowed = ()
+    if warns:
+        bad = [w for w in warns if args.init != "fairseq" or " is not in the model" not in w
+               or not w.strip().startswith(FAIRSEQ_OK_MISSING)]
+        if bad:
+            info = {"run": args.run, "model": args.model, "init": args.init, "status": "load_warning",
+                    "load_warnings": len(warns)}
+            append_summary(os.path.join(args.out, "train_summary.csv"), info)
+            sys.exit(f"[{args.run}] nạp trọng số sai, dừng trước khi huấn luyện: {bad[:5]}")
+        allowed = tuple(w.strip() for w in warns)
+        log(f"[{args.run}] bỏ qua {len(warns)} khoá chỉ dùng cho học tự giám sát: {warns[:5]}")
+    info, ckpt = run_train(args, ckpt_init, overrides, allowed)
+    info["init"] = args.init
+    info["load_warnings_allowed"] = len(allowed)
     append_summary(os.path.join(args.out, "train_summary.csv"), info)
     log(f"[{args.run}] KẾT QUẢ HUẤN LUYỆN: {json.dumps(info, ensure_ascii=False)}")
     if ckpt is None:
