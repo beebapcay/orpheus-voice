@@ -56,9 +56,9 @@ Thước đo chính: hệ thống để riêng (`test_f5`, `test_minimax`), RADA
 | Lần | Kernel | GPU 0 | GPU 1 | Sau đó | Ước tính |
 |---|---|---|---|---|---|
 | 1 | `orpheus-finetune` v2 | R seed 1 | A0 seed 1 | Chấm S0 trên SEA-Spoof dev, test: MMS-300M, W2V-Large, W2V-Small, MMS-300M NDA | ~4,8 giờ |
-| 2 | | P0 seed 1 | B2 seed 1 | | ~3,7 giờ |
-| 3 | | B1 seed 1 | N0 seed 1 | | ~3,5 giờ |
-| 4 | | R seed 2 | R seed 3 | | ~3,7 giờ |
+| 2 | `orpheus-finetune` v3 | P0 seed 1 | B2 seed 1 | | ~4,1 giờ (theo số đo lần 1: 3,95 giờ + dựng môi trường) |
+| 3 | | B1 seed 1 | N0 seed 1 | | ~4 giờ |
+| 4 | | R seed 2 | R seed 3 | | ~4,1 giờ |
 
 **Quyết định (14/11, người dùng):** dừng báo kết quả lần 1 và chờ duyệt. Sau khi duyệt, lần 2–4 chạy nối nhau: lần sau được đẩy ngay khi lần trước xong và đã lưu bằng chứng; chỉ dừng báo khi có lỗi, kết quả bất thường, hoặc khi xong cả GĐ5.
 
@@ -122,10 +122,20 @@ Mỗi kết quả, một câu giải thích (giả thuyết, 1 seed):
 
 | # | Phát hiện | Ảnh hưởng | Việc cần làm |
 |---|---|---|---|
-| 1 | **`--optimizer_step_limit` không ghi đè được vào YAML.** SpeechBrain coi đây là tham số chạy (run option) của `Brain`, nên `hyperparams.yaml` của lần chạy vẫn ghi `optimizer_step_limit: 50000` và `lr_scheduler.total_steps: 50000`; `--warmup 460` thì có tác dụng. Learning rate thực tế: tăng lên 1e-6 trong 460 bước, rồi chỉ giảm còn 6,83e-7 ở bước 4.563 (`exp_log.txt`), thay vì ~1e-8. Tổng learning rate qua các bước gấp ~3,8 lần kế hoạch E1. Pilot GĐ4 không lộ ra vì chỉ chạy 300 bước trong warmup | R và A0 cùng lịch nên so sánh R–A0 vẫn công bằng. Lần 2–4 phải dùng **cùng một lịch** với lần 1 thì mới so được với R. So với bài GRPO, ta fine-tune mạnh hơn nữa (GĐ4 phát hiện 9) | **Chờ người dùng chốt:** giữ lịch thực tế cho cả GĐ5–6 (không chạy lại) hay sửa (`total_steps` = 4.600) và chạy lại R, A0 seed 1 (~3,7 giờ quota) |
-| 2 | **Hệ thống để riêng của SEA-Spoof đã dễ với mô hình dùng thẳng:** F5-TTS 0,57%, MiniMax 0,00% (S0 MMS-300M); mọi hệ thống ≤ 2,1% với cả 4 mô hình S0 | Thước đo "tổng quát hoá trong tiếng Việt sang hệ thống chưa gặp" của plan không phân biệt được cấu hình. Thước đo chính còn lại: RADAR VI, mức quên, tiếng thật nguồn khác (`test_cvreal`, FRR) | Có thể thêm tập hệ thống chưa gặp khó hơn: `fake/vi` của MLAAD (LEMAS-TTS, OmniVoice, VieNeu-TTS, VoxCPM2, vixTTS; đã có quyền) ghép với tiếng thật VIVOS của test. **Chờ người dùng chốt** |
+| 1 | **`--optimizer_step_limit` không ghi đè được vào YAML.** SpeechBrain coi đây là tham số chạy (run option) của `Brain`, nên `hyperparams.yaml` của lần chạy vẫn ghi `optimizer_step_limit: 50000` và `lr_scheduler.total_steps: 50000`; `--warmup 460` thì có tác dụng. Learning rate thực tế: tăng lên 1e-6 trong 460 bước, rồi chỉ giảm còn 6,83e-7 ở bước 4.563 (`exp_log.txt`), thay vì ~1e-8. Tổng learning rate cộng dồn qua 4.563 bước: 3,64 × 10⁻³, gấp ~3,25 lần lịch E1 dự kiến (1,12 × 10⁻³); cùng cỡ với cách bài GRPO chạy thực tế (ước 2,0–3,6 × 10⁻³ cho ~18–24 nghìn bước với warmup 80.000, theo ước lượng số bước ở GĐ4 phát hiện 9), nhưng đỉnh của ta cao hơn (1e-6 so với ~2–3 × 10⁻⁷) và dồn trong ít bước hơn. Pilot GĐ4 không lộ ra vì chỉ chạy 300 bước trong warmup | R và A0 cùng lịch nên so sánh R–A0 vẫn công bằng. Lần 2–4 phải dùng **cùng một lịch** với lần 1 thì mới so được với R. So với bài GRPO, ta fine-tune mạnh hơn nữa (GĐ4 phát hiện 9) | **Đã chốt 14/11 (E1'):** giữ lịch thực tế cho cả GĐ5–6, không chạy lại (người dùng giao Claude quyết; lý do ở mục 4.1). Mọi lần sau giữ nguyên bộ ghi đè của lần 1 để YAML vẫn ra `total_steps: 50000` |
+| 2 | **Hệ thống để riêng của SEA-Spoof đã dễ với mô hình dùng thẳng:** F5-TTS 0,57%, MiniMax 0,00% (S0 MMS-300M); mọi hệ thống ≤ 2,1% với cả 4 mô hình S0 | Thước đo "tổng quát hoá trong tiếng Việt sang hệ thống chưa gặp" của plan không phân biệt được cấu hình. Thước đo chính còn lại: RADAR VI, mức quên, tiếng thật nguồn khác (`test_cvreal`, FRR) | **Đã chốt 14/11:** thêm tập `fake/vi` của MLAAD (LEMAS-TTS, OmniVoice, VieNeu-TTS, VoxCPM2, vixTTS) ghép với tiếng thật VIVOS của test; chuẩn bị song song, không chặn lần 2; phải kiểm lối tắt (giả và thật từ hai kho) |
 | 3 | **Fine-tune làm tiếng thật nguồn khác bị coi là giả** (FRR ở ngưỡng 0: RADAR VI 4,8 → 27–29%; `test_cvreal` 0,75 → 8,3–8,5%) và làm lệch hiệu chuẩn (actDCF − minDCF ~0,2) | Quyết định Q6 của GĐ3 ("giảm kỳ vọng vào hiệu chuẩn") cần xem lại: sau fine-tune, hiệu chuẩn có ý nghĩa. EER vẫn là thước đo không phụ thuộc ngưỡng | Báo FAR/FRR cho mọi cấu hình. GĐ6 ngày 3: hiệu chuẩn trên dev (dev cũng chỉ có tiếng thật VIVOS, nên có thể không sửa được lệch trên nguồn khác; ghi khi làm) |
 | 4 | **RawBoost (khi fine-tune) làm kém ngoài miền ở MMS-300M**, cả ba tập ngoài miền, KTC theo câu không chứa 0 | Cấu hình mốc R (có RawBoost, theo bài GRPO) là cấu hình kém hơn. Một seed: chưa biết chênh lệch do seed lớn cỡ nào | R seed 2, 3 (lần 4) cho độ lệch giữa các seed. Không đổi R giữa chừng: các cấu hình khác so với R như plan |
+
+### 4.1. Vì sao không chạy lại lần 1 (quyết định E1', 14/11)
+
+| Câu hỏi | Trả lời |
+|---|---|
+| So sánh trong GĐ5–6 có còn đúng không? | Có, miễn mọi cấu hình (P0, B2, B1, N0, seed 2–3, GRPO) dùng đúng lịch của lần 1. Ablation chỉ cần "đổi một yếu tố", không cần lịch nào cụ thể |
+| Lịch thực tế có vô lý không? | Không: warmup 10% rồi gần như giữ 1e-6 (còn 6,8e-7 ở cuối). Tổng learning rate cộng dồn 3,64 × 10⁻³, gần mức bài GRPO chạy thực tế (ước 2,0–3,6 × 10⁻³) hơn lịch E1 dự kiến (1,12 × 10⁻³) |
+| Mất gì nếu không chạy lại? | (1) Báo cáo phải ghi lịch đúng như đã chạy, không ghi E1. (2) Mức quên tuyệt đối (ItW 2,6 → 7,6%) gắn với độ mạnh fine-tune này; không nói được nó sẽ ra sao với lịch nhẹ hơn. (3) Learning rate không giảm về gần 0 ở cuối, nên mô hình cuối có thể dao động theo seed nhiều hơn; R 3 seed sẽ đo |
+| Được gì? | Tiết kiệm ~4 giờ quota và ~4 giờ chờ. Hiện tượng cần nghiên cứu (SFT làm quên) đã lộ rõ; lịch nhẹ hơn nhiều khả năng làm nó mờ đi và khó thấy khác biệt SFT–GRPO ở GĐ6 |
+| Việc thêm nếu còn quota (không bắt buộc) | Một lần R seed 1 với lịch E1 đúng nghĩa, để có điểm thứ hai về "độ mạnh fine-tune so với mức quên" (biến chỗ lệch thành một ablation phụ). Sửa bằng cách ghi đè `total_steps` của `lr_scheduler`, cần kiểm cú pháp ghi đè lồng của SpeechBrain |
 
 ## 5. Ngân sách quota
 

@@ -14,28 +14,27 @@ import threading
 import time
 
 # ---- Sửa phần này cho mỗi lần chạy -------------------------------------------
-# GĐ5, lần 1 (chore/GD5-Ablation.md mục 2): R seed 1 và A0 seed 1, hai GPU song song.
-#   Cấu hình SFT đã chốt ở GĐ4 (chore/GD4-Du-Lieu-Va-Pipeline.md mục 4.2, E1–E3): 3 epoch trên
-#   toàn bộ train (17,88 giờ), batch 50 giây, lr đỉnh 1e-6, warmup 10% (460 / 4.600 bước), chỉ
-#   kiểm tra dev một lần sau epoch cuối nên checkpoint lưu là mô hình cuối.
-#   Sau khi cả hai GPU xong: chấm S0 (dùng thẳng, không fine-tune) trên SEA-Spoof dev/test cho
-#   3 backbone sẽ fine-tune ở GĐ5 và MMS-300M bản NDA (mốc của N0).
+# GĐ5, lần 2 (chore/GD5-Ablation.md mục 2): P0 seed 1 (GPU 0) và B2 seed 1 (GPU 1).
+#   P0: MMS-300M khởi tạo từ trọng số fairseq gốc (chưa post-train), lớp FC ngẫu nhiên -> post-training
+#       đóng góp bao nhiêu (so với R). B2: W2V-Large post-trained -> ngôn ngữ pre-training (so với R).
+#   Bộ ghi đè SFT giữ NGUYÊN như lần 1 (quyết định E1', mục 4.1): `optimizer_step_limit` không vào
+#   được YAML nên lịch learning rate thực tế là warmup 460 bước lên 1e-6 rồi giảm rất chậm
+#   (total_steps 50000); đổi bộ ghi đè là đổi lịch và không so được với R_s1, A0_s1.
 SFT = ["max_batch_length=50", "number_of_epochs=3", "optimizer_step_limit=4600", "warmup=460",
        "lr=1e-6", "valid_step=1000000000", "num_workers=2"]
 SCORE = ["seaspoof_vi_dev", "seaspoof_vi_test", "radar_vi", "ood_forget"]
 RUNS = {
     0: [
-        {"run": "R_s1", "model": "mms_300m", "train": "seaspoof_vi_train",
+        {"run": "P0_s1", "model": "mms_300m", "init": "fairseq", "train": "seaspoof_vi_train",
          "valid": "seaspoof_vi_dev", "set": SFT + ["seed=1"], "score": SCORE},
     ],
     1: [
-        {"run": "A0_s1", "model": "mms_300m", "train": "seaspoof_vi_train",
-         "valid": "seaspoof_vi_dev", "set": SFT + ["seed=1", "use_da=False"], "score": SCORE},
+        {"run": "B2_s1", "model": "w2v_large", "train": "seaspoof_vi_train",
+         "valid": "seaspoof_vi_dev", "set": SFT + ["seed=1"], "score": SCORE},
     ],
 }
 # Chấm zero-shot sau khi mọi lần huấn luyện xong (score_zeroshot.py, hai GPU), vào results/zeroshot/
-ZEROSHOT = ["seaspoof_vi_dev:mms_300m,w2v_large,w2v_small,mms_300m_nda",
-            "seaspoof_vi_test:mms_300m,w2v_large,w2v_small,mms_300m_nda"]
+ZEROSHOT = []
 # -------------------------------------------------------------------------------
 
 T0 = time.time()
