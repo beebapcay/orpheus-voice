@@ -1,0 +1,11 @@
+{
+  "kernel": "orpheus-finetune",
+  "version": "2",
+  "pushed_at": {
+    "local": "2026-11-14T12:50:29+07:00",
+    "utc": "2026-11-14T05:50:29+00:00"
+  },
+  "repo_commit": "115d896",
+  "repo_dirty_kaggle_src": false,
+  "note": "run.py và kernel-metadata.json trong thư mục này là bản đã đẩy lên Kaggle (KAGGLE_USER đã được thay bằng tên tài khoản)."
+}
