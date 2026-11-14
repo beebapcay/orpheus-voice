@@ -159,7 +159,7 @@ Mỗi giai đoạn trả lời một câu hỏi, và câu trả lời là đầu
 
 ## 5. Việc chạy nền (làm ngay ngày đầu)
 
-- [x] Xin quyền [SEA-Spoof](https://huggingface.co/datasets/Jack-ppkdczgx/SEA-Spoof) (tác giả duyệt thủ công).
+- [x] Xin quyền [SEA-Spoof](https://huggingface.co/datasets/Jack-ppkdczgx/SEA-Spoof) (tác giả duyệt thủ công). **Đã được duyệt, kiểm 14/11.**
   - 14/11: README của SEA-Spoof yêu cầu **gửi email cho tác giả trước khi xin quyền** (wu_jinyang@a-star.edu.sg, imcc.sg@gmail.com), ghi họ tên, đơn vị, mục đích nghiên cứu, cam kết phi thương mại. Cần kiểm tra yêu cầu đã được duyệt chưa; nếu chưa, gửi email.
 - [ ] Xin quyền [MLAAD](https://huggingface.co/datasets/mueller91/MLAAD) (duyệt tự động), phòng trường hợp SEA-Spoof chưa được duyệt. **Làm ngay trước GĐ4.**
 - [ ] Xin quyền [F5-TTS Vietnamese](https://huggingface.co/hynt/F5-TTS-Vietnamese-ViVoice) bằng email trường, vì email cá nhân bị từ chối.

@@ -6,7 +6,7 @@ Câu hỏi của giai đoạn: fine-tune trên tiếng Việt như thế nào ch
 
 | Ngày | Việc | Sản phẩm | Trạng thái |
 |---|---|---|---|
-| 0 | Việc người dùng làm trước (mục 1): quyền SEA-Spoof, MLAAD, đăng nhập Hugging Face | | **Chưa**. Chặn ngày 1 |
+| 0 | Việc người dùng làm trước (mục 1): quyền SEA-Spoof, MLAAD, đăng nhập Hugging Face | | **SEA-Spoof: có quyền** (14/11, đã kiểm). MLAAD: chưa |
 | 1 | Lấy metadata SEA-Spoof, thống kê phần tiếng Việt, chọn và chia tập, tải âm thanh | `protocols/ids/seaspoof_vi_*.tsv`, CSV theo định dạng AntiDeepfake | Chưa |
 | 2 | Pipeline fine-tune: bộ nhớ, warmup, overfit một batch, thời gian một epoch | Kernel Kaggle fine-tune, `results/runs/...` | Chưa |
 | 2 | Ngân sách quota GĐ5–6 | Mục 5 | Chưa |
@@ -30,9 +30,9 @@ Câu hỏi của giai đoạn: fine-tune trên tiếng Việt như thế nào ch
 
 ## 1. Việc người dùng cần làm trước
 
-1. **Kiểm tra quyền SEA-Spoof.** Đăng nhập Hugging Face, mở [trang dữ liệu](https://huggingface.co/datasets/Jack-ppkdczgx/SEA-Spoof). Nếu vẫn chờ duyệt: README hiện yêu cầu **gửi email cho tác giả trước** (wu_jinyang@a-star.edu.sg, imcc.sg@gmail.com), ghi họ tên, đơn vị, loại đơn vị (trường đại học), mục đích nghiên cứu, và cam kết phi thương mại, không chia sẻ lại. Claude soạn được bản nháp email nếu cần.
+1. ~~**Kiểm tra quyền SEA-Spoof.**~~ **Xong 14/11:** tác giả đã duyệt. Đã kiểm trên máy: `hf auth whoami` ra đúng tài khoản; `hf download` tải được `metadata/dataset_metadata.json`; đọc được đoạn cuối của một file parquet qua `HfFileSystem` (đọc theo khoảng byte, không tải cả file). Đăng nhập Hugging Face, mở [trang dữ liệu](https://huggingface.co/datasets/Jack-ppkdczgx/SEA-Spoof). Nếu vẫn chờ duyệt: README hiện yêu cầu **gửi email cho tác giả trước** (wu_jinyang@a-star.edu.sg, imcc.sg@gmail.com), ghi họ tên, đơn vị, loại đơn vị (trường đại học), mục đích nghiên cứu, và cam kết phi thương mại, không chia sẻ lại. Claude soạn được bản nháp email nếu cần.
 2. **Xin quyền MLAAD** ([trang dữ liệu](https://huggingface.co/datasets/mueller91/MLAAD), duyệt tự động) làm dự phòng. Làm ngay, kể cả khi SEA-Spoof được duyệt.
-3. **Đăng nhập Hugging Face trên máy:** `hf auth login` (hoặc `huggingface-cli login`). Claude không đọc token; script dùng thông tin đăng nhập có sẵn của thư viện.
+3. ~~**Đăng nhập Hugging Face trên máy.**~~ **Xong 14/11:** CLI `hf` (huggingface_hub 2.4.0) cài bằng `uv tool install --python 3.12 huggingface_hub`; người dùng đã `hf auth login`. Claude không đọc token; script dùng Python của CLI (`head -1 $(command -v hf)`) để có sẵn thông tin đăng nhập. Kết nối tới huggingface.co hiện đi được cả IPv4 lẫn IPv6.
 4. (Không chặn) Xin quyền F5-TTS Vietnamese bằng email trường, cho tập tự tạo.
 
 ## 2. SEA-Spoof: những gì đã biết
