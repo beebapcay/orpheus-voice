@@ -139,6 +139,21 @@ Mỗi kết quả, một câu giải thích (giả thuyết, 1 seed):
 | Được gì? | Tiết kiệm ~4 giờ quota và ~4 giờ chờ. Hiện tượng cần nghiên cứu (SFT làm quên) đã lộ rõ; lịch nhẹ hơn nhiều khả năng làm nó mờ đi và khó thấy khác biệt SFT–GRPO ở GĐ6 |
 | Việc thêm nếu còn quota (không bắt buộc) | Một lần R seed 1 với lịch E1 đúng nghĩa, để có điểm thứ hai về "độ mạnh fine-tune so với mức quên" (biến chỗ lệch thành một ablation phụ). Sửa bằng cách ghi đè `total_steps` của `lr_scheduler`, cần kiểm cú pháp ghi đè lồng của SpeechBrain |
 
+### 4.2. Tập kiểm tra MLAAD `fake/vi` (dựng 14/11)
+
+`src/prep_mlaad.py build` / `check`; danh sách ID `protocols/ids/mlaad_vi_test.tsv`; dataset Kaggle riêng tư `orpheus-mlaad-vi` (`push.sh data-mlaad`). Kết quả kiểm: `results/mlaad/`.
+
+| Thứ | Giá trị |
+|---|---|
+| Tiếng giả | 5 hệ thống × 1.000 câu: LEMAS-TTS (kiến trúc F5-TTS), OmniVoice, VieNeu-TTS, VoxCPM2, vixTTS; 10,06 giờ; WAV 22,05 kHz, giữ nguyên (code gốc tự resample về 16 kHz khi chấm) |
+| Tiếng thật | `real_vivos` của test SEA-Spoof (2.475 câu, 14 người nói, 4,03 giờ), đúng phần thật của `test_f5`, `test_minimax`, nên so được trực tiếp |
+| Tổng | 7.475 câu, 14,09 giờ |
+| Đặc điểm | LEMAS-TTS dùng giọng tham chiếu tiếng Anh (LibriVox) đọc văn bản tiếng Việt (cột `reference_speaker`, `original_file` của `meta.csv`) |
+| Lối tắt (EER khi chỉ dùng một đặc trưng thô; 50% = không tách được) | Thấp nhất 26,5% (âm lượng, vixTTS), 28,1% (âm lượng, VoxCPM2), 28,2% (năng lượng dải 4–8 kHz, VoxCPM2). Không có lối tắt mạnh; cùng cỡ `test_f5` (âm lượng 28,7%, GĐ4 mục 3.1) |
+| Lỗi đã sửa khi dựng | `meta.csv` có dấu ngoặc kép trong transcript; đọc mặc định gộp dòng (VieNeu-TTS ra 841 / 1.000). Đọc với `QUOTE_NONE` |
+
+Kế hoạch dùng: chấm S0 (4 mô hình) ở lần 4. Nếu S0 cũng gần 0% thì MLAAD không phân biệt được cấu hình và dừng ở đó; nếu đủ khó thì chấm lại checkpoint các lần 1–3 (đang ở output Kaggle).
+
 ## 5. Ngân sách quota
 
 | Lần | Quota dùng | Còn lại | Ghi chú |

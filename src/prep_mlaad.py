@@ -17,6 +17,7 @@ MLAAD: CC BY-NC 4.0, chỉ dùng nghiên cứu phi thương mại. Không commit
 dataset Kaggle để riêng tư. Chỉ commit danh sách ID (protocols/ids/mlaad_vi_test.tsv).
 """
 import argparse
+import csv
 import os
 import shutil
 import sys
@@ -61,7 +62,8 @@ def cmd_build(a):
         meta = os.path.join(src, system, "meta.csv")
         if not os.path.exists(meta):
             continue
-        m = pd.read_csv(meta, sep="|")
+        # QUOTE_NONE: transcript có dấu ngoặc kép; đọc mặc định làm gộp dòng (VieNeu-TTS ra 841 / 1.000)
+        m = pd.read_csv(meta, sep="|", quoting=csv.QUOTE_NONE)
         for _, r in m.iterrows():
             name = os.path.basename(r["path"])
             stem = os.path.splitext(name)[0]
