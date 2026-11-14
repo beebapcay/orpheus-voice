@@ -57,8 +57,10 @@ Thước đo chính: hệ thống để riêng (`test_f5`, `test_minimax`), RADA
 |---|---|---|---|---|---|
 | 1 | `orpheus-finetune` v2 | R seed 1 | A0 seed 1 | Chấm S0 trên SEA-Spoof dev, test: MMS-300M, W2V-Large, W2V-Small, MMS-300M NDA | ~4,8 giờ |
 | 2 | `orpheus-finetune` v3 | P0 seed 1 | B2 seed 1 | | ~4,1 giờ (theo số đo lần 1: 3,95 giờ + dựng môi trường) |
-| 3 | | B1 seed 1 | N0 seed 1 | | ~4 giờ |
+| 3 | `orpheus-finetune-b` v1 (kernel thứ hai, song song với lần 2) | B1 seed 1 | N0 seed 1 | | ~4 giờ |
 | 4 | | R seed 2 | R seed 3 | | ~4,1 giờ |
+
+**Chạy song song (14/11, người dùng đồng ý):** lần 2–4 độc lập nhau (không lần nào dùng kết quả của lần khác), tổng quota như nhau, nên chạy song song trên hai kernel: `orpheus-finetune` và `orpheus-finetune-b` (cùng `run.py`, `push.sh push finetune-b`). Một kernel chỉ chạy một version mỗi lúc. Giới hạn số phiên GPU cùng lúc của Kaggle chưa kiểm; lần 2 và lần 3 cùng `QUEUED` lúc 18:30. Lần 2 không tải lại `orpheus-src` để lần 2 (đang xếp hàng) chạy đúng bản code lúc đẩy.
 
 **Quyết định (14/11, người dùng):** dừng báo kết quả lần 1 và chờ duyệt. Sau khi duyệt, lần 2–4 chạy nối nhau: lần sau được đẩy ngay khi lần trước xong và đã lưu bằng chứng; chỉ dừng báo khi có lỗi, kết quả bất thường, hoặc khi xong cả GĐ5.
 
