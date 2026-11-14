@@ -11,10 +11,9 @@ Câu hỏi của giai đoạn: fine-tune trên tiếng Việt như thế nào ch
 | 1 | Đọc lướt bài SEA-Spoof | `resource/paper/SEA-Spoof-2509.19865.pdf` | Xong (mục 2, 2.2) |
 | 1 | Chọn và chia tập | `protocols/ids/seaspoof_vi_*.tsv`, mục 3 | **Xong** (người dùng chốt D1–D3 14/11); không trùng người nói, giọng, video |
 | 1 | Tải âm thanh, tạo CSV theo định dạng AntiDeepfake, kiểm lối tắt | `Data/seaspoof/data/` (máy), `results/seaspoof/` | **Xong** (14/11, 22,6 phút); train 17,88 giờ |
-| 1 | Đưa lên Kaggle | Dataset riêng tư `orpheus-seaspoof-vi` | Đang tải lên |
-| 2 | Code fine-tune và kernel | `src/finetune.py`, `kaggle/finetune/`, mục 4 | Xong code; pilot chưa chạy |
-| 2 | Pipeline fine-tune: bộ nhớ, warmup, overfit một batch, thời gian một epoch | Kernel Kaggle fine-tune, `results/runs/...` | Chưa |
-| 2 | Ngân sách quota GĐ5–6 | Mục 5 | Chưa |
+| 1 | Đưa lên Kaggle | Dataset riêng tư `orpheus-seaspoof-vi` (2,5 GB) | **Xong** (14/11) |
+| 2 | Code fine-tune và kernel; pilot đo đạc | `src/finetune.py`, `kaggle/finetune/`, `results/runs/orpheus-finetune-v1/`, mục 4 | **Pilot xong** (14/11, 0,74 giờ): bộ nhớ, tốc độ, CPU, overfit, đường chấm. Chờ chốt E1–E3 |
+| 2 | Ngân sách quota GĐ5–6 | Mục 5 | Điền số theo pilot; chờ chốt số epoch |
 
 **Lịch:** hôm nay 14/11, hạn nộp 30/11 (còn 16 ngày). Plan cần 14 ngày cho GĐ4–8 và dự phòng, còn dư khoảng 2 ngày. Quota Kaggle 30 giờ/tuần, làm mới 7 giờ sáng thứ Bảy: tuần 14–20/11, tuần 21–27/11, rồi 28–30/11.
 
@@ -69,7 +68,7 @@ Kiểm 14/11 trên metadata thật (revision HF `132f5dca`, ngày 21/07/2026; `s
 | 2. Chọn câu | `prep_seaspoof.py select` theo cách chia đã chốt (mục 3), seed 2026 | **Xong:** `protocols/ids/seaspoof_vi_{train,dev,test}.tsv`, `seaspoof_vi_split.json` (người nói, giọng, số câu, kết quả kiểm tra) |
 | 3. Âm thanh | `prep_seaspoof.py fetch`: tải 384 row group chứa câu đã chọn, kiểm `utterance_id` đúng vị trí, ghi FLAC, đo độ dài, tạo CSV định dạng AntiDeepfake | **Xong:** 22,6 phút trên máy (~5,4 MB/s), 7,38 GB đọc, giữ 31.886 file FLAC (2,5 GB) ở `Data/seaspoof/data/` (không commit) |
 | 4. Kiểm lối tắt | `prep_seaspoof.py check`: giờ thật theo tập và hệ thống; EER khi chỉ dùng một đặc trưng thô | **Xong:** `results/seaspoof/check_output.txt`, `hours_by_set.csv`, `shortcut_eer.csv` (mục 3.1) |
-| 5. Lên Kaggle | `push.sh data` -> dataset **riêng tư** `orpheus-seaspoof-vi` (FLAC + CSV) | Đang tải lên |
+| 5. Lên Kaggle | `push.sh data` -> dataset **riêng tư** `orpheus-seaspoof-vi` (FLAC + CSV) | **Xong** (14/11, ~6 phút tải lên) |
 
 Lượt 3 chạy trên **máy** (đăng nhập HF có sẵn; kernel Kaggle cần token HF trong Kaggle Secrets, chưa kiểm được với kernel đẩy bằng CLI).
 
@@ -181,41 +180,79 @@ Xuất phát từ `hparams/ft_grpo/mms_300m_pre-post-sft.yaml` của AntiDeepfak
 
 Với lịch gốc, 300 bước chỉ đưa learning rate lên ~4 × 10⁻⁹ (phát hiện 9), nên mô hình gần như không đổi: EER dev của pilot xấp xỉ EER dùng thẳng (S0) trên dev SEA-Spoof.
 
-**Cần chốt sau pilot** (phát hiện 9, 10): lịch learning rate; RawBoost trên dev; số epoch và `valid_step`.
+### 4.1. Kết quả pilot (`orpheus-finetune` v1, 14/11, 0,74 giờ quota; `results/runs/orpheus-finetune-v1/`)
+
+Trạng thái Kaggle là **ERROR**, nhưng chỉ do một bước chấm: shard 2 của dev (70 câu cuối của CSV xếp theo ID) chỉ có một lớp, và `main.py analysis` lỗi ở bước tính EER sau khi đã ghi điểm. Đã sửa ở `score_zeroshot.py` (xáo trộn cố định trước khi chia shard, kiểm mỗi shard đủ hai lớp). Cả ba lần huấn luyện đều xong.
+
+| Lần | Thời gian huấn luyện | Batch mỗi epoch | Giây mỗi bước | Bộ nhớ đỉnh | GPU dùng | CPU dùng | EER dev lúc huấn luyện |
+|---|---|---|---|---|---|---|---|
+| `pilot_R` (RawBoost) | 13,2 phút | 1.521 | 1,93 | 14,6 GB | 92,8% | 64,3% | 3,81% |
+| `pilot_A0` (không RawBoost) | 12,3 phút | 1.521 | 1,92 | 14,6 GB | 96,7% | 35,9% | 3,29% |
+| `overfit_n50` | 12,0 phút | 12 | 1,70 | 14,2 GB | 86,4% | 65,4% | 0,00% (từ bước 25) |
+
+Tất cả ở `max_batch_length` = 50 (tự giảm sau khi 100 hết bộ nhớ). Hai GPU chạy song song suốt pilot.
+
+| Kiểm tra | Kết quả |
+|---|---|
+| Bộ nhớ | **100 giây/batch hết bộ nhớ T4 ngay bước 2**; 50 giây chạy được, đỉnh 14,6 / 15 GB (sát). GRPO giữ thêm hai bản mô hình (~2,5 GB) nên sẽ phải giảm batch nữa |
+| Pipeline học được | Có: overfit 100 câu (lr 1e-5) làm loss giảm 0,748 → 0,013 qua 15 lần kiểm tra. EER bằng 0 ngay từ bước 25, vì tập này vốn dễ với mô hình post-trained |
+| Tốc độ | ~49 phút mỗi epoch trên toàn bộ train (17,88 giờ), khi hai GPU cùng huấn luyện |
+| Đọc dữ liệu | Không phải nút thắt: GPU dùng 93–97%. RawBoost tốn CPU (64% so với 36%) nhưng không làm chậm bước (1,93 so với 1,92 s). Hai lần huấn luyện song song trên 4 nhân CPU chạy được, `num_workers=2` mỗi lần |
+| Nạp trọng số | Không có cảnh báo; cả ba lần nạp `mms_300m.ckpt` (HF) |
+| Đường chấm checkpoint cục bộ | Đúng: `pilot_A0` trên `ood_forget` ra In-the-Wild 2,6% / RADAR EN 25,9%, gần mốc S0 của GĐ3 (2,6 / 26,2), đúng như kỳ vọng vì learning rate chỉ ~4e-9 |
+| EER dev lúc huấn luyện so với chấm lại | **Không khớp:** chấm lại `pilot_R` (batch 1, dev sạch) ra **1,16%**; lúc huấn luyện ra 3,81% (`pilot_R`, RawBoost trên dev) và 3,29% (`pilot_A0`, dev sạch). Hai mô hình gần như chưa đổi, nên khoảng chênh 1,16 so với 3,29 là do đệm số 0 (phát hiện 13) |
+
+**Phát hiện thêm từ pilot** (nối tiếp mục 2.2):
+
+| # | Phát hiện | Ảnh hưởng | Việc cần làm |
+|---|---|---|---|
+| 13 | **EER dev lúc huấn luyện bị lệch do đệm số 0.** Kiểm tra dev dùng batch 10 (`valid_dataloader_options`), các câu ngắn được đệm số 0 tới câu dài nhất; mô hình không có mặt nạ cho phần đệm, nên phần đệm đi vào lớp trung bình theo thời gian. Khi chấm (`main.py inference/analysis`) batch là 1, không đệm (`dataio_prepare_test`). Cùng một mô hình: 3,29% so với 1,16% | Chọn checkpoint theo EER dev lúc huấn luyện là chọn theo một độ đo bị lệch. Cộng với phát hiện 10 (RawBoost trên dev), EER dev lúc huấn luyện không dùng để báo cáo được | Số báo cáo luôn lấy từ chấm lại (batch 1, dev và test sạch). Cách chọn checkpoint: chờ người dùng chốt (mục 4.2) |
+| 14 | **Mô hình dùng thẳng đã gần bão hoà trên dev SEA-Spoof:** ~1,16% (mô hình pilot gần như chưa đổi so với S0). So với RADAR tiếng Việt 20,08% | Trong miền gần như không còn chỗ cải thiện; dev khó phân biệt các checkpoint (nhiều mức EER gần 0). Thước đo chính vẫn là hệ thống để riêng, RADAR, mức quên (đúng như plan) | Chấm S0 chính thức trên `seaspoof_vi_test` (mọi tập con) ở lần chạy sau |
+| 15 | **T4 không chạy được batch 100 giây với MMS-300M** (cấu hình gốc, bài dùng H100) | Batch 50 giây: số bước gấp đôi cho cùng lượng âm thanh, nên lịch learning rate theo bước cũng đổi | Dùng `max_batch_length=50` cho mọi cấu hình MMS-300M, W2V-Large (cùng kích thước); W2V-Small đo lại |
+
+### 4.2. Cần người dùng chốt trước GĐ5
+
+| # | Câu hỏi | Lý do |
+|---|---|---|
+| E1 | Lịch learning rate | Phát hiện 9: lịch gốc với ~4.500 bước (3 epoch ở batch 50 giây) chỉ lên tới ~5,7 × 10⁻⁸, gần bằng learning rate post-train; SFT gần như không đổi mô hình |
+| E2 | Số epoch | Ngân sách (mục 5) |
+| E3 | Chọn checkpoint | Phát hiện 10, 13, 14: EER dev lúc huấn luyện bị lệch (RawBoost, đệm) và dev gần bão hoà |
 
 - [x] Kernel Kaggle fine-tune: dùng lại cách dựng môi trường và lưu bằng chứng của GĐ3 (`results/runs/<kernel>-v<N>/`); mở rộng `push.sh output` cho kernel mới.
-- [ ] Lưu checkpoint tốt nhất vào `/kaggle/working/results/ckpt/` (đã làm). **Chạy tiếp qua nhiều phiên không làm được đúng với code gốc:** checkpoint chỉ giữ 1 bản tốt nhất, không lưu bộ đếm epoch và lịch learning rate (chỉ `ssl`, cộng `optimizer`, `brain` do SpeechBrain tự thêm). Vì vậy mỗi lần huấn luyện phải vừa một phiên 12 giờ.
-- [ ] Đo bộ nhớ GPU với MMS-300M. Nếu vượt 15 GB, giảm `max_batch_length` (mặc định 100 giây âm thanh mỗi batch).
-- [ ] Chỉnh `warmup` theo số bước thật: cấu hình gốc `warmup: 80000` nhưng `optimizer_step_limit: 50000`, nên với tập nhỏ learning rate gần như không tăng tới giá trị đặt.
-- [ ] Overfit một batch nhỏ để xác nhận pipeline học được.
-- [ ] Đo thời gian một epoch và **tốc độ đọc dữ liệu** (4 nhân CPU cho 2 GPU; chỉnh `num_workers`).
-- [ ] Thử chạy hai cấu hình song song trên hai GPU trong một phiên.
-- [ ] Chấm sau fine-tune bằng `src/score_zeroshot.py` (đã có, chia shard, chạy tiếp được) trên dev, test, hệ thống để riêng, RADAR tiếng Việt, `ood_forget`.
+- [x] Lưu checkpoint tốt nhất vào `/kaggle/working/results/ckpt/`. **Không chạy tiếp được qua nhiều phiên với code gốc:** checkpoint chỉ giữ 1 bản tốt nhất, không lưu bộ đếm epoch và lịch learning rate (chỉ `ssl`, cộng `optimizer`, `brain` do SpeechBrain tự thêm). Vì vậy mỗi lần huấn luyện phải vừa một phiên 12 giờ
+- [x] Đo bộ nhớ GPU với MMS-300M: 100 giây hết bộ nhớ, 50 giây đỉnh 14,6 GB
+- [ ] Chỉnh `warmup` theo số bước thật (chờ E1)
+- [x] Overfit một tập nhỏ: loss 0,748 → 0,013
+- [x] Đo thời gian một epoch (~49 phút) và tốc độ đọc dữ liệu (GPU 93–97%, không phải nút thắt)
+- [x] Chạy hai cấu hình song song trên hai GPU trong một phiên: được
+- [x] Chấm sau fine-tune bằng `src/score_zeroshot.py --local`: chạy được trên dev, `ood_forget` (lỗi shard một lớp đã sửa)
 
-## 5. Ngân sách quota (nháp, điền số sau ngày 2)
+## 5. Ngân sách quota (14/11, theo số đo của pilot)
 
-`Giờ quota = số phiên × thời gian phiên`, mỗi phiên chạy được 2 cấu hình song song (nếu ngày 2 xác nhận được).
+`Giờ quota = số phiên × thời gian phiên`; mỗi phiên chạy 2 lần huấn luyện song song (đã xác nhận ở pilot).
 
-| Giai đoạn | Lần huấn luyện | Ghi chú |
+| Thành phần mỗi lần | Thời gian (một T4, khi hai GPU cùng chạy) | Nguồn |
 |---|---|---|
-| GĐ5 | R × 3 seed, P0, A0, B2, B1 = 7; N0 = 1 (không bắt buộc) | |
-| GĐ6 | G1 × 3 seed, G2, G3 = 5; ít mẫu (SFT và G1, N = 50, 200, 1000) = 6 lần ngắn | |
-| Tổng | ~19 lần | |
+| Một epoch toàn bộ train (17,88 giờ, batch 50 giây) | ~49 phút (1.521 bước × 1,93 s) | Pilot |
+| Kiểm tra dev (batch 1) | ~3,5 phút | Pilot (chấm dev 209 s) |
+| Chấm sau huấn luyện: `seaspoof_vi_test` (13,5 giờ) + RADAR tiếng Việt (17,0 giờ) + `ood_forget` (5,5 giờ) | ~60–70 phút | GĐ3 (RADAR 24–38 phút), pilot (`ood_forget` 11 phút, ~30–38x thời gian thực) |
+| Dựng môi trường, tải checkpoint | ~5 phút mỗi phiên | GĐ3, pilot |
+| GRPO | **Chưa đo.** Ước ~1,7 lần SFT mỗi epoch (thêm hai lượt forward của mô hình tham chiếu và chính sách cũ; phải giảm batch vì bộ nhớ) | Ước lượng |
 
-| Thành phần cho mỗi lần | Đã biết | Chưa biết |
-|---|---|---|
-| Huấn luyện | | Thời gian một epoch, số epoch |
-| Chấm RADAR tiếng Việt + `ood_forget` | ~30–50 phút trên một T4 (bản 317M) | |
-| Chấm dev, test, hệ thống để riêng | | Phụ thuộc kích thước tập |
+| Số epoch (cho mọi cấu hình) | Một lần SFT | GĐ5: 8 lần = 4 phiên | GĐ6: 5 lần GRPO = 3 phiên | GĐ6: 6 lần ít mẫu = 3 phiên | **Tổng** |
+|---|---|---|---|---|---|
+| 3 | ~3,7 giờ | ~15 giờ | ~16,5 giờ | ~4 giờ | **~36 giờ** |
+| 5 | ~5,5 giờ | ~22 giờ | ~25,5 giờ | ~4 giờ | **~52 giờ** |
+| 10 (như bài GRPO) | ~9,8 giờ | ~39 giờ | ~40 giờ | ~4 giờ | ~83 giờ (không vừa) |
 
-Quota còn lại đến hạn nộp: khoảng 30 + 30 + 30 giờ (ba lần làm mới: 14/11, 21/11, 28/11), nhưng tuần cuối chỉ còn 2–3 ngày dùng được trước khi đóng gói. Nếu không vừa: theo thứ tự cắt ở mục 8 của plan (bỏ N0, G3, B1, ...).
+Quota: còn **29,26 giờ** đến 21/11 (đã dùng 0,74 giờ cho pilot), thêm 30 giờ cho 21–27/11, và 30 giờ từ 28/11 nhưng gần như chỉ dùng được 1–2 ngày trước hạn nộp. Thực tế dùng được ~59–70 giờ. 3 epoch để lại ~20 giờ dự phòng (chạy lại, thêm seed cho P0, B2); 5 epoch còn ~10 giờ. Nếu không vừa: theo thứ tự cắt ở mục 8 của plan (bỏ N0, G3, B1, ...).
 
 ## 6. Kiểm tra điều kiện qua GĐ4
 
 - [x] Có quyền SEA-Spoof (hoặc đã chuyển sang MLAAD + VIVOS và ghi rõ hạn chế): có từ 14/11
 - [x] Danh sách câu train, dev, test, hệ thống để riêng cố định trong `protocols/ids/`, không trùng người nói (14/11, mục 3)
-- [ ] Pipeline overfit được một batch; bộ nhớ vừa T4
+- [x] Pipeline overfit được một tập nhỏ; bộ nhớ vừa T4 ở batch 50 giây (14/11, mục 4.1)
 - [ ] Đã đo thời gian một epoch và tốc độ đọc dữ liệu; bảng ngân sách mục 5 điền đủ và vừa quota
-- [ ] Bằng chứng mọi lần chạy trong `results/runs/`
+- [x] Bằng chứng mọi lần chạy trong `results/runs/` (`orpheus-finetune-v1`)
 
 Điều kiện của plan: ngân sách vừa quota. Nếu MMS-300M không vừa sau khi giảm batch, chuyển cấu hình mốc sang W2V-Small. Nếu không fine-tune được, chuyển sang tầng 0.

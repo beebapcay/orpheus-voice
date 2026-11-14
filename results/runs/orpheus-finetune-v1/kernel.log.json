@@ -1,0 +1,96 @@
+[{"stream_name":"stdout","time":8.439943305,"data":"Code: /kaggle/input/datasets/beebapcay/orpheus-src | SEA-Spoof: /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi | RADAR/ItW: /kaggle/input/notebooks/beebapcay/orpheus-prep/data\n"}
+,{"stream_name":"stdout","time":8.551397208000001,"data":"git 6edd4cc\n"}
+,{"stream_name":"stdout","time":8.551429966,"data":"staged 2026-11-14 10:10:38\n"}
+,{"stream_name":"stdout","time":8.551434771,"data":"\n"}
+,{"stream_name":"stdout","time":8.551438721,"data":"+ ls /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi | head; ls /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi/seaspoof_vi/flac | wc -l\n"}
+,{"stream_name":"stdout","time":8.575079245,"data":"seaspoof_vi\n"}
+,{"stream_name":"stdout","time":8.575103161,"data":"seaspoof_vi_audio_info.csv\n"}
+,{"stream_name":"stdout","time":8.575109277,"data":"seaspoof_vi_dev.csv\n"}
+,{"stream_name":"stdout","time":8.575113049,"data":"seaspoof_vi_test.csv\n"}
+,{"stream_name":"stdout","time":8.575118282,"data":"seaspoof_vi_train_10h.csv\n"}
+,{"stream_name":"stdout","time":8.575129461,"data":"seaspoof_vi_train.csv\n"}
+,{"stream_name":"stdout","time":8.575133335,"data":"seaspoof_vi_train_n1000.csv\n"}
+,{"stream_name":"stdout","time":8.575137732,"data":"seaspoof_vi_train_n200.csv\n"}
+,{"stream_name":"stdout","time":8.575141244,"data":"seaspoof_vi_train_n50.csv\n"}
+,{"stream_name":"stdout","time":8.575144635000001,"data":"VERSION\n"}
+,{"stream_name":"stdout","time":8.719862628,"data":"31886\n"}
+,{"stream_name":"stdout","time":8.720676366,"data":"+ nvidia-smi --query-gpu=name,memory.total --format=csv; free -g; df -h /kaggle/working /tmp; echo nproc=$(nproc); lscpu | grep -E 'Model name|^CPU\\(s\\)'\n"}
+,{"stream_name":"stdout","time":8.753054845,"data":"name, memory.total [MiB]\n"}
+,{"stream_name":"stdout","time":8.75308516,"data":"Tesla T4, 15360 MiB\n"}
+,{"stream_name":"stdout","time":8.753130417,"data":"Tesla T4, 15360 MiB\n"}
+,{"stream_name":"stdout","time":8.781736462,"data":"               total        used        free      shared  buff/cache   available\n"}
+,{"stream_name":"stdout","time":8.781762437,"data":"Mem:              31           1          26           0           4          30\n"}
+,{"stream_name":"stdout","time":8.781781736,"data":"Swap:              0           0           0\n"}
+,{"stream_name":"stdout","time":8.785952009,"data":"Filesystem      Size  Used Avail Use% Mounted on\n"}
+,{"stream_name":"stdout","time":8.785974563,"data":"/dev/loop2       20G  140K   20G   1% /kaggle/working\n"}
+,{"stream_name":"stdout","time":8.785977748,"data":"overlay         8.0T  7.1T  967G  89% /\n"}
+,{"stream_name":"stdout","time":8.788706891,"data":"nproc=4\n"}
+,{"stream_name":"stdout","time":8.797064864,"data":"CPU(s):                                  4\n"}
+,{"stream_name":"stdout","time":8.797081922,"data":"Model name:                              Intel(R) Xeon(R) CPU @ 2.00GHz\n"}
+,{"stream_name":"stdout","time":12.002065448,"data":"+ bash /tmp/orpheus/src/setup_antideepfake.sh /tmp/orpheus/work env\n"}
+,{"stream_name":"stdout","time":12.017762277,"data":"[03:19:26] Tải micromamba\n"}
+,{"stream_name":"stdout","time":13.866278244,"data":"[03:19:28] Tạo env Python 3.9, pip 24.0\n"}
+,{"stream_name":"stdout","time":21.747927871999998,"data":"[03:19:36] Cài torch 2.6.0 + torchaudio 2.6.0 (cu118)\n"}
+,{"stream_name":"stdout","time":140.845884879,"data":"[03:21:35] Clone fairseq\n"}
+,{"stream_name":"stdout","time":143.636400706,"data":"[03:21:38] Cài fairseq 862efab86f649c04ea31545ce28d13c59560113d (biên dịch, mất vài phút)\n"}
+,{"stream_name":"stdout","time":185.619153954,"data":"[03:22:20] Cài speechbrain 1.0.2 và các gói phụ\n"}
+,{"stream_name":"stdout","time":242.101052981,"data":"[03:23:16] Clone AntiDeepfake\n"}
+,{"stream_name":"stdout","time":242.741487846,"data":"[03:23:17] Kiểm tra môi trường\n"}
+,{"stream_name":"stderr","time":247.001889565,"data":"2026-11-14 03:23:21 | INFO | speechbrain.utils.quirks | Applied quirks (see `speechbrain.utils.quirks`): [disable_jit_profiling, allow_tf32]\n"}
+,{"stream_name":"stderr","time":247.001946388,"data":"2026-11-14 03:23:21 | INFO | speechbrain.utils.quirks | Excluded quirks specified by the `SB_DISABLE_QUIRKS` environment (comma-separated list): []\n"}
+,{"stream_name":"stdout","time":247.184999976,"data":"python       3.9.23\n"}
+,{"stream_name":"stdout","time":247.185026463,"data":"torch        2.6.0+cu118 | CUDA: True | Tesla T4\n"}
+,{"stream_name":"stdout","time":247.185032494,"data":"torchaudio   2.6.0+cu118\n"}
+,{"stream_name":"stdout","time":247.185037573,"data":"fairseq      1.0.0a0+862efab\n"}
+,{"stream_name":"stdout","time":247.185042435,"data":"speechbrain  1.0.2\n"}
+,{"stream_name":"stdout","time":247.185046981,"data":"numpy/pandas 1.21.2 1.4.3\n"}
+,{"stream_name":"stdout","time":247.185051496,"data":"fairseq Wav2Vec2Model import: OK\n"}
+,{"stream_name":"stdout","time":248.421098161,"data":"[03:23:22] Dựng môi trường mất 3 phút\n"}
+,{"stream_name":"stdout","time":248.424841281,"data":"[03:23:22] Xong bước env. Log đầy đủ: /tmp/orpheus/work/setup.log\n"}
+,{"stream_name":"stdout","time":248.426314304,"data":"Dựng môi trường xong sau 4.1 phút\n"}
+,{"stream_name":"stdout","time":248.426333533,"data":"+ /usr/bin/python3 /tmp/orpheus/src/finetune.py --base /tmp/orpheus/work --data-root /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi /kaggle/input/notebooks/beebapcay/orpheus-prep/data --out /kaggle/working/results --cache /tmp/orpheus/cache --run prefetch_mms_300m --model mms_300m --prefetch\n"}
+,{"stream_name":"stdout","time":248.59502078,"data":"[03:23:23] [mms_300m] tải checkpoint từ Hugging Face (mms-300m-anti-deepfake)\n"}
+,{"stream_name":"stdout","time":259.673383403,"data":"[03:23:34]   tải mms_300m.safetensors: 1.27 GB, 11 s (115 MB/s)\n"}
+,{"stream_name":"stdout","time":270.790356598,"data":"[03:23:45] [mms_300m] đã chuyển safetensors -\u003e mms_300m.ckpt (431 tensor)\n"}
+,{"stream_name":"stdout","time":271.099020123,"data":"[03:23:45] Đã có checkpoint khởi tạo /tmp/orpheus/cache/mms_300m.ckpt\n"}
+,{"stream_name":"stdout","time":277.238404408,"data":"[GPU 0] bắt đầu pilot_R\n"}
+,{"stream_name":"stdout","time":297.238907878,"data":"[GPU 1] bắt đầu overfit_n50\n"}
+,{"stream_name":"stdout","time":1042.020536927,"data":"[GPU 1] xong overfit_n50 (mã 0) sau 12.4 phút\n"}
+,{"stream_name":"stdout","time":1042.020604546,"data":"+ grep -E 'KẾT QUẢ|THẤT BẠI|lỗi|Lỗi' /kaggle/working/results/train/overfit_n50.driver.log | tail -5\n"}
+,{"stream_name":"stdout","time":1042.033438784,"data":"[03:36:36] [overfit_n50] KẾT QUẢ HUẤN LUYỆN: {\"run\": \"overfit_n50\", \"model\": \"mms_300m\", \"method\": \"sft\", \"train\": \"seaspoof_vi_train_n50\", \"valid\": \"seaspoof_vi_train_n50\", \"returncode\": 0, \"train_seconds\": 721, \"overrides\": \"{\\\"number_of_epochs\\\": \\\"30\\\", \\\"valid_step\\\": \\\"25\\\", \\\"use_da\\\": \\\"False\\\", \\\"lr\\\": \\\"1e-5\\\", \\\"warmup\\\": \\\"1\\\", \\\"num_workers\\\": \\\"2\\\", \\\"max_batch_length\\\": 50.0}\", \"max_batch_length\": 50.0, \"batches_per_epoch\": 12, \"sec_per_it\": 1.7, \"peak_mem_mib\": 14203.0, \"gpu_util_mean\": 86.4, \"cpu_util_mean\": 65.4, \"monitor_samples\": 140, \"n_valid\": 15, \"last_steps\": 360, \"last_lr\": 9.68e-06, \"best_valid_eer\": 0.0, \"best_steps\": 25, \"ckpt_mb\": 1270, \"status\": \"ok\"}\n"}
+,{"stream_name":"stdout","time":1042.033813587,"data":"[GPU 1] bắt đầu pilot_A0\n"}
+,{"stream_name":"stdout","time":1304.57500829,"data":"[GPU 0] xong pilot_R (mã 0) sau 17.1 phút\n"}
+,{"stream_name":"stdout","time":1304.575075037,"data":"+ grep -E 'KẾT QUẢ|THẤT BẠI|lỗi|Lỗi' /kaggle/working/results/train/pilot_R.driver.log | tail -5\n"}
+,{"stream_name":"stdout","time":1304.578156343,"data":"[03:37:27] [pilot_R] KẾT QUẢ HUẤN LUYỆN: {\"run\": \"pilot_R\", \"model\": \"mms_300m\", \"method\": \"sft\", \"train\": \"seaspoof_vi_train\", \"valid\": \"seaspoof_vi_dev\", \"returncode\": 0, \"train_seconds\": 791, \"overrides\": \"{\\\"number_of_epochs\\\": \\\"1\\\", \\\"optimizer_step_limit\\\": \\\"300\\\", \\\"valid_step\\\": \\\"100000\\\", \\\"num_workers\\\": \\\"2\\\", \\\"max_batch_length\\\": 50.0}\", \"max_batch_length\": 50.0, \"batches_per_epoch\": 1521, \"sec_per_it\": 1.93, \"peak_mem_mib\": 14645.0, \"gpu_util_mean\": 92.8, \"cpu_util_mean\": 64.3, \"monitor_samples\": 155, \"n_valid\": 1, \"last_steps\": 300, \"last_lr\": 3.74e-09, \"best_valid_eer\": 3.81, \"best_steps\": 300, \"ckpt_mb\": 1270, \"status\": \"ok\"}\n"}
+,{"stream_name":"stdout","time":1304.578197422,"data":"[03:40:59] [pilot_R/seaspoof_vi_dev] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_dev\", \"model\": \"pilot_R\", \"n\": 2070, \"audio_h\": 2.205, \"gpu_seconds\": 209, \"x_realtime\": 38.0, \"n_real\": 1035, \"n_fake\": 1035, \"eer_%\": 1.1594202898550725, \"minDCF\": 0.0266666666666666, \"actDCF\": 0.1420289855072463, \"eer_threshold\": 5.072447776794434}\n"}
+,{"stream_name":"stdout","time":2672.882994014,"data":"[GPU 1] xong pilot_A0 (mã 1) sau 27.2 phút\n"}
+,{"stream_name":"stdout","time":2672.8830555,"data":"+ grep -E 'KẾT QUẢ|THẤT BẠI|lỗi|Lỗi' /kaggle/working/results/train/pilot_A0.driver.log | tail -5\n"}
+,{"stream_name":"stdout","time":2672.885914529,"data":"[03:49:31] [pilot_A0] KẾT QUẢ HUẤN LUYỆN: {\"run\": \"pilot_A0\", \"model\": \"mms_300m\", \"method\": \"sft\", \"train\": \"seaspoof_vi_train\", \"valid\": \"seaspoof_vi_dev\", \"returncode\": 0, \"train_seconds\": 736, \"overrides\": \"{\\\"number_of_epochs\\\": \\\"1\\\", \\\"optimizer_step_limit\\\": \\\"300\\\", \\\"valid_step\\\": \\\"100000\\\", \\\"num_workers\\\": \\\"2\\\", \\\"use_da\\\": \\\"False\\\", \\\"max_batch_length\\\": 50.0}\", \"max_batch_length\": 50.0, \"batches_per_epoch\": 1521, \"sec_per_it\": 1.92, \"peak_mem_mib\": 14645.0, \"gpu_util_mean\": 96.7, \"cpu_util_mean\": 35.9, \"monitor_samples\": 145, \"n_valid\": 1, \"last_steps\": 300, \"last_lr\": 3.74e-09, \"best_valid_eer\": 3.29, \"best_steps\": 300, \"ckpt_mb\": 1270, \"status\": \"ok\"}\n"}
+,{"stream_name":"stdout","time":2672.885959673,"data":"[03:52:40] [pilot_A0/seaspoof_vi_dev] THẤT BẠI: [pilot_A0/seaspoof_vi_dev] shard 1 lỗi (mã 1). Cuối log:\n"}
+,{"stream_name":"stdout","time":2672.885967171,"data":"[04:03:47] [pilot_A0/ood_forget] KẾT QUẢ: {\"dataset\": \"ood_forget\", \"model\": \"pilot_A0\", \"n\": 4000, \"audio_h\": 5.457, \"gpu_seconds\": 666, \"x_realtime\": 29.5, \"n_real\": 2000, \"n_fake\": 2000, \"eer_%\": 15.25, \"minDCF\": 0.3244, \"actDCF\": 0.33275, \"eer_threshold\": 2.507768511772156}\n"}
+,{"stream_name":"stdout","time":2672.88652896,"data":"+ cat /kaggle/working/results/train_summary.csv\n"}
+,{"stream_name":"stdout","time":2672.892039283,"data":"run,model,method,train,valid,returncode,train_seconds,overrides,max_batch_length,batches_per_epoch,sec_per_it,peak_mem_mib,gpu_util_mean,cpu_util_mean,monitor_samples,n_valid,last_steps,last_lr,best_valid_eer,best_steps,ckpt_mb,status\r\n"}
+,{"stream_name":"stdout","time":2672.892064863,"data":"overfit_n50,mms_300m,sft,seaspoof_vi_train_n50,seaspoof_vi_train_n50,0,721,\"{\"\"number_of_epochs\"\": \"\"30\"\", \"\"valid_step\"\": \"\"25\"\", \"\"use_da\"\": \"\"False\"\", \"\"lr\"\": \"\"1e-5\"\", \"\"warmup\"\": \"\"1\"\", \"\"num_workers\"\": \"\"2\"\", \"\"max_batch_length\"\": 50.0}\",50.0,12,1.7,14203.0,86.4,65.4,140,15,360,9.68e-06,0.0,25,1270,ok\r\n"}
+,{"stream_name":"stdout","time":2672.892085791,"data":"pilot_R,mms_300m,sft,seaspoof_vi_train,seaspoof_vi_dev,0,791,\"{\"\"number_of_epochs\"\": \"\"1\"\", \"\"optimizer_step_limit\"\": \"\"300\"\", \"\"valid_step\"\": \"\"100000\"\", \"\"num_workers\"\": \"\"2\"\", \"\"max_batch_length\"\": 50.0}\",50.0,1521,1.93,14645.0,92.8,64.3,155,1,300,3.74e-09,3.81,300,1270,ok\r\n"}
+,{"stream_name":"stdout","time":2672.892091374,"data":"pilot_A0,mms_300m,sft,seaspoof_vi_train,seaspoof_vi_dev,0,736,\"{\"\"number_of_epochs\"\": \"\"1\"\", \"\"optimizer_step_limit\"\": \"\"300\"\", \"\"valid_step\"\": \"\"100000\"\", \"\"num_workers\"\": \"\"2\"\", \"\"use_da\"\": \"\"False\"\", \"\"max_batch_length\"\": 50.0}\",50.0,1521,1.92,14645.0,96.7,35.9,145,1,300,3.74e-09,3.29,300,1270,ok\r\n"}
+,{"stream_name":"stdout","time":2672.892476845,"data":"+ cat /kaggle/working/results/scores/summary.csv\n"}
+,{"stream_name":"stdout","time":2672.894271807,"data":"dataset,model,n,audio_h,gpu_seconds,x_realtime,n_real,n_fake,eer_%,minDCF,actDCF,eer_threshold\n"}
+,{"stream_name":"stdout","time":2672.894287465,"data":"seaspoof_vi_dev,pilot_R,2070,2.205,209,38.0,1035,1035,1.1594202898550725,0.0266666666666666,0.1420289855072463,5.072447776794434\n"}
+,{"stream_name":"stdout","time":2672.894292258,"data":"ood_forget,pilot_A0,4000,5.457,666,29.5,2000,2000,15.25,0.3244,0.33275,2.507768511772156\n"}
+,{"stream_name":"stdout","time":2672.894610337,"data":"+ du -sh /kaggle/working/results/*\n"}
+,{"stream_name":"stdout","time":2672.903009777,"data":"3.6G\t/kaggle/working/results/ckpt\n"}
+,{"stream_name":"stdout","time":2672.903027304,"data":"4.0K\t/kaggle/working/results/pip-freeze.txt\n"}
+,{"stream_name":"stdout","time":2672.903394558,"data":"58M\t/kaggle/working/results/scores\n"}
+,{"stream_name":"stdout","time":2672.903412396,"data":"52K\t/kaggle/working/results/setup.log\n"}
+,{"stream_name":"stdout","time":2672.903856985,"data":"860K\t/kaggle/working/results/train\n"}
+,{"stream_name":"stdout","time":2672.903876124,"data":"4.0K\t/kaggle/working/results/train_summary.csv\n"}
+,{"stream_name":"stdout","time":2672.903881344,"data":"4.0K\t/kaggle/working/results/versions.txt\n"}
+,{"stream_name":"stdout","time":2672.904205588,"data":"Thất bại: ['pilot_A0']\n"}
+,{"stream_name":"stdout","time":2672.904222244,"data":"Tổng thời gian 0.74 giờ\n"}
+,{"stream_name":"stderr","time":2675.307479754,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":2675.307533492,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":2675.68640962,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":2675.686461105,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":2677.015518093,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":2678.173826193,"data":"[NbConvertApp] Writing 301789 bytes to __results__.html\n"}
+]

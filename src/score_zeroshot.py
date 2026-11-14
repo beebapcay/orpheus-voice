@@ -187,7 +187,15 @@ def job_antideepfake(args, ckpts, ram, gpu, dataset, model, csv_path, outdir):
     import pickle
 
     df = read_csv(csv_path)
+    # Xáo trộn cố định trước khi chia shard: CSV xếp theo ID nên các câu cùng nhãn đứng liền
+    # nhau, shard cuối có thể chỉ có một lớp; khi đó main.py analysis ghi xong điểm rồi mới
+    # lỗi ở bước tính EER (lỗi gặp ở orpheus-finetune v1, dev SEA-Spoof). Thứ tự không ảnh
+    # hưởng độ đo (evaluate.py ghép theo ID).
+    df = df.sample(frac=1, random_state=0).reset_index(drop=True)
     shards = make_shards(df, args.shard_size)
+    for k, s in enumerate(shards):
+        if s.Label.nunique() < 2:
+            raise RuntimeError(f"[{model}/{dataset}] shard {k} chỉ có một lớp; đổi --shard-size")
     os.makedirs(os.path.join(outdir, "shards"), exist_ok=True)
     todo = [k for k in range(len(shards))
             if not os.path.exists(os.path.join(outdir, "shards", f"{k:03d}.done"))]

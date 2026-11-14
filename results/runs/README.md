@@ -10,6 +10,7 @@ Mỗi thư mục `<kernel>-v<N>` là một lần chạy trên Kaggle (một vers
 | `orpheus-zeroshot-v1` | Kiểm chứng 3 mốc; zero-shot 3 backbone (Default) + baseline; mốc `ood_forget` | Xong, 2,42 giờ; qua 3 mốc |
 | `orpheus-zeroshot-v2` | Zero-shot: MMS-300M NDA, MMS-1B, XLS-R-1B (hai bản), W2V-Large NDA, W2V-Small NDA | Xong, 2,71 giờ; NDA tốt hơn Default ở 4/5 backbone |
 | `orpheus-zeroshot-v3` | Zero-shot: HuBERT-XL, XLS-R-2B (hai bản) | Xong, 5,18 giờ; XLS-R-2B Default tốt nhất (13,71%) |
+| `orpheus-finetune-v1` | GĐ4 pilot fine-tune: R và A0 300 bước, overfit 100 câu; đo bộ nhớ, tốc độ, CPU | ERROR do một shard chấm chỉ có một lớp (đã sửa); huấn luyện xong cả 3; 0,74 giờ |
 
 **Cách sinh:** `kaggle/push.sh` tự tạo khi đẩy kernel (`run.py`, `kernel-metadata.json`, `pushed.json`) và khi tải kết quả (`output zeroshot N` hoặc `archive-log prep N`: log, môi trường, log từng shard, `RUN.md`). Script: `kaggle/archive_run.py`. Mục **Ghi chú** trong `RUN.md` viết tay.
 
