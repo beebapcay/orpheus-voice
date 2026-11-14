@@ -55,6 +55,9 @@ def find(name):
 src = find("finetune.py")
 sea = find("seaspoof_vi_train.csv")
 prep = find("orpheus_data_manifest.json")
+# Tập MLAAD fake/vi (GĐ5 phát hiện 2), không bắt buộc: dataset orpheus-mlaad-vi nếu được gắn
+mlaad_hits = sorted(glob.glob("/kaggle/input/**/mlaad_vi_test.csv", recursive=True))
+roots = [sea, prep] + ([os.path.dirname(mlaad_hits[0])] if mlaad_hits else [])
 print("Code:", src, "| SEA-Spoof:", sea, "| RADAR/ItW:", prep, flush=True)
 p = os.path.join(src, "VERSION")
 if os.path.exists(p):
@@ -84,7 +87,7 @@ if r.returncode != 0:
     sys.exit("Dựng môi trường thất bại, xem results/setup.log")
 print(f"Dựng môi trường xong sau {(time.time() - T0) / 60:.1f} phút", flush=True)
 
-common = ["--base", base, "--data-root", sea, prep, "--out", out, "--cache", cache]
+common = ["--base", base, "--data-root", *roots, "--out", out, "--cache", cache]
 # Tải trước checkpoint khởi tạo (một lần cho mỗi mô hình và cách khởi tạo), tránh hai GPU cùng
 # tải một file. init: "post" (checkpoint post-trained, mặc định) hoặc "fairseq" (P0)
 for m, ini in sorted({(r["model"], r.get("init", "post")) for runs in RUNS.values() for r in runs}):
@@ -166,7 +169,7 @@ for t in threads:
 print(f"Huấn luyện và chấm sau fine-tune xong sau {(time.time() - T0) / 3600:.2f} giờ", flush=True)
 
 if ZEROSHOT:
-    cmd = [sys.executable, f"{code}/score_zeroshot.py", "--base", base, "--data-root", sea, prep,
+    cmd = [sys.executable, f"{code}/score_zeroshot.py", "--base", base, "--data-root", *roots,
            "--out", f"{out}/zeroshot", "--cache", cache, "--gpus", "0,1", "--jobs", *ZEROSHOT]
     logf = f"{out}/zeroshot.driver.log"
     t0 = time.time()

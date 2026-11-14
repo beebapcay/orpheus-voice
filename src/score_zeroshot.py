@@ -282,6 +282,9 @@ def finish(args, dataset, model, outdir, df, shards_dir=None):
         cmd += ["--score-col", "Score"]
     if dataset == "ood_forget":
         cmd += ["--prefix", "ItW", "RADAR2026"]   # evaluate.py tự thêm dấu "-"
+    if dataset == "mlaad_vi_test":
+        # EER theo từng hệ thống MLAAD (toàn bộ tiếng thật real_vivos so với từng hệ thống)
+        cmd += ["--protocol", find_csv(args, dataset), "--group-col", "Attack"]
     if dataset == "toy":
         cmd += ["--protocol", os.path.join(args.base, "AntiDeepfake", "protocols", "toy_example_test.csv"),
                 "--group-col", "Attack"]

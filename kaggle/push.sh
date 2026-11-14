@@ -90,6 +90,27 @@ EOF
       sleep 20
     done
     ;;
+  data-mlaad)
+    # Tập kiểm tra MLAAD fake/vi (src/prep_mlaad.py build): dataset RIÊNG TƯ <user>/orpheus-mlaad-vi.
+    # MLAAD là CC BY-NC 4.0; giữ riêng tư như SEA-Spoof.
+    U=$(user); D="$ROOT/Data/mlaad/data"
+    [ -f "$D/mlaad_vi_test.csv" ] || { echo "Chưa có $D: chạy prep_mlaad.py build trước"; exit 2; }
+    cat > "$D/dataset-metadata.json" <<EOF
+{"title": "orpheus-mlaad-vi", "id": "$U/orpheus-mlaad-vi", "licenses": [{"name": "other"}]}
+EOF
+    git -C "$ROOT" rev-parse --short HEAD > "$D/VERSION"
+    if kg datasets status "$U/orpheus-mlaad-vi" >/dev/null 2>&1; then
+      kg datasets version -p "$D" -r tar -m "$(git -C "$ROOT" log -1 --format=%s)"
+    else
+      kg datasets create -p "$D" -r tar
+    fi
+    for _ in $(seq 1 60); do
+      s=$(kg datasets status "$U/orpheus-mlaad-vi" 2>/dev/null || true)
+      echo "trạng thái dataset: $s"
+      [ "$s" = "ready" ] && break
+      sleep 20
+    done
+    ;;
   push)
     K="${2:?prep, zeroshot hoặc finetune}"; U=$(user)
     d="$BUILD/orpheus-$K"; rm -rf "$d" && mkdir -p "$d"
