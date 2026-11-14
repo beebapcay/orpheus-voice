@@ -39,6 +39,8 @@ Lỗi trong miền giảm một nửa, nhưng lỗi trên In-the-Wild tăng gấ
 | **Tập kiểm tra trong miền bão hoà** | Mô hình chưa fine-tune đã gần 0% EER trên chính bộ dữ liệu fine-tune, kể cả trên các hệ thống sinh được để riêng. Mọi cấu hình đều ra ~0%, không so được | Chấm mô hình chưa fine-tune trên tập kiểm tra **trước** khi chọn nó làm thước đo chính |
 | **Cấu hình không áp dụng như mình tưởng** | Một số toolkit coi vài tham số là tham số chạy, không ghi đè vào file cấu hình. Ví dụ: truyền giới hạn số bước qua dòng lệnh, toolkit dùng nó để dừng nhưng lịch learning rate vẫn tính theo giá trị cũ trong file, nên learning rate không giảm như dự kiến | Đọc file cấu hình đã giải (bản toolkit ghi ra lúc chạy) và learning rate thật trong log, không chỉ đọc lệnh đã truyền |
 
+**Mức quên phụ thuộc backbone.** Quan sát một seed: cùng dữ liệu, cùng siêu tham số, một backbone 300M đa ngôn ngữ quên rõ trên In-the-Wild (2,6% → 7,6%), còn backbone 300M chỉ pre-train tiếng Anh thì không quên (2,0% → 1,4%). Kết luận "SFT làm quên" cần kiểm trên hơn một backbone.
+
 ## 3. SFT và học tăng cường khác nhau ở đâu
 
 **SFT (fine-tune có giám sát):** đưa đáp án đúng, ép mô hình tăng xác suất của đáp án đó. Loss là $-\log p(\text{nhãn đúng})$. Câu nào mô hình đang sai càng nặng thì bị kéo càng mạnh.

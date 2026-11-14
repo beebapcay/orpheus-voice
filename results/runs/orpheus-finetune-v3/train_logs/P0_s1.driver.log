@@ -1,0 +1,32 @@
+[14:40:33] [P0_s1] kiểm nạp trọng số: 0 cảnh báo; PREFLIGHT_OK 431 tensor, 317392642 tham số
+[14:40:33] [P0_s1] huấn luyện, GPU 0: python main.py hparams/ft_grpo/mms_300m_pre-post-sft.yaml --base_path /tmp/orpheus/work --output_folder /kaggle/working/results/train/P0_s1/exp --train_csv /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi/seaspoof_vi_train.csv --valid_csv /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi/seaspoof_vi_dev.csv --ckpt_path /tmp/orpheus/cache/fairseq_base_300m.pt --max_batch_length 50 --number_of_epochs 3 --optimizer_step_limit 4600 --warmup 460 --lr 1e-6 --valid_step 1000000000 --num_workers 2 --seed 1
+[17:18:41] [P0_s1] KẾT QUẢ HUẤN LUYỆN: {"run": "P0_s1", "model": "mms_300m", "method": "sft", "train": "seaspoof_vi_train", "valid": "seaspoof_vi_dev", "returncode": 0, "train_seconds": 9486, "overrides": "{\"max_batch_length\": \"50\", \"number_of_epochs\": \"3\", \"optimizer_step_limit\": \"4600\", \"warmup\": \"460\", \"lr\": \"1e-6\", \"valid_step\": \"1000000000\", \"num_workers\": \"2\", \"seed\": \"1\"}", "max_batch_length": "50", "batches_per_epoch": 1521, "sec_per_it": 2.04, "peak_mem_mib": 14645.0, "gpu_util_mean": 99.5, "cpu_util_mean": 73.1, "monitor_samples": 1877, "n_valid": 1, "last_steps": 4563, "last_lr": 6.83e-07, "best_valid_eer": 0.0, "best_steps": 4563, "ckpt_mb": 1270, "status": "ok", "init": "fairseq", "load_warnings_allowed": 0}
+[17:18:41] [P0_s1] chấm: --base /tmp/orpheus/work --data-root /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi /kaggle/input/notebooks/beebapcay/orpheus-prep/data --out /kaggle/working/results/scores --cache /tmp/orpheus/cache --gpus 0 --local P0_s1=/kaggle/working/results/ckpt/P0_s1.ckpt,mms_300m --jobs seaspoof_vi_dev:P0_s1 seaspoof_vi_test:P0_s1 radar_vi:P0_s1 ood_forget:P0_s1
+[17:18:41] Checkpoint cục bộ: P0_s1
+[17:18:41] 4 job, GPU 0, ngân sách RAM 26 GB
+[17:18:41] [P0_s1/seaspoof_vi_dev] GPU 0: 2070 câu, 2 shard, còn 2
+[17:22:05] [P0_s1/seaspoof_vi_dev] shard 1/2: 2000 câu, 204 s, nhanh 37.7x thời gian thực
+[17:22:25] [P0_s1/seaspoof_vi_dev] shard 2/2: 70 câu, 20 s, nhanh 12.7x thời gian thực
+[17:22:27] [P0_s1/seaspoof_vi_dev] KẾT QUẢ: {"dataset": "seaspoof_vi_dev", "model": "P0_s1", "n": 2070, "audio_h": 2.205, "gpu_seconds": 224, "x_realtime": 35.4, "n_real": 1035, "n_fake": 1035, "eer_%": 0.0, "minDCF": 0.0, "actDCF": 0.0, "eer_threshold": -3.5872642993927}
+[17:22:27] [P0_s1/seaspoof_vi_test] GPU 0: 11996 câu, 6 shard, còn 6
+[17:26:09] [P0_s1/seaspoof_vi_test] shard 1/6: 2000 câu, 222 s, nhanh 36.1x thời gian thực
+[17:31:34] [P0_s1/seaspoof_vi_test] shard 2/6: 2000 câu, 325 s, nhanh 25.1x thời gian thực
+[17:37:07] [P0_s1/seaspoof_vi_test] shard 3/6: 2000 câu, 333 s, nhanh 24.7x thời gian thực
+[17:42:29] [P0_s1/seaspoof_vi_test] shard 4/6: 2000 câu, 322 s, nhanh 25.2x thời gian thực
+[17:47:51] [P0_s1/seaspoof_vi_test] shard 5/6: 2000 câu, 323 s, nhanh 24.9x thời gian thực
+[17:53:15] [P0_s1/seaspoof_vi_test] shard 6/6: 1996 câu, 323 s, nhanh 25.0x thời gian thực
+[17:53:16] [P0_s1/seaspoof_vi_test] KẾT QUẢ: {"dataset": "seaspoof_vi_test", "model": "P0_s1", "n": 11996, "audio_h": 13.511, "gpu_seconds": 1847, "x_realtime": 26.3, "n_real": 4475, "n_fake": 7521, "eer_%": 21.38945329241996, "minDCF": 0.2776583733144959, "actDCF": 0.5294583434539714, "eer_threshold": -0.0400736257433891}
+[17:53:17] [P0_s1/radar_vi] GPU 0: 13438 câu, 7 shard, còn 7
+[17:58:45] [P0_s1/radar_vi] shard 1/7: 2000 câu, 328 s, nhanh 27.8x thời gian thực
+[18:04:21] [P0_s1/radar_vi] shard 2/7: 2000 câu, 336 s, nhanh 27.7x thời gian thực
+[18:09:52] [P0_s1/radar_vi] shard 3/7: 2000 câu, 331 s, nhanh 27.7x thời gian thực
+[18:15:17] [P0_s1/radar_vi] shard 4/7: 2000 câu, 325 s, nhanh 27.7x thời gian thực
+[18:20:47] [P0_s1/radar_vi] shard 5/7: 2000 câu, 330 s, nhanh 28.0x thời gian thực
+[18:26:15] [P0_s1/radar_vi] shard 6/7: 2000 câu, 328 s, nhanh 27.7x thời gian thực
+[18:30:12] [P0_s1/radar_vi] shard 7/7: 1438 câu, 237 s, nhanh 27.2x thời gian thực
+[18:30:13] [P0_s1/radar_vi] KẾT QUẢ: {"dataset": "radar_vi", "model": "P0_s1", "n": 13438, "audio_h": 17.042, "gpu_seconds": 2215, "x_realtime": 27.7, "n_real": 7000, "n_fake": 6438, "eer_%": 31.45550525895353, "minDCF": 0.6529243376381307, "actDCF": 1.188633697244042, "eer_threshold": -2.899894118309021}
+[18:30:13] [P0_s1/ood_forget] GPU 0: 4000 câu, 2 shard, còn 2
+[18:36:24] [P0_s1/ood_forget] shard 1/2: 2000 câu, 371 s, nhanh 26.9x thời gian thực
+[18:42:25] [P0_s1/ood_forget] shard 2/2: 2000 câu, 361 s, nhanh 26.8x thời gian thực
+[18:42:26] [P0_s1/ood_forget] KẾT QUẢ: {"dataset": "ood_forget", "model": "P0_s1", "n": 4000, "audio_h": 5.457, "gpu_seconds": 732, "x_realtime": 26.8, "n_real": 2000, "n_fake": 2000, "eer_%": 24.15, "minDCF": 0.60015, "actDCF": 1.8087, "eer_threshold": -3.6355020999908447}
+[18:42:26] Tất cả job xong

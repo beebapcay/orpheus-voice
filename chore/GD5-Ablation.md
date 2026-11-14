@@ -9,8 +9,9 @@ Câu hỏi của giai đoạn: yếu tố nào quyết định kết quả trên
 | 1 | Chuẩn bị lần chạy 1: tập con SEA-Spoof tính ngay trên Kaggle, khoá file khi hai tiến trình chấm cùng ghi, bước chấm S0 | `src/score_zeroshot.py`, `kaggle/finetune/run.py`, `kaggle/archive_run.py`, `kaggle/push.sh` | Xong (14/11), đã thử trên máy với điểm của pilot |
 | 1 | **Lần chạy 1: R seed 1, A0 seed 1**, chấm S0 trên SEA-Spoof | `orpheus-finetune` v2, `results/runs/orpheus-finetune-v2/` | **Xong** (14/11, 4,68 giờ); mục 3.1 |
 | 1 | Báo kết quả lần 1 cho người dùng, chờ duyệt trước khi chạy tiếp | Mục 3.1, 4 | Đã báo (14/11); chờ chốt phát hiện 1, 2 |
-| 1–2 | Lần 2–3: P0, B2, B1 (seed 1); N0 nếu còn quota | | Chưa |
-| 3–4 | Lần 4: R seed 2, 3 | | Chưa |
+| 1–2 | Lần 2: P0, B2 seed 1 | `orpheus-finetune` v3, mục 3.2 | **Xong** (15/11 ~1:46, 4,14 giờ) |
+| 1–2 | Lần 3: B1, N0 seed 1 | `orpheus-finetune-b` v1 | Đang chạy (từ ~22:10) |
+| 3–4 | Lần 4: R seed 2, 3; MLAAD | `orpheus-finetune` v4 | Đã đẩy 15/11 ~1:50 |
 | Trong lúc chờ GPU | Đọc sâu bài GRPO và `algo/rl.py` (chuẩn bị GĐ6) | Mục 6, `src/grpo_gradient_sim.py` | Xong (14/11) |
 | Trong lúc chờ GPU | Script bảng kết quả trên máy; code cho P0 (khởi tạo fairseq, kiểm nạp trọng số trước khi huấn luyện) | `src/analyze_ablation.py`, `src/finetune.py --init fairseq` | Xong (14/11), thử trên máy; P0 chưa chạy trên Kaggle |
 
@@ -120,6 +121,45 @@ Mỗi kết quả, một câu giải thích (giả thuyết, 1 seed):
 4. **SFT làm quên trên In-the-Wild:** 2,6 → 7,6% (R), 6,1% (A0), cùng hiện tượng bài GRPO báo cho MMS-300M (2,91 → 14,17%, Bảng 1 hàng 17–18). RADAR EN không đổi đáng kể. Trả lời sơ bộ câu hỏi 2: có quên, rõ trên ItW.
 5. **Fine-tune 317M chưa thắng 2,2B dùng thẳng:** A0 vẫn kém XLS-R-2B 4,66 điểm trên RADAR VI.
 
+### 3.2. Lần 2 (`orpheus-finetune` v3, 14–15/11, 4,14 giờ; `results/runs/orpheus-finetune-v3/`)
+
+COMPLETE, không có cảnh báo nạp trọng số. P0 nạp đủ 431 tensor từ `base_300m.pt` (kiểm trước khi huấn luyện, 0 cảnh báo), lớp FC ngẫu nhiên; dev 0,00% sau 3 epoch. Cùng bộ ghi đè và lịch learning rate với lần 1.
+
+**EER (%), thấp hơn là tốt hơn** (dòng S0 và R, A0 lặp lại để so):
+
+| Cấu hình | test_seen | test_f5 | test_minimax | test_cvreal | **RADAR VI** | **ItW** | RADAR EN |
+|---|---|---|---|---|---|---|---|
+| R seed 1 (MMS-300M post-trained) | 0,04 | 0,04 | 0,00 | 2,70 | 23,07 | 7,60 | 26,70 |
+| **P0** seed 1 (MMS-300M, chỉ pre-train) | 0,04 | **5,94** | 0,00 | 3,26 | **31,46** | **14,90** | **33,90** |
+| **B2** seed 1 (W2V-Large post-trained) | 0,04 | 0,00 | 0,00 | 2,59 | **21,03** | **1,40** | 23,40 |
+| S0 W2V-Large (dùng thẳng) | 0,73 | 0,72 | 0,04 | 3,04 | 17,80 | 2,00 | 23,50 |
+| S0 MMS-300M (dùng thẳng) | 0,81 | 0,57 | 0,00 | 7,44 | 20,08 | 2,60 | 26,20 |
+
+**Lỗi ở ngưỡng 0 (%):**
+
+| Cấu hình | RADAR VI FAR | RADAR VI FRR | RADAR VI actDCF − minDCF | test_cvreal FRR | test_f5 FAR |
+|---|---|---|---|---|---|
+| R seed 1 | 19,54 | 29,21 | 0,20 | 8,50 | 1,16 |
+| P0 seed 1 | 23,41 | **53,37** | **0,54** | **48,85** | **54,80** |
+| B2 seed 1 | 18,36 | 25,64 | 0,14 | 12,75 | 0,51 |
+
+**Chênh lệch EER, KTC 95% bootstrap ghép cặp (theo câu):**
+
+| So sánh | test_f5 | RADAR VI | ItW | RADAR EN |
+|---|---|---|---|---|
+| P0 − R (bỏ post-training) | +5,90 [5,33; 6,59] | **+8,39** [7,44; 9,14] | **+7,30** [5,60; 8,90] | **+7,20** [5,10; 9,40] |
+| B2 − R (tiếng Anh thay đa ngôn ngữ, cùng 317M) | −0,04 [−0,11; 0,00] | **−2,04** [−2,84; −1,37] | **−6,20** [−7,40; −5,00] | **−3,30** [−5,40; −1,30] |
+| B2 − S0 W2V-Large (fine-tune W2V-Large) | −0,72 [−0,96; −0,48] | +3,23 [2,70; 3,81] | −0,60 [−1,10; 0,00] | −0,10 [−1,80; 1,20] |
+
+**Tập 493 câu khó (RADAR VI, % còn sai ở ngưỡng EER của chính mô hình):** R 83,2 / 72,5 (giả / thật); B2 95,0 / 83,9; **P0 54,6 / 60,8**.
+
+Mỗi kết quả, một câu giải thích (1 seed):
+1. **Post-training đóng góp gần như toàn bộ phần ngoài miền, không đóng góp trong miền:** P0 và R bằng nhau trên `test_seen` (0,04%), nhưng P0 kém 7–8 điểm ở RADAR VI, ItW, RADAR EN và kém 5,9 điểm ở F5-TTS (hệ thống để riêng). Đúng điều đã dự đoán từ Bảng III bài AntiDeepfake và Bảng 1 bài GRPO (mục 6.4): trong miền gần như nhau, khác biệt nằm ở ngoài miền.
+2. **P0 lệch hiệu chuẩn nặng:** coi 53% tiếng thật RADAR VI và 49% tiếng thật Common Voice là giả ở ngưỡng 0, và để lọt 55% câu F5-TTS. Mô hình không post-train học "thật = VIVOS" mạnh hơn hẳn (yếu tố gây nhiễu ở phát hiện 3, phóng đại).
+3. **P0 sai ở những câu khác:** chỉ còn sai ~55–61% tập câu khó chung (các mô hình post-trained sai 72–95%). Tập câu khó được định nghĩa từ lỗi của các mô hình post-trained, nên kết quả này ủng hộ giả thuyết của GĐ3 (phát hiện 16): lỗi chung bắt nguồn từ dữ liệu post-training. P0 có EER chung tệ hơn nhiều, nên đây không phải ưu điểm.
+4. **W2V-Large (tiếng Anh) fine-tune tốt hơn MMS-300M (đa ngôn ngữ) ở mọi tập ngoài miền**, kể cả RADAR tiếng Việt (−2,04 điểm). Cùng chiều với zero-shot GĐ3 (W2V-Large 17,80 so với MMS-300M 20,08). Ngôn ngữ pre-training "có tiếng Việt" không cho lợi thế.
+5. **Mức quên phụ thuộc backbone:** W2V-Large không quên trên ItW (2,00 → 1,40%), RADAR EN giữ nguyên; MMS-300M quên rõ (2,60 → 7,60%). Nhưng trên RADAR VI cả hai đều kém bản dùng thẳng của chính mình (B2 +3,23, R +2,98): fine-tune trên SEA-Spoof làm kém RADAR VI ở cả hai backbone.
+
 ## 4. Phát hiện ảnh hưởng thí nghiệm
 
 | # | Phát hiện | Ảnh hưởng | Việc cần làm |
@@ -154,12 +194,16 @@ Mỗi kết quả, một câu giải thích (giả thuyết, 1 seed):
 
 Kế hoạch dùng: chấm S0 (4 mô hình) ở lần 4. Nếu S0 cũng gần 0% thì MLAAD không phân biệt được cấu hình và dừng ở đó; nếu đủ khó thì chấm lại checkpoint các lần 1–3 (đang ở output Kaggle).
 
+| 5 | **Fine-tune trên SEA-Spoof làm kém RADAR tiếng Việt ở mọi cấu hình có RawBoost đã chạy** (R +2,98, B2 +3,23 so với bản dùng thẳng của chính backbone; P0 còn tệ hơn); chỉ A0 (không RawBoost) tốt hơn S0 (−1,71) | Câu hỏi 1 phần "dữ liệu": có thêm dữ liệu tiếng Việt cùng hệ thống sinh (ElevenLabs, ChatGPT) vẫn không giúp RADAR VI; tiếng thật một nguồn (phát hiện 3) và RawBoost (phát hiện 4) lấn át lợi ích | Chờ N0, B1, R seed 2–3 để xem có nhất quán; cân nhắc ở GĐ6: so GRPO với cả R và A0 |
+| 6 | **Post-training gần như không giúp trong miền nhưng quyết định ngoài miền** (P0 − R: test_seen 0,00; RADAR VI +8,39; ItW +7,30; F5 +5,90) | Trả lời trực tiếp "post-training đóng góp bao nhiêu" của câu hỏi 1. Khớp các bài gốc (mục 6.4) | Ghi vào báo cáo kèm cảnh báo 1 seed |
+
 ## 5. Ngân sách quota
 
 | Lần | Quota dùng | Còn lại | Ghi chú |
 |---|---|---|---|
 | Trước GĐ5 | 0,74 giờ (pilot GĐ4) | 29,26 giờ đến 21/11 | |
 | 1 (`orpheus-finetune` v2) | 4,68 giờ | 24,58 giờ | Ước 4,8 giờ; khớp |
+| 2 (`orpheus-finetune` v3) | 4,14 giờ | (chạy song song với lần 3; đọc quota sau lần 3) | Xếp hàng ~3,5 giờ không tốn quota |
 
 ## 6. Chuẩn bị GĐ6: đọc sâu bài GRPO và `algo/rl.py` (làm trong lúc chờ GPU, 14/11)
 

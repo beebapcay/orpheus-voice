@@ -153,6 +153,21 @@ Fine-tune trên phần huấn luyện của Deepfake-Eval-2024 (90% để học,
 
 **Hình t-SNE:** embedding sau lớp trung bình của XLS-R-2B tách thật/giả rõ hơn khi có post-training. Embedding của mô hình post-trained cũng tách được thật/giả trên một phần dữ liệu giả mạo một phần, dù chưa học bài toán đó.
 
+### 6.1. Post-training giúp ở đâu khi fine-tune: trong miền hay ngoài miền
+
+Quan sát một lần chạy (một seed, chưa lặp lại): fine-tune cùng một backbone 300M trên cùng bộ dữ liệu nhỏ, cùng siêu tham số, chỉ khác điểm khởi tạo (đã post-train so với chỉ pre-train).
+
+| Tập | Có post-train | Chỉ pre-train | Chênh |
+|---|---|---|---|
+| Trong miền (hệ thống đã thấy) | 0,04% | 0,04% | 0 |
+| Hệ thống sinh để riêng, cùng bộ dữ liệu | 0,04% | 5,94% | +5,9 điểm |
+| Bộ dữ liệu khác, cùng ngôn ngữ | 23,1% | 31,5% | +8,4 điểm |
+| In-the-Wild | 7,6% | 14,9% | +7,3 điểm |
+
+Bài học: **đo lợi ích của post-training bằng tập trong miền sẽ thấy gần như bằng 0**; lợi ích nằm ở khả năng tổng quát. Mô hình chỉ pre-train còn lệch ngưỡng nặng: coi ~50% tiếng thật từ nguồn khác là giả ở ngưỡng 0. Khớp với kết quả công bố: trong miền gần như nhau, ngoài miền khác hẳn.
+
+Một hệ quả phụ: những câu mà nhiều mô hình post-trained cùng sai thì mô hình chỉ pre-train lại sai ít hơn. Lỗi chung của nhóm post-trained có thể bắt nguồn từ chính dữ liệu post-training (cùng một "điểm mù"), nên ghép nhiều mô hình post-trained khác backbone giúp ít.
+
 ## 7. Hạn chế do chính tác giả nêu
 
 | Hạn chế | Hướng tác giả gợi ý |
