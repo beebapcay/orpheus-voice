@@ -11,7 +11,7 @@ Ghi lại mức độ đã đọc của từng phần, để biết phần nào 
 | 1. Bản đồ các hướng | Ngày 1 kỹ; ngày 2, 3 lướt | Đã qua, còn nợ đọc kỹ ngày 2, 3 |
 | 2. Backbone SSL và môi trường | Ngày 1 lướt; ngày 2 xong | **Đã qua** (13/11). Còn nợ đọc kỹ ngày 1 |
 | 3. Post-training và zero-shot | Ngày 1 chưa đọc (đã có tài liệu, **hoãn** 14/11); ngày 2 xong | **Đã qua phần chạy** (14/11): đủ 14 checkpoint + baseline, phân tích lại, quyết định ở mục 8 file GĐ3. Còn nợ đọc kỹ ngày 1 |
-| 4. Dữ liệu tiếng Việt và pipeline | Ngày 1 xong; ngày 2 đang chạy pilot | Chia tập đã chốt (D1–D3), dữ liệu đã tải và đưa lên Kaggle (dataset riêng tư); phát hiện 1–12 ở mục 2.2 file GĐ4. Pilot fine-tune đang chạy (14/11) |
+| 4. Dữ liệu tiếng Việt và pipeline | Ngày 1 lướt bài SEA-Spoof; ngày 2 xong | **Đã qua** (14/11): chia tập đã chốt (D1–D3), pilot fine-tune xong, cấu hình huấn luyện đã chốt (E1–E3). Tổng kết ở mục 7 file GĐ4 |
 | 5–8 | Chưa | |
 
 ## GĐ1. Bản đồ các hướng
@@ -103,7 +103,7 @@ Việc ngày 2:
 | Ngày | Nội dung | Mức | Cần quay lại |
 |---|---|---|---|
 | 1 | SEA-Spoof: phần mô tả dữ liệu tiếng Việt và hệ thống sinh (nhóm C, đọc lướt) | Lướt (Claude đọc bài, tóm ở mục 2 file GĐ4) | Bảng 1, 3 và mục 2.2–2.3 của bài; chỗ lệch giữa bài và dữ liệu ở mục 2.2 file GĐ4 |
-| 2 | Pipeline fine-tune (`mms_300m_pre-post-sft.yaml`) | Chưa | |
+| 2 | Pipeline fine-tune (`mms_300m_pre-post-sft.yaml`) | **Xong** (14/11): pilot trên Kaggle | Đọc phát hiện 8–10, 13–15 (mục 2.2, 4.1 file GĐ4): lịch learning rate, RawBoost trên dev, đệm khi kiểm tra dev |
 
 Tài liệu: `chore/GD4-Du-Lieu-Va-Pipeline.md`.
 

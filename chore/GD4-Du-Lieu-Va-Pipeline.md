@@ -12,8 +12,8 @@ Câu hỏi của giai đoạn: fine-tune trên tiếng Việt như thế nào ch
 | 1 | Chọn và chia tập | `protocols/ids/seaspoof_vi_*.tsv`, mục 3 | **Xong** (người dùng chốt D1–D3 14/11); không trùng người nói, giọng, video |
 | 1 | Tải âm thanh, tạo CSV theo định dạng AntiDeepfake, kiểm lối tắt | `Data/seaspoof/data/` (máy), `results/seaspoof/` | **Xong** (14/11, 22,6 phút); train 17,88 giờ |
 | 1 | Đưa lên Kaggle | Dataset riêng tư `orpheus-seaspoof-vi` (2,5 GB) | **Xong** (14/11) |
-| 2 | Code fine-tune và kernel; pilot đo đạc | `src/finetune.py`, `kaggle/finetune/`, `results/runs/orpheus-finetune-v1/`, mục 4 | **Pilot xong** (14/11, 0,74 giờ): bộ nhớ, tốc độ, CPU, overfit, đường chấm. Chờ chốt E1–E3 |
-| 2 | Ngân sách quota GĐ5–6 | Mục 5 | Điền số theo pilot; chờ chốt số epoch |
+| 2 | Code fine-tune và kernel; pilot đo đạc | `src/finetune.py`, `kaggle/finetune/`, `results/runs/orpheus-finetune-v1/`, mục 4 | **Pilot xong** (14/11, 0,74 giờ): bộ nhớ, tốc độ, CPU, overfit, đường chấm. E1–E3 đã chốt (mục 4.2) |
+| 2 | Ngân sách quota GĐ5–6 | Mục 5 | **Xong**: 3 epoch, ~36 giờ (vừa quota) |
 
 **Lịch:** hôm nay 14/11, hạn nộp 30/11 (còn 16 ngày). Plan cần 14 ngày cho GĐ4–8 và dự phòng, còn dư khoảng 2 ngày. Quota Kaggle 30 giờ/tuần, làm mới 7 giờ sáng thứ Bảy: tuần 14–20/11, tuần 21–27/11, rồi 28–30/11.
 
@@ -210,18 +210,36 @@ Tất cả ở `max_batch_length` = 50 (tự giảm sau khi 100 hết bộ nhớ
 | 14 | **Mô hình dùng thẳng đã gần bão hoà trên dev SEA-Spoof:** ~1,16% (mô hình pilot gần như chưa đổi so với S0). So với RADAR tiếng Việt 20,08% | Trong miền gần như không còn chỗ cải thiện; dev khó phân biệt các checkpoint (nhiều mức EER gần 0). Thước đo chính vẫn là hệ thống để riêng, RADAR, mức quên (đúng như plan) | Chấm S0 chính thức trên `seaspoof_vi_test` (mọi tập con) ở lần chạy sau |
 | 15 | **T4 không chạy được batch 100 giây với MMS-300M** (cấu hình gốc, bài dùng H100) | Batch 50 giây: số bước gấp đôi cho cùng lượng âm thanh, nên lịch learning rate theo bước cũng đổi | Dùng `max_batch_length=50` cho mọi cấu hình MMS-300M, W2V-Large (cùng kích thước); W2V-Small đo lại |
 
-### 4.2. Cần người dùng chốt trước GĐ5
+### 4.2. Cấu hình huấn luyện cho GĐ5–6 (**đã chốt 14/11**: người dùng chọn đề xuất ở E1, E2, E3)
 
-| # | Câu hỏi | Lý do |
+| # | Câu hỏi | Đã chốt | Lý do | Phương án đã bỏ |
+|---|---|---|---|---|
+| E1 | Lịch learning rate | **Đỉnh `lr` = 1e-6 (giá trị trong YAML), `warmup` = 10% tổng số bước, rồi giảm theo hàm mũ còn 1e-8 ở cuối** (`decay_factor` 0,01 của YAML) | Phát hiện 9: lịch gốc với ~4.500 bước chỉ lên tới ~5,7 × 10⁻⁸, gần bằng learning rate post-train, nên SFT gần như không đổi mô hình và không trả lời được câu hỏi 2. Cùng lớp lịch của SpeechBrain, chỉ đổi `warmup` và `optimizer_step_limit` | Giữ cấu hình gốc; bám learning rate cuối của bài (~2,5 × 10⁻⁷) |
+| E2 | Số epoch | **3 epoch** trên toàn bộ `train` (17,88 giờ) | Tổng GĐ5–6 ~36 giờ, còn ~20 giờ dự phòng (mục 5). Người dùng: dùng Kaggle trước; nếu thiếu tài nguyên sẽ thuê server | 5 epoch (~52 giờ) |
+| E3 | Chọn checkpoint | **Mô hình sau epoch cuối**: chỉ kiểm tra dev một lần ở cuối, nên SpeechBrain giữ đúng mô hình cuối | Tránh hai độ lệch của EER dev lúc huấn luyện (phát hiện 10, 13) và việc dev gần bão hoà (phát hiện 14). Không sửa code gốc. Dev và test vẫn được chấm lại sạch (batch 1) để báo cáo | EER dev tốt nhất (dev batch 1, có hoặc không vá RawBoost trên dev) |
+
+**Ghi đè YAML cho mọi lần SFT ở GĐ5** (`--set` của `src/finetune.py`; file gốc `hparams/ft_grpo/<backbone>_pre-post-sft.yaml`):
+
+| Khoá | Giá trị | Ghi chú |
 |---|---|---|
-| E1 | Lịch learning rate | Phát hiện 9: lịch gốc với ~4.500 bước (3 epoch ở batch 50 giây) chỉ lên tới ~5,7 × 10⁻⁸, gần bằng learning rate post-train; SFT gần như không đổi mô hình |
-| E2 | Số epoch | Ngân sách (mục 5) |
-| E3 | Chọn checkpoint | Phát hiện 10, 13, 14: EER dev lúc huấn luyện bị lệch (RawBoost, đệm) và dev gần bão hoà |
+| `max_batch_length` | 50 | Phát hiện 15. Giữ 50 cho mọi backbone (kể cả W2V-Small) để số bước và lịch learning rate giống nhau |
+| `number_of_epochs` | 3 | E2 |
+| `optimizer_step_limit` | 4600 | ≈ 3 × 1.521 bước, làm tròn lên để 3 epoch chạy đủ; cũng là `total_steps` của lịch learning rate |
+| `warmup` | 460 | 10% của 4.600 (E1) |
+| `lr` | 1e-6 | Giữ giá trị YAML |
+| `valid_step` | 1000000000 | Không kiểm tra giữa chừng; chỉ một lần sau epoch cuối (E3) |
+| `num_workers` | 2 | Hai lần huấn luyện song song trên 4 nhân CPU |
+| `seed` | 1, 2, 3 (R); 1 (các cấu hình khác) | YAML gốc 1234 |
+| `use_da` | `False` cho A0; YAML gốc (`True`) cho các cấu hình khác | |
+
+Chấm sau huấn luyện (mỗi lần): `seaspoof_vi_dev`, `seaspoof_vi_test` (tập con bằng `src/eval_seaspoof.py`), `radar_vi`, `ood_forget`. Lần chạy GĐ5 đầu tiên cũng chấm S0 (`mms_300m`, `w2v_large`, `w2v_small` dùng thẳng) trên `seaspoof_vi_dev` và `seaspoof_vi_test`.
+
+Hạn chế cần ghi trong báo cáo: lịch learning rate khác cách bài GRPO chạy thực tế (đỉnh của ta 1e-6, của bài ~2–3 × 10⁻⁷); batch 50 giây thay vì 100; 3 epoch thay vì tối đa 10; chọn mô hình cuối thay vì EER dev tốt nhất.
 
 - [x] Kernel Kaggle fine-tune: dùng lại cách dựng môi trường và lưu bằng chứng của GĐ3 (`results/runs/<kernel>-v<N>/`); mở rộng `push.sh output` cho kernel mới.
 - [x] Lưu checkpoint tốt nhất vào `/kaggle/working/results/ckpt/`. **Không chạy tiếp được qua nhiều phiên với code gốc:** checkpoint chỉ giữ 1 bản tốt nhất, không lưu bộ đếm epoch và lịch learning rate (chỉ `ssl`, cộng `optimizer`, `brain` do SpeechBrain tự thêm). Vì vậy mỗi lần huấn luyện phải vừa một phiên 12 giờ
 - [x] Đo bộ nhớ GPU với MMS-300M: 100 giây hết bộ nhớ, 50 giây đỉnh 14,6 GB
-- [ ] Chỉnh `warmup` theo số bước thật (chờ E1)
+- [x] Chỉnh `warmup` theo số bước thật: `warmup=460`, `optimizer_step_limit=4600` (E1, mục 4.2)
 - [x] Overfit một tập nhỏ: loss 0,748 → 0,013
 - [x] Đo thời gian một epoch (~49 phút) và tốc độ đọc dữ liệu (GPU 93–97%, không phải nút thắt)
 - [x] Chạy hai cấu hình song song trên hai GPU trong một phiên: được
@@ -252,7 +270,29 @@ Quota: còn **29,26 giờ** đến 21/11 (đã dùng 0,74 giờ cho pilot), thê
 - [x] Có quyền SEA-Spoof (hoặc đã chuyển sang MLAAD + VIVOS và ghi rõ hạn chế): có từ 14/11
 - [x] Danh sách câu train, dev, test, hệ thống để riêng cố định trong `protocols/ids/`, không trùng người nói (14/11, mục 3)
 - [x] Pipeline overfit được một tập nhỏ; bộ nhớ vừa T4 ở batch 50 giây (14/11, mục 4.1)
-- [ ] Đã đo thời gian một epoch và tốc độ đọc dữ liệu; bảng ngân sách mục 5 điền đủ và vừa quota
+- [x] Đã đo thời gian một epoch và tốc độ đọc dữ liệu; bảng ngân sách mục 5 điền đủ và vừa quota (3 epoch, ~36 giờ trên ~59–70 giờ)
 - [x] Bằng chứng mọi lần chạy trong `results/runs/` (`orpheus-finetune-v1`)
 
 Điều kiện của plan: ngân sách vừa quota. Nếu MMS-300M không vừa sau khi giảm batch, chuyển cấu hình mốc sang W2V-Small. Nếu không fine-tune được, chuyển sang tầng 0.
+
+## 7. Tổng kết GĐ4 và mang sang GĐ5 (14/11)
+
+**Trạng thái:** GĐ4 **qua**. Đủ 5 điều kiện ở mục 6; ngân sách vừa quota (điều kiện của plan). Dùng 0,74 giờ quota Kaggle (pilot), còn 29,26 giờ đến 21/11.
+
+**Năm kết quả chính**
+1. Split có sẵn của SEA-Spoof trùng cả 65 người nói VIVOS giữa train và evaluation; đã chia lại theo người nói, giọng, video, không trùng văn bản khác nhãn (phát hiện 1, mục 3).
+2. Tiếng thật tiếng Việt của SEA-Spoof gồm cả Common Voice (13.384 câu), cùng kho với tiếng thật RADAR; chỉ dùng để kiểm tra (`test_cvreal`), không vào train (phát hiện 2, D1).
+3. Dữ liệu: train 17,88 giờ (8.910 + 8.910 câu, 5 hệ thống đã thấy), dev 2,20 giờ, test 13,51 giờ gồm F5-TTS và MiniMax để riêng; không có lối tắt mạnh theo một đặc trưng thô (mục 3.1).
+4. Pipeline chạy được trên T4: batch 50 giây (100 hết bộ nhớ), ~49 phút mỗi epoch, nghẽn ở GPU chứ không ở đọc dữ liệu, hai lần huấn luyện song song được (mục 4.1).
+5. Code gốc có ba điểm làm lệch thí nghiệm nếu dùng nguyên: learning rate thực tế rất thấp, RawBoost áp lên dev, EER dev bị lệch do đệm (phát hiện 9, 10, 13); đã chốt cách xử lý (E1–E3, mục 4.2).
+
+**Quyết định** (14/11, người dùng chốt): D1–D3 (mục 3), E1–E3 (mục 4.2).
+
+**Mang sang GĐ5**
+- Cấu hình huấn luyện: mục 4.2 (3 epoch, `max_batch_length` 50, `warmup` 460, `optimizer_step_limit` 4600, mô hình cuối).
+- Mỗi phiên Kaggle chạy 2 cấu hình song song (~3,7 giờ một phiên SFT). GĐ5: 4 phiên, ~15 giờ.
+- Thước đo: `test_seen`, `test_f5`, `test_minimax`, `test_cvreal` (`src/eval_seaspoof.py`), RADAR tiếng Việt, `ood_forget`; kèm FAR/FRR ở ngưỡng 0 và tập câu khó của GĐ3.
+- Chấm S0 trên SEA-Spoof dev/test cho 3 backbone ở lần chạy đầu của GĐ5 (dev dùng thẳng đã ~1,16%, phát hiện 14).
+- Yếu tố gây nhiễu viết lại: tiếng thật train chỉ từ VIVOS; theo dõi tiếng thật bị coi là giả trên `test_cvreal` (Common Voice, cùng kho với RADAR) và RADAR tiếng Việt; khoảng lặng là ứng viên lối tắt (phát hiện 12).
+- P0 (khởi tạo từ trọng số fairseq gốc) cần thêm tuỳ chọn khởi tạo cho `src/finetune.py`. GRPO (GĐ6) chưa đo bộ nhớ và tốc độ.
+- Nếu thiếu tài nguyên: người dùng sẽ thuê server (14/11).

@@ -253,6 +253,8 @@ Thông tin SEA-Spoof đã kiểm (README công khai, 14/11): 553.746 câu, tiế
 
 **Điều kiện qua giai đoạn:** ngân sách vừa với quota. Nếu MMS-300M vẫn không vừa sau khi giảm batch, chuyển cấu hình mốc sang W2V-Small. Nếu fine-tune không chạy được, chuyển sang tầng 0 (mục 2).
 
+**Trạng thái (14/11): qua.** SEA-Spoof chia lại theo người nói (split có sẵn trùng cả 65 người nói VIVOS); tiếng thật có cả Common Voice nên Common Voice chỉ dùng kiểm tra; F5-TTS và MiniMax để riêng; train 17,88 giờ. Pilot trên T4: batch 50 giây (100 hết bộ nhớ), ~49 phút mỗi epoch. Đã chốt: 3 epoch, learning rate đỉnh 1e-6 với warmup 10%, chấm mô hình sau epoch cuối; ngân sách GĐ5–6 ~36 giờ. Chi tiết, phát hiện 1–15 và quyết định: `chore/GD4-Du-Lieu-Va-Pipeline.md` mục 2.2, 3, 4.1–4.2, 5, 7.
+
 ### GĐ5. Ablation (4 ngày)
 
 Đổi một yếu tố mỗi lần. Fine-tune trên tiếng Việt. R chạy 3 seed; các cấu hình khác chạy 1 seed trước, thêm seed nếu còn quota.
@@ -287,7 +289,7 @@ Vì sao giữ R là bản Default dù bản NDA tốt hơn khi dùng thẳng: đ
 
 RADAR có ElevenLabs và OpenAI, gần với các hệ thống trong SEA-Spoof, nên RADAR tiếng Việt không hoàn toàn là hệ thống chưa gặp.
 
-**Yếu tố gây nhiễu cần phân tích:** tiếng nói thật của SEA-Spoof đến từ VIVOS, còn của RADAR tiếng Việt đến từ Common Voice và FOSD. Fine-tune có thể khiến mô hình coi tiếng thật từ nguồn khác là giả. Không thêm Common Voice tiếng Việt vào tập huấn luyện để khắc phục, vì RADAR lấy tiếng thật từ chính kho này. Hiện tượng này được ghi nhận như một kết quả.
+**Yếu tố gây nhiễu cần phân tích** (sửa 14/11: tiếng thật tiếng Việt của SEA-Spoof gồm cả VIVOS và Common Voice; theo quyết định D1 ở GĐ4, train chỉ dùng VIVOS, Common Voice chỉ ở tập `test_cvreal`): tiếng nói thật dùng để fine-tune đến từ VIVOS, còn của RADAR tiếng Việt đến từ Common Voice và FOSD. Fine-tune có thể khiến mô hình coi tiếng thật từ nguồn khác là giả. Không thêm Common Voice tiếng Việt vào tập huấn luyện để khắc phục, vì RADAR lấy tiếng thật từ chính kho này. Hiện tượng này được ghi nhận như một kết quả.
 
 **Cách chạy**
 - Ngày 1–2: seed 1 cho cả 5 cấu hình cần huấn luyện (R, P0, A0, B2, B1); N0 nếu còn quota.
