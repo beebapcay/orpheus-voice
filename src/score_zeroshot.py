@@ -96,6 +96,8 @@ class Checkpoints:
 
     def get(self, model):
         yaml, repo, zname, _ = MODELS[model]
+        if repo is None:                  # checkpoint cục bộ (--local), ví dụ sau fine-tune
+            return zname
         ckpt = os.path.join(self.cache, zname)
         with self.locks[model]:
             if os.path.exists(ckpt):
@@ -122,7 +124,7 @@ class Checkpoints:
         with self.guard:
             self.refcount[model] -= 1
             last = self.refcount[model] == 0
-        if last:
+        if last and MODELS[model][1] is not None:     # không xoá checkpoint cục bộ
             for f in glob.glob(os.path.join(self.cache, MODELS[model][2].replace(".ckpt", "") + ".*")):
                 os.remove(f)
             log(f"[{model}] xong mọi tập, xoá checkpoint khỏi cache")
@@ -301,15 +303,35 @@ def finish(args, dataset, model, outdir, df, shards_dir=None):
 
 
 def prepare_data_dir(args):
-    """$ROOT của CSV = <base>/Data. Gắn dữ liệu đã chuẩn bị và toy example vào đó."""
+    """$ROOT của CSV = <base>/Data. Gắn mọi thư mục con của các --data-root vào đó
+    (radar/, itw/ của orpheus-prep; seaspoof_vi/ của orpheus-seaspoof-vi)."""
     data = os.path.join(args.base, "Data")
     os.makedirs(data, exist_ok=True)
-    for name in ("radar", "itw"):
-        src = os.path.join(args.data_root, name)
-        dst = os.path.join(data, name)
-        if os.path.isdir(src) and not os.path.exists(dst):
-            os.symlink(src, dst)
+    for root in args.data_root:
+        for name in sorted(os.listdir(root)):
+            src, dst = os.path.join(root, name), os.path.join(data, name)
+            if os.path.isdir(src) and not os.path.exists(dst):
+                os.symlink(src, dst)
     return data
+
+
+def find_csv(args, dataset):
+    for root in args.data_root:
+        p = os.path.join(root, f"{dataset}.csv")
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def register_local(spec):
+    """--local <tên>=<đường dẫn .ckpt>,<mô hình gốc>: chấm checkpoint cục bộ bằng YAML của
+    mô hình gốc (cùng kiến trúc). File .ckpt là state_dict cùng tên khoá với checkpoint
+    post-trained (ví dụ ssl.ckpt do SpeechBrain lưu khi fine-tune)."""
+    name, rest = spec.split("=", 1)
+    path, base = rest.rsplit(",", 1)
+    yaml, _, _, ram = MODELS[base]
+    MODELS[name] = (yaml, None, os.path.abspath(path), ram)
+    return name
 
 
 def prepare_toy(args):
@@ -323,7 +345,11 @@ def prepare_toy(args):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--base", required=True, help="thư mục có AntiDeepfake/ và bin/micromamba (setup_antideepfake.sh)")
-    ap.add_argument("--data-root", required=True, help="thư mục do prep_data.py fetch tạo ra")
+    ap.add_argument("--data-root", required=True, nargs="+",
+                    help="một hoặc nhiều thư mục chứa <tập>.csv và âm thanh "
+                         "(prep_data.py fetch, prep_seaspoof.py fetch)")
+    ap.add_argument("--local", nargs="*", default=[],
+                    help="checkpoint cục bộ: <tên>=<file .ckpt>,<mô hình gốc>")
     ap.add_argument("--out", required=True, help="nơi lưu kết quả (giữ lại sau phiên)")
     ap.add_argument("--cache", required=True, help="nơi để checkpoint tạm (không nằm trong --out)")
     ap.add_argument("--gpus", default="0")
@@ -336,6 +362,8 @@ def main():
     os.makedirs(args.cache, exist_ok=True)
     os.environ["MAMBA_ROOT_PREFIX"] = os.path.join(args.base, "mamba")
     prepare_data_dir(args)
+    for spec in args.local:
+        log(f"Checkpoint cục bộ: {register_local(spec)}")
 
     jobs = []
     for spec in args.jobs:
@@ -343,9 +371,9 @@ def main():
         for model in models.split(","):
             if model != "w2v2_aasist" and model not in MODELS:
                 sys.exit(f"Không biết mô hình {model}")
-            csv_path = prepare_toy(args) if dataset == "toy" else os.path.join(args.data_root, f"{dataset}.csv")
-            if not os.path.exists(csv_path):
-                sys.exit(f"Không thấy {csv_path}")
+            csv_path = prepare_toy(args) if dataset == "toy" else find_csv(args, dataset)
+            if not csv_path:
+                sys.exit(f"Không thấy {dataset}.csv trong {args.data_root}")
             jobs.append((dataset, model, csv_path))
     refcount = {}
     for _, m, _ in jobs:

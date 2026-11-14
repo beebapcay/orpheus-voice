@@ -39,6 +39,9 @@ flowchart LR
 | `bash kaggle/push.sh src` | Đóng gói `src/*.py`, `src/*.sh`, `protocols/ids/*`, file `VERSION` (commit git) thành dataset `orpheus-src` |
 | `bash kaggle/push.sh push prep` | Đẩy kernel chuẩn bị dữ liệu (chỉ cần chạy lại khi đổi danh sách câu) |
 | `bash kaggle/push.sh push zeroshot` | Đẩy kernel chấm điểm; danh sách job ở biến `JOBS` trong `kaggle/zeroshot/run.py` |
+| `bash kaggle/push.sh data` | Đưa SEA-Spoof tiếng Việt đã chọn (`Data/seaspoof/data`: FLAC + CSV, do `src/prep_seaspoof.py fetch` tạo) lên dataset **riêng tư** `orpheus-seaspoof-vi`. SEA-Spoof không được phân phối lại: không bao giờ đặt dataset này công khai |
+| `bash kaggle/push.sh push finetune` | Đẩy kernel fine-tune (GĐ4–6); các lần huấn luyện ở biến `RUNS` (theo GPU) trong `kaggle/finetune/run.py`, mỗi lần gọi `src/finetune.py` |
+| `bash kaggle/push.sh output finetune N` | Như `output zeroshot`, nhưng không tải checkpoint (`*.ckpt`, ở lại output Kaggle); gộp `train_summary.csv`, `summary.csv`, điểm và độ đo vào `results/finetune/` |
 | `bash kaggle/push.sh status <kernel>` | `running`, `complete`, `error` |
 | `bash kaggle/push.sh logs <kernel> [-f]` | Xem log (`-f`: theo dõi trực tiếp), không phải tải output |
 | `bash kaggle/push.sh quota` | Quota GPU còn lại |
@@ -73,7 +76,7 @@ Mọi lần chạy GPU, kể cả lần lỗi, đều phải để lại bằng 
 
 **Không commit:** embedding, checkpoint, âm thanh (ghi đường dẫn nơi chúng nằm vào Ghi chú). Output thô ở `results/kaggle-raw/<kernel>-v<N>/` trên máy; bản gốc còn trên Kaggle theo từng version (`kaggle kernels output <user>/<kernel>/<N>`).
 
-**Kernel mới** (ví dụ fine-tune ở GĐ5–6): dùng cùng cơ chế. `push.sh push <kernel>` đã lưu bản đẩy cho mọi kernel; phần `output` cần mở rộng cho kernel mới (hiện chỉ nhận `zeroshot`), và nếu kernel ghi checkpoint thì ghi thêm vào `RUN.md` tên, dung lượng và nơi lưu checkpoint.
+**Kernel fine-tune** (từ GĐ4): cùng cơ chế. `output finetune N` lưu thêm `train_summary.csv` (thời gian, số batch mỗi epoch, giây mỗi bước, bộ nhớ GPU đỉnh, mức dùng GPU và CPU, EER dev tốt nhất) và `train_logs/` (log `main.py`, `monitor.csv`, `exp_log.txt`, `hyperparams.yaml`). Checkpoint tốt nhất của mỗi lần nằm ở output Kaggle `ckpt/<run>.ckpt` (~1,3 GB với bản 317M), không tải về máy; ghi tên và dung lượng vào mục Ghi chú của `RUN.md`.
 
 **Các lần đã lưu:** xem `results/runs/README.md`.
 

@@ -3,12 +3,17 @@
 #
 #   bash kaggle/push.sh src                 tạo/cập nhật dataset riêng tư <user>/orpheus-src
 #                                           (src/*.py, src/*.sh, protocols/ids/*, VERSION)
-#   bash kaggle/push.sh push prep|zeroshot  đẩy kernel và bắt đầu chạy
-#   bash kaggle/push.sh status prep|zeroshot
-#   bash kaggle/push.sh logs prep|zeroshot [-f]   xem log (không tải output)
+#   bash kaggle/push.sh data                tạo/cập nhật dataset riêng tư <user>/orpheus-seaspoof-vi
+#                                           từ Data/seaspoof/data (FLAC + CSV, prep_seaspoof.py fetch).
+#                                           SEA-Spoof không được phân phối lại: dataset PHẢI riêng tư
+#   bash kaggle/push.sh push prep|zeroshot|finetune  đẩy kernel và bắt đầu chạy
+#   bash kaggle/push.sh status <kernel>
+#   bash kaggle/push.sh logs <kernel> [-f]  xem log (không tải output)
 #   bash kaggle/push.sh quota               quota GPU còn lại
 #   bash kaggle/push.sh output zeroshot N   tải output version N về results/kaggle-raw/,
 #                                           lưu bằng chứng vào results/runs/, kết quả vào results/zeroshot/
+#   bash kaggle/push.sh output finetune N   như trên, trừ checkpoint (*.ckpt, ở lại Kaggle);
+#                                           kết quả vào results/finetune/
 #   bash kaggle/push.sh archive-log prep N  chỉ lưu log version N vào results/runs/ (không tải output)
 #
 # Mỗi lần push lưu run.py + metadata vào results/runs/orpheus-<kernel>-v<N>/; output và
@@ -64,8 +69,29 @@ case "$CMD" in
       sleep 10
     done
     ;;
+  data)
+    # Dataset riêng tư (mặc định của CLI; KHÔNG dùng --public). Thư mục seaspoof_vi/ đưa lên
+    # dạng tar không nén (FLAC đã nén sẵn).
+    U=$(user); D="$ROOT/Data/seaspoof/data"
+    [ -f "$D/seaspoof_vi_train.csv" ] || { echo "Chưa có $D: chạy prep_seaspoof.py fetch trước"; exit 2; }
+    cat > "$D/dataset-metadata.json" <<EOF
+{"title": "orpheus-seaspoof-vi", "id": "$U/orpheus-seaspoof-vi", "licenses": [{"name": "other"}]}
+EOF
+    git -C "$ROOT" rev-parse --short HEAD > "$D/VERSION"
+    if kg datasets status "$U/orpheus-seaspoof-vi" >/dev/null 2>&1; then
+      kg datasets version -p "$D" -r tar -m "$(git -C "$ROOT" log -1 --format=%s)"
+    else
+      kg datasets create -p "$D" -r tar
+    fi
+    for _ in $(seq 1 60); do
+      s=$(kg datasets status "$U/orpheus-seaspoof-vi" 2>/dev/null || true)
+      echo "trạng thái dataset: $s"
+      [ "$s" = "ready" ] && break
+      sleep 20
+    done
+    ;;
   push)
-    K="${2:?prep hoặc zeroshot}"; U=$(user)
+    K="${2:?prep, zeroshot hoặc finetune}"; U=$(user)
     d="$BUILD/orpheus-$K"; rm -rf "$d" && mkdir -p "$d"
     cp "$ROOT/kaggle/$K/run.py" "$d/"
     sed "s/KAGGLE_USER/$U/g" "$ROOT/kaggle/$K/kernel-metadata.json" > "$d/kernel-metadata.json"
@@ -102,17 +128,30 @@ case "$CMD" in
     rm -f "$run/.kernel.log.raw" "$q"
     ;;
   output)
-    # bash kaggle/push.sh output zeroshot <version>
-    K="${2:?zeroshot}"; V="${3:?số version (xem results/runs/ hoặc dòng 'Kernel version N' lúc đẩy)}"; U=$(user)
-    [ "$K" = "zeroshot" ] || { echo "Chỉ tải output của zeroshot (prep: dùng archive-log)"; exit 2; }
+    # bash kaggle/push.sh output zeroshot|finetune <version>
+    K="${2:?zeroshot hoặc finetune}"; V="${3:?số version (xem results/runs/ hoặc dòng 'Kernel version N' lúc đẩy)}"; U=$(user)
+    case "$K" in zeroshot|finetune) ;; *) echo "Chỉ tải output của zeroshot, finetune (prep: dùng archive-log)"; exit 2;; esac
     # Mỗi version tải vào thư mục riêng, để không mất embedding của lần chạy trước
     raw="$ROOT/results/kaggle-raw/orpheus-$K-v$V"
     mkdir -p "$raw"
-    kg kernels output "$U/orpheus-$K/$V" -p "$raw" --page-size 200
+    if [ "$K" = "finetune" ]; then
+      # Không tải checkpoint (~1,3 GB mỗi lần huấn luyện); chúng ở lại output trên Kaggle
+      kg kernels output "$U/orpheus-$K/$V" -p "$raw" --page-size 200 --file-pattern '^(?!.*\.ckpt$)'
+    else
+      kg kernels output "$U/orpheus-$K/$V" -p "$raw" --page-size 200
+    fi
     q=$(mktemp); kg quota > "$q" 2>&1 || true
     python3 -I "$ROOT/kaggle/archive_run.py" collect --run-dir "$ROOT/results/runs/orpheus-$K-v$V" \
       --raw "$raw" --kernel "orpheus-$K" --version "$V" --quota "$q"
     rm -f "$q"
+    if [ "$K" = "finetune" ]; then
+      # Lưu vào git: tóm tắt huấn luyện, log, điểm và độ đo. Không lưu embedding, shard, checkpoint.
+      dst="$ROOT/results/finetune"; mkdir -p "$dst"
+      python3 -I "$ROOT/kaggle/archive_run.py" merge-finetune --raw "$raw" --dst "$dst" --version "$V"
+      echo "Đã chép vào results/finetune/. Checkpoint ở output Kaggle orpheus-finetune/$V (ckpt/)"
+      ls "$raw"
+      exit 0
+    fi
     # Lưu vào git: tóm tắt, độ đo, file điểm, log cài đặt. Không lưu embedding và shard.
     dst="$ROOT/results/zeroshot"; mkdir -p "$dst"
     # Gộp summary.csv: dòng mới thay dòng cũ cùng (dataset, model), giữ các dòng cũ còn lại
@@ -129,6 +168,6 @@ case "$CMD" in
     ls "$raw"
     ;;
   *)
-    sed -n '2,17p' "$0"
+    sed -n '2,24p' "$0"
     ;;
 esac

@@ -23,6 +23,9 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# File nhỏ của mỗi lần huấn luyện (src/finetune.py) được lưu làm bằng chứng
+TRAIN_FILES = (".log", "monitor.csv", "exp_log.txt", "valid_history.json", "hyperparams.yaml",
+               "best_CKPT.yaml", ".txt")
 WARN_RE = re.compile(r"Traceback|Error|is not in the model|Wrong para\. length|failures\.json")
 IGNORE_RE = re.compile(r"SyntaxWarning|mistune|nbconvert|filter_links|Ignoring unknown extended header")
 
@@ -92,16 +95,24 @@ def cmd_collect(a):
         copied += ["kernel.log.json", "kernel.log.txt"]
 
     # 2. Môi trường và tóm tắt của riêng lần chạy này
-    for f in ("summary.csv", "setup.log", "versions.txt", "pip-freeze.txt", "failures.json",
-              "orpheus_data_manifest.json"):
+    for f in ("summary.csv", "train_summary.csv", "setup.log", "versions.txt", "pip-freeze.txt",
+              "failures.json", "orpheus_data_manifest.json"):
         for p in glob.glob(os.path.join(res, f)) + glob.glob(os.path.join(a.raw, "**", f), recursive=True)[:1]:
             if os.path.exists(p) and not os.path.exists(os.path.join(a.run_dir, f)):
                 shutil.copy(p, a.run_dir)
                 copied.append(f)
 
-    # 3. Log và thời gian của từng shard (main.py), log của baseline
+    # 3a. Kernel fine-tune: log huấn luyện của từng lần (không có checkpoint)
+    for p in sorted(glob.glob(os.path.join(res, "train", "*.driver.log"))
+                    + [q for q in glob.glob(os.path.join(res, "train", "*", "*"))
+                       if os.path.isfile(q) and q.endswith(TRAIN_FILES)]):
+        dst = os.path.join(a.run_dir, "train_logs", os.path.relpath(p, os.path.join(res, "train")))
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        shutil.copy(p, dst)
+
+    # 3b. Log và thời gian của từng shard (main.py), log của baseline
     n_shard = 0
-    for p in sorted(glob.glob(os.path.join(res, "*", "*", "shards", "*"))):
+    for p in sorted(glob.glob(os.path.join(res, "**", "shards", "*"), recursive=True)):
         if p.endswith((".log", ".done")):
             rel = os.path.relpath(p, res).replace(os.sep + "shards" + os.sep, os.sep)
             dst = os.path.join(a.run_dir, "shard_logs", rel)
@@ -145,14 +156,22 @@ def write_run_md(a, entries, copied, n_shard):
     jobs = "?"
     rp = os.path.join(a.run_dir, "run.py")
     if os.path.exists(rp):
-        m = re.search(r"^JOBS = \[(.*?)^\]", open(rp, encoding="utf-8").read(), re.S | re.M)
+        src = open(rp, encoding="utf-8").read()
+        m = re.search(r"^JOBS = \[(.*?)^\]", src, re.S | re.M)
         if m:
             jobs = "\n".join("- `" + j + "`" for j in re.findall(r'"([^"]+)"', m.group(1)))
+        m = re.search(r"^(PILOT = .*?\n)?^RUNS = \{(.*?)^\}", src, re.S | re.M)
+        if m:
+            jobs = "```python\n" + m.group(0).strip() + "\n```"
 
     rows = []
     sp = os.path.join(a.run_dir, "summary.csv")
     if os.path.exists(sp):
         rows = list(csv.DictReader(open(sp, encoding="utf-8")))
+    trows = []
+    tp = os.path.join(a.run_dir, "train_summary.csv")
+    if os.path.exists(tp):
+        trows = list(csv.DictReader(open(tp, encoding="utf-8")))
 
     L = [f"# {a.kernel} version {a.version}", "",
          "File này do `kaggle/archive_run.py` sinh ra. Mục **Ghi chú** cuối file viết tay.", "",
@@ -169,6 +188,15 @@ def write_run_md(a, entries, copied, n_shard):
          f"| GPU | {grab(r'^(Tesla [^,]+, \d+ MiB)')} (xem `kernel.log.txt` cho đủ) |",
          f"| Lưu trữ lúc | {now()['local']} |", "",
          "## Job", "", jobs, ""]
+    if trows:
+        keys = ["run", "status", "train", "train_seconds", "batches_per_epoch", "sec_per_it",
+                "last_steps", "max_batch_length", "peak_mem_mib", "gpu_util_mean", "cpu_util_mean",
+                "n_valid", "best_valid_eer", "last_lr"]
+        L += ["## Huấn luyện (train_summary.csv)", "",
+              "| " + " | ".join(keys) + " |", "|" + "---|" * len(keys)]
+        for r in trows:
+            L.append("| " + " | ".join(str(r.get(k, "")) for k in keys) + " |")
+        L += ["", "Đầy đủ (kể cả ghi đè YAML): `train_summary.csv`; log từng lần: `train_logs/`.", ""]
     if rows:
         L += ["## Kết quả của lần chạy này", "",
               "| Tập | Mô hình | Câu | Giờ âm thanh | Giây GPU | x thời gian thực | EER (%) | minDCF | actDCF |",
@@ -211,18 +239,55 @@ def write_run_md(a, entries, copied, n_shard):
     open(path, "w", encoding="utf-8").write("\n".join(L))
 
 
+def cmd_merge_finetune(a):
+    """Chép kết quả kernel fine-tune vào results/finetune/ (commit): train_summary.csv và
+    summary.csv gộp (dòng mới thay dòng cũ cùng khoá), điểm và độ đo từng (lần chạy, tập).
+    Không chép embedding, shard, checkpoint."""
+    res = os.path.join(a.raw, "results")
+
+    def merge(src, dst, key):
+        if not os.path.exists(src):
+            return
+        new = list(csv.DictReader(open(src, encoding="utf-8")))
+        old = list(csv.DictReader(open(dst, encoding="utf-8"))) if os.path.exists(dst) else []
+        k = lambda r: tuple(r.get(x) for x in key)  # noqa: E731
+        seen = {k(r) for r in new}
+        rows = new + [r for r in old if k(r) not in seen]
+        for r in rows:
+            r.setdefault("kaggle_version", a.version)
+        fields = []
+        for r in rows:
+            fields += [f for f in r if f not in fields]
+        with open(dst, "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=fields)
+            w.writeheader()
+            w.writerows(rows)
+    merge(os.path.join(res, "train_summary.csv"), os.path.join(a.dst, "train_summary.csv"), ["run"])
+    merge(os.path.join(res, "scores", "summary.csv"), os.path.join(a.dst, "summary.csv"),
+          ["dataset", "model"])
+    n = 0
+    for p in glob.glob(os.path.join(res, "scores", "*", "*", "*")):
+        if os.path.basename(p) in ("scores.csv", "metrics.csv", "metrics.txt"):
+            dst = os.path.join(a.dst, os.path.relpath(p, os.path.join(res, "scores")))
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy(p, dst)
+            n += 1
+    print(f"Đã gộp train_summary.csv, summary.csv và {n} file điểm/độ đo vào {a.dst}")
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("cmd", choices=["pushed", "collect"])
-    p.add_argument("--run-dir", required=True)
-    p.add_argument("--kernel", required=True)
+    p.add_argument("cmd", choices=["pushed", "collect", "merge-finetune"])
+    p.add_argument("--dst")
+    p.add_argument("--run-dir")
+    p.add_argument("--kernel")
     p.add_argument("--version", required=True)
     p.add_argument("--build-dir")
     p.add_argument("--raw")
     p.add_argument("--log")
     p.add_argument("--quota")
     a = p.parse_args()
-    {"pushed": cmd_pushed, "collect": cmd_collect}[a.cmd](a)
+    {"pushed": cmd_pushed, "collect": cmd_collect, "merge-finetune": cmd_merge_finetune}[a.cmd](a)
 
 
 if __name__ == "__main__":
