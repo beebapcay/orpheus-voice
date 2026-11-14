@@ -1,0 +1,169 @@
+Revision 132f5dca9b6efe39cf1d3b54a858f167f5a421fc. Tổng 553746 dòng
+language
+en    130776
+hi     71171
+id     93542
+ms     42382
+ta     49640
+th     85215
+vi     81020
+
+== Tiếng Việt: 81020 câu
+
+-- split
+split
+train         60905
+validation    10058
+evaluation    10057
+
+-- label
+label
+spoof       55216
+bonafide    25804
+
+-- spoof_type
+spoof_type
+offline    43815
+           25804
+online     11401
+
+-- category
+category
+offline_spoof                43815
+bonafide                     25804
+online_spoof_other            3267
+elevenlabs_language           3032
+heygen_avatar                 2983
+minimax_language_seg_flac     2119
+
+-- source_model
+source_model
+bonafide                     25804
+vietnamese_vivos_f5-tts       8752
+Vietnamese_vivos_vits         8752
+vienamese_vivos_edge_tts      8752
+Vietnamese_common_vits        5864
+vietnamese_common_f5-tts      5848
+vienamese_common_edge_tts     5847
+chatgpt_tts_flac              3267
+elevenlabs                    3032
+heygen                        2983
+minimax                       2119
+
+-- source_dataset
+source_dataset
+vivos           38676
+                28960
+common_voice    13384
+
+-- mapping_source
+mapping_source
+local                75158
+whisperx_backfill     5862
+
+-- text_granularity
+text_granularity
+sentence_exact       75158
+audio_segment_asr     5862
+
+-- is_text_exact
+is_text_exact
+True    81020
+
+-- sampling_rate
+sampling_rate
+16000    81020
+
+-- audio_was_resampled
+audio_was_resampled
+False    81020
+
+-- text_source
+text_source
+local_json:vienamese_vivos_edge_tts_manifest.json:original_path       11657
+local_tsv:other.tsv:sentence                                          10293
+local_json:vietnamese_vivos_f5-tts_manifest.json:output_path           8752
+local_json:Vietnamese_vivos_vits_manifest.json:output_path             8752
+local_json:vienamese_vivos_edge_tts_manifest.json:output_path          8752
+local_json:Vietnamese_common_vits_manifest.json:output_path            5864
+whisperx_large-v3                                                      5860
+local_json:vietnamese_common_f5-tts_manifest.json:output_path          5848
+local_json:vienamese_commmon_edge_tts_manifest.json:output_path        5847
+local_json:vietnamese_common_chatgpt_tts_manifest.json:output_path     3267
+bundle_info_json_sentence                                              3032
+local_json:vienamese_commmon_edge_tts_manifest.json:original_path      2933
+local_tsv:invalidated.tsv:sentence                                      158
+local_json:Vietnamese_vivos_vits_manifest.json:original_path              3
+whisperx_large-v3_retry_silero_vad_loose                                  2
+
+-- hệ thống × split (số câu)
+split       evaluation  train  validation
+sys                                      
+chatgpt            327   2613         327
+edge_tts          1749  11100        1750
+elevenlabs         327   2378         327
+f5_tts            1750  11100        1750
+heygen             327   2329         327
+minimax            327   1465         327
+real_cv           1750   9884        1750
+real_vivos        1750   8920        1750
+vits              1750  11116        1750
+
+-- giờ ước lượng (18.1 KB/s, sai ±15–20%) hệ thống × split
+split       evaluation  train  validation
+sys                                      
+chatgpt            0.3    2.9         0.3
+edge_tts           2.0   16.2         2.0
+elevenlabs         0.3    1.3         0.2
+f5_tts             1.1    8.8         1.1
+heygen             0.3    2.2         0.3
+minimax            0.4    1.6         0.4
+real_cv            3.1   17.8         3.1
+real_vivos         2.2   10.8         2.1
+vits               2.5   22.4         2.6
+tổng ~108 giờ
+
+-- vị trí: 411 row group chứa câu vi (9 row group trộn ngôn ngữ), tổng âm thanh 7.18 GB
+file
+evaluation/evaluation-00002.parquet     8717
+evaluation/evaluation-00003.parquet     1340
+train/train-00020.parquet               1626
+train/train-00021.parquet              15000
+train/train-00022.parquet              15000
+train/train-00023.parquet              15000
+train/train-00024.parquet               5494
+train/train-00028.parquet               4423
+train/train-00029.parquet               4362
+validation/validation-00002.parquet     8750
+validation/validation-00003.parquet     1308
+
+-- speaker_or_voice: số giá trị khác nhau theo hệ thống × split (0 hoặc 1 = trống)
+split       evaluation  train  validation
+sys                                      
+chatgpt              1      1           1
+edge_tts             1      1           1
+elevenlabs           2     10           2
+f5_tts               1      1           1
+heygen              31    228          33
+minimax              2      1           1
+real_cv              1      1           1
+real_vivos           1      1           1
+vits                 1      1           1
+   elevenlabs: giọng train∩evaluation = 0, train∩validation = 1; số câu theo giọng (lớn nhất) 270
+   heygen: giọng train∩evaluation = 0, train∩validation = 1; số câu theo giọng (lớn nhất) 18
+   minimax: giọng train∩evaluation = 1, train∩validation = 1; số câu theo giọng (lớn nhất) 2032
+
+-- VIVOS thật: 65 người nói ({'SPK': 11660, 'DEV': 760}); theo split {'evaluation': 65, 'train': 65, 'validation': 65}; trùng train∩evaluation 65, train∩validation 65
+   câu mỗi người nói (min / trung vị / max): [40.0, 250.0, 300.0]
+
+-- văn bản: 20978 câu khác nhau trên 81020 dòng; trùng train∩evaluation 3775, train∩validation 4180
+   tỉ lệ câu giả có văn bản trùng câu thật VIVOS / Common Voice:
+   chatgpt     VIVOS   0.1%   CV 100.0%
+   edge_tts    VIVOS  60.0%   CV  40.1%
+   elevenlabs  VIVOS   0.0%   CV 100.0%
+   f5_tts      VIVOS  60.0%   CV  40.1%
+   heygen      VIVOS   0.0%   CV   0.0%
+   minimax     VIVOS   0.0%   CV   0.1%
+   vits        VIVOS  59.9%   CV  40.1%
+
+-- Common Voice thật: 13384 clip, 5394 câu khác nhau; số clip (min/max) [21824030, 27404903]
