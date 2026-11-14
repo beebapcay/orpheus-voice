@@ -96,6 +96,7 @@ Các con số trên lấy từ tài liệu thứ cấp, cần đối chiếu v�
 
 | Hiện tượng | Xử lý |
 |---|---|
+| Mọi lệnh báo `Authentication required` hoặc `Permission 'kernels.get' was denied` (kể cả với kernel của mình), trong khi `kaggle auth login` lại báo "already logged-in" | Phiên OAuth đã hết hạn hoặc bị thu hồi (gặp 14/11, khoảng 12 giờ sau lần đăng nhập). **Người dùng** chạy `kaggle auth login --force` trong Terminal riêng, xác nhận trên trình duyệt, rồi thử `kaggle quota`. Kernel trên Kaggle vẫn chạy bình thường trong lúc này. Vòng theo dõi phải coi lỗi này là "không biết", không phải "kernel đã dừng" |
 | `push.sh`: không lấy được username | Chạy lại `kaggle auth login`, hoặc đặt `export KAGGLE_USERNAME=<tên>` |
 | Kernel báo không có internet / GPU | Chưa xác minh số điện thoại |
 | `Không thấy ... trong /kaggle/input` | Dataset `orpheus-src` chưa xử lý xong, hoặc kernel `orpheus-prep` chưa chạy xong |
