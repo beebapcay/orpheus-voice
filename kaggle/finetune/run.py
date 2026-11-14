@@ -14,27 +14,26 @@ import threading
 import time
 
 # ---- Sửa phần này cho mỗi lần chạy -------------------------------------------
-# GĐ5, lần 3 (chore/GD5-Ablation.md mục 2), kernel orpheus-finetune-b (chạy song song với lần 2):
-#   B1 seed 1 (GPU 0): W2V-Small post-trained (95M, tiếng Anh) -> kích thước backbone (so với B2).
-#   N0 seed 1 (GPU 1): MMS-300M bản NDA (post-train không RawBoost) -> RawBoost khi post-train (so với R).
+# GĐ5, lần 4 (chore/GD5-Ablation.md mục 2): R seed 2 (GPU 0) và R seed 3 (GPU 1), cho độ lệch giữa
+#   các seed của cấu hình mốc. Chấm thêm tập MLAAD fake/vi (mục 4.2), rồi chấm S0 trên MLAAD.
 #   Bộ ghi đè SFT giữ NGUYÊN như lần 1 (quyết định E1', mục 4.1): `optimizer_step_limit` không vào
 #   được YAML nên lịch learning rate thực tế là warmup 460 bước lên 1e-6 rồi giảm rất chậm
 #   (total_steps 50000); đổi bộ ghi đè là đổi lịch và không so được với R_s1, A0_s1.
 SFT = ["max_batch_length=50", "number_of_epochs=3", "optimizer_step_limit=4600", "warmup=460",
        "lr=1e-6", "valid_step=1000000000", "num_workers=2"]
-SCORE = ["seaspoof_vi_dev", "seaspoof_vi_test", "radar_vi", "ood_forget"]
+SCORE = ["seaspoof_vi_dev", "seaspoof_vi_test", "radar_vi", "ood_forget", "mlaad_vi_test"]
 RUNS = {
     0: [
-        {"run": "B1_s1", "model": "w2v_small", "train": "seaspoof_vi_train",
-         "valid": "seaspoof_vi_dev", "set": SFT + ["seed=1"], "score": SCORE},
+        {"run": "R_s2", "model": "mms_300m", "train": "seaspoof_vi_train",
+         "valid": "seaspoof_vi_dev", "set": SFT + ["seed=2"], "score": SCORE},
     ],
     1: [
-        {"run": "N0_s1", "model": "mms_300m_nda", "train": "seaspoof_vi_train",
-         "valid": "seaspoof_vi_dev", "set": SFT + ["seed=1"], "score": SCORE},
+        {"run": "R_s3", "model": "mms_300m", "train": "seaspoof_vi_train",
+         "valid": "seaspoof_vi_dev", "set": SFT + ["seed=3"], "score": SCORE},
     ],
 }
 # Chấm zero-shot sau khi mọi lần huấn luyện xong (score_zeroshot.py, hai GPU), vào results/zeroshot/
-ZEROSHOT = []
+ZEROSHOT = ["mlaad_vi_test:mms_300m,w2v_large,w2v_small,mms_300m_nda"]
 # -------------------------------------------------------------------------------
 
 T0 = time.time()
