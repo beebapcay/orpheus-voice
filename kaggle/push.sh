@@ -12,7 +12,7 @@
 #   bash kaggle/push.sh quota               quota GPU còn lại
 #   bash kaggle/push.sh output zeroshot N   tải output version N về results/kaggle-raw/,
 #                                           lưu bằng chứng vào results/runs/, kết quả vào results/zeroshot/
-#   bash kaggle/push.sh output finetune N   như trên, trừ checkpoint (*.ckpt, ở lại Kaggle);
+#   bash kaggle/push.sh output finetune N   như trên, trừ checkpoint và embedding (ở lại Kaggle);
 #                                           kết quả vào results/finetune/
 #   bash kaggle/push.sh archive-log prep N  chỉ lưu log version N vào results/runs/ (không tải output)
 #
@@ -135,8 +135,11 @@ EOF
     raw="$ROOT/results/kaggle-raw/orpheus-$K-v$V"
     mkdir -p "$raw"
     if [ "$K" = "finetune" ]; then
-      # Không tải checkpoint (~1,3 GB mỗi lần huấn luyện); chúng ở lại output trên Kaggle
-      kg kernels output "$U/orpheus-$K/$V" -p "$raw" --page-size 200 --file-pattern '^(?!.*\.ckpt$)'
+      # Không tải checkpoint (~1,3 GB mỗi lần huấn luyện) và embedding (emb.npy, *_emb.pkl: ~98%
+      # dung lượng còn lại, tải ~0,5 MB/s ở GĐ5 lần 1); chúng ở lại output trên Kaggle.
+      # Cần embedding thì: kg kernels output <user>/orpheus-finetune/<N> -p <thư mục> --file-pattern 'emb'
+      kg kernels output "$U/orpheus-$K/$V" -p "$raw" --page-size 200 \
+        --file-pattern '^(?!.*(\.ckpt|emb\.npy|_emb\.pkl)$)'
     else
       kg kernels output "$U/orpheus-$K/$V" -p "$raw" --page-size 200
     fi

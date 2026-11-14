@@ -7,8 +7,8 @@ Câu hỏi của giai đoạn: yếu tố nào quyết định kết quả trên
 | Ngày | Việc | Sản phẩm | Trạng thái |
 |---|---|---|---|
 | 1 | Chuẩn bị lần chạy 1: tập con SEA-Spoof tính ngay trên Kaggle, khoá file khi hai tiến trình chấm cùng ghi, bước chấm S0 | `src/score_zeroshot.py`, `kaggle/finetune/run.py`, `kaggle/archive_run.py`, `kaggle/push.sh` | Xong (14/11), đã thử trên máy với điểm của pilot |
-| 1 | **Lần chạy 1: R seed 1, A0 seed 1**, chấm S0 trên SEA-Spoof | `orpheus-finetune` v2, `results/runs/orpheus-finetune-v2/` | Đang chạy |
-| 1 | Báo kết quả lần 1 cho người dùng, chờ duyệt trước khi chạy tiếp | Mục 3 | |
+| 1 | **Lần chạy 1: R seed 1, A0 seed 1**, chấm S0 trên SEA-Spoof | `orpheus-finetune` v2, `results/runs/orpheus-finetune-v2/` | **Xong** (14/11, 4,68 giờ); mục 3.1 |
+| 1 | Báo kết quả lần 1 cho người dùng, chờ duyệt trước khi chạy tiếp | Mục 3.1, 4 | Đã báo (14/11); chờ chốt phát hiện 1, 2 |
 | 1–2 | Lần 2–3: P0, B2, B1 (seed 1); N0 nếu còn quota | | Chưa |
 | 3–4 | Lần 4: R seed 2, 3 | | Chưa |
 | Trong lúc chờ GPU | Đọc sâu bài GRPO và `algo/rl.py` (chuẩn bị GĐ6) | Mục 6, `src/grpo_gradient_sim.py` | Xong (14/11) |
@@ -70,18 +70,69 @@ Chấm S0 thêm MMS-300M NDA (ngoài 3 backbone GĐ4 đã định): ~15 phút qu
 
 ## 3. Kết quả
 
-(Điền sau lần 1.)
+### 3.1. Lần 1 (`orpheus-finetune` v2, 14/11, 4,68 giờ; `results/runs/orpheus-finetune-v2/`)
+
+COMPLETE, không có cảnh báo nạp trọng số. R và A0 mỗi lần 4.563 bước (đúng 3 epoch × 1.521 batch), ~2,0 s mỗi bước, ~2,6 giờ huấn luyện, GPU 99,5%, bộ nhớ đỉnh 14,6 GB. Chấm sau fine-tune ~74 phút mỗi GPU, chấm S0 43,8 phút. **Lịch learning rate lệch E1** (phát hiện 1): R và A0 cùng lịch nên so với nhau công bằng; so với kế hoạch là fine-tune mạnh hơn.
+
+Số liệu: `results/finetune/analysis/` (`python src/analyze_ablation.py`, đầu ra `analysis_output.txt`), điểm từng câu ở `results/finetune/<lần>/<tập>/scores.csv` và `results/zeroshot/<mô hình>/seaspoof_vi_*/`.
+
+**Bảng chính, EER (%), thấp hơn là tốt hơn.** S0 = dùng thẳng, không fine-tune.
+
+| Cấu hình | test_seen | test_f5 (để riêng) | test_minimax (để riêng) | test_cvreal | **RADAR VI** | **ItW** (mức quên) | RADAR EN (mức quên) |
+|---|---|---|---|---|---|---|---|
+| S0 MMS-300M | 0,81 | 0,57 | 0,00 | 7,44 | 20,08 | 2,60 | 26,20 |
+| **R** seed 1 | 0,04 | 0,04 | 0,00 | 2,70 | **23,07** | 7,60 | 26,70 |
+| **A0** seed 1 (không RawBoost) | 0,04 | 0,00 | 0,00 | 2,79 | **18,37** | 6,10 | 25,00 |
+| S0 MMS-300M NDA | 0,89 | 0,76 | 0,04 | 2,10 | 18,07 | | |
+| S0 W2V-Large | 0,73 | 0,72 | 0,04 | 3,04 | 17,80 | 2,00 | 23,50 |
+| S0 W2V-Small | 0,93 | 2,11 | 0,15 | 6,90 | 27,21 | 4,00 | 27,20 |
+| Tham chiếu XLS-R-2B dùng thẳng | | | | | 13,71 | | |
+
+**Hai loại lỗi ở ngưỡng log-odds 0** (FAR: giả bị nhận là thật; FRR: thật bị coi là giả; %, thấp hơn là tốt hơn) và lệch hiệu chuẩn:
+
+| Cấu hình | RADAR VI FAR | RADAR VI FRR | RADAR VI actDCF − minDCF | test_cvreal FRR | test_f5 FAR |
+|---|---|---|---|---|---|
+| S0 MMS-300M | 37,06 | **4,81** | 0,007 | 0,75 | 9,57 |
+| R seed 1 | 19,54 | **29,21** | 0,199 | 8,50 | 1,16 |
+| A0 seed 1 | 13,26 | **27,09** | 0,192 | 8,30 | 0,38 |
+
+**Chênh lệch EER, KTC 95% bootstrap ghép cặp** (1.000 lượt, theo câu; không tính độ bất định do seed huấn luyện):
+
+| So sánh | RADAR VI | ItW | RADAR EN | test_cvreal |
+|---|---|---|---|---|
+| R − S0 | **+2,98** [2,41; 3,67] | **+5,00** [3,80; 6,20] | +0,50 [−1,30; 2,30] | −4,74 [−5,59; −4,16] |
+| A0 − S0 | **−1,71** [−2,22; −1,12] | **+3,50** [2,50; 4,60] | −1,20 [−2,80; 0,30] | −4,65 [−5,59; −4,00] |
+| A0 − R | **−4,70** [−5,24; −4,22] | −1,50 [−2,30; −0,60] | −1,70 [−2,90; −0,60] | +0,09 [−0,29; 0,36] |
+| R − XLS-R-2B (dùng thẳng) | +9,35 [8,60; 10,16] | | | |
+| A0 − XLS-R-2B | +4,66 [3,98; 5,34] | | | |
+| S0 NDA − S0 Default | −2,02 [−2,58; −1,47] | | | −5,34 [−6,24; −4,71] |
+
+**Theo hệ thống sinh** (SEA-Spoof test, tiếng thật VIVOS 14 người nói; EER %): S0 MMS-300M từ 0,00 (ChatGPT, MiniMax) đến 1,82 (ElevenLabs); R và A0 ≤ 0,20 ở mọi hệ thống (`table_by_system.csv`).
+
+**Tập 493 câu khó chung của GĐ3** (RADAR VI, sai ở ngưỡng EER của chính mô hình): S0 sai 100% (theo định nghĩa); R còn sai 83,2% câu giả và 72,5% câu thật; A0 88,2% và 72,2% (`hard_ids.csv`).
+
+Mỗi kết quả, một câu giải thích (giả thuyết, 1 seed):
+1. **Trong miền SEA-Spoof bão hoà ngay từ S0**, kể cả hai hệ thống để riêng (F5-TTS 0,57%, MiniMax 0,00%); fine-tune đưa về gần 0. Hệ thống để riêng của SEA-Spoof không phân biệt được các cấu hình (phát hiện 2).
+2. **Fine-tune dịch cả phân bố điểm về phía "giả":** trên RADAR VI, FAR giảm (37 → 13–20%) nhưng FRR tăng gấp ~6 (4,8 → 27–29%), actDCF − minDCF từ 0,007 lên ~0,2. Khớp yếu tố gây nhiễu đã dự báo: tiếng thật train chỉ từ VIVOS, nên tiếng thật nguồn khác (Common Voice, FOSD) bị coi là giả nhiều hơn (phát hiện 3).
+3. **RawBoost khi fine-tune làm kém ngoài miền:** A0 tốt hơn R 4,70 điểm trên RADAR VI, và tốt hơn ở cả ItW, RADAR EN. Cùng chiều với GĐ3 (bản NDA tốt hơn Default ở mọi backbone ≤ 317M) và với S0 trên `test_cvreal` (NDA 2,10% so với Default 7,44%) (phát hiện 4).
+4. **SFT làm quên trên In-the-Wild:** 2,6 → 7,6% (R), 6,1% (A0), cùng hiện tượng bài GRPO báo cho MMS-300M (2,91 → 14,17%, Bảng 1 hàng 17–18). RADAR EN không đổi đáng kể. Trả lời sơ bộ câu hỏi 2: có quên, rõ trên ItW.
+5. **Fine-tune 317M chưa thắng 2,2B dùng thẳng:** A0 vẫn kém XLS-R-2B 4,66 điểm trên RADAR VI.
 
 ## 4. Phát hiện ảnh hưởng thí nghiệm
 
 | # | Phát hiện | Ảnh hưởng | Việc cần làm |
 |---|---|---|---|
+| 1 | **`--optimizer_step_limit` không ghi đè được vào YAML.** SpeechBrain coi đây là tham số chạy (run option) của `Brain`, nên `hyperparams.yaml` của lần chạy vẫn ghi `optimizer_step_limit: 50000` và `lr_scheduler.total_steps: 50000`; `--warmup 460` thì có tác dụng. Learning rate thực tế: tăng lên 1e-6 trong 460 bước, rồi chỉ giảm còn 6,83e-7 ở bước 4.563 (`exp_log.txt`), thay vì ~1e-8. Tổng learning rate qua các bước gấp ~3,8 lần kế hoạch E1. Pilot GĐ4 không lộ ra vì chỉ chạy 300 bước trong warmup | R và A0 cùng lịch nên so sánh R–A0 vẫn công bằng. Lần 2–4 phải dùng **cùng một lịch** với lần 1 thì mới so được với R. So với bài GRPO, ta fine-tune mạnh hơn nữa (GĐ4 phát hiện 9) | **Chờ người dùng chốt:** giữ lịch thực tế cho cả GĐ5–6 (không chạy lại) hay sửa (`total_steps` = 4.600) và chạy lại R, A0 seed 1 (~3,7 giờ quota) |
+| 2 | **Hệ thống để riêng của SEA-Spoof đã dễ với mô hình dùng thẳng:** F5-TTS 0,57%, MiniMax 0,00% (S0 MMS-300M); mọi hệ thống ≤ 2,1% với cả 4 mô hình S0 | Thước đo "tổng quát hoá trong tiếng Việt sang hệ thống chưa gặp" của plan không phân biệt được cấu hình. Thước đo chính còn lại: RADAR VI, mức quên, tiếng thật nguồn khác (`test_cvreal`, FRR) | Có thể thêm tập hệ thống chưa gặp khó hơn: `fake/vi` của MLAAD (LEMAS-TTS, OmniVoice, VieNeu-TTS, VoxCPM2, vixTTS; đã có quyền) ghép với tiếng thật VIVOS của test. **Chờ người dùng chốt** |
+| 3 | **Fine-tune làm tiếng thật nguồn khác bị coi là giả** (FRR ở ngưỡng 0: RADAR VI 4,8 → 27–29%; `test_cvreal` 0,75 → 8,3–8,5%) và làm lệch hiệu chuẩn (actDCF − minDCF ~0,2) | Quyết định Q6 của GĐ3 ("giảm kỳ vọng vào hiệu chuẩn") cần xem lại: sau fine-tune, hiệu chuẩn có ý nghĩa. EER vẫn là thước đo không phụ thuộc ngưỡng | Báo FAR/FRR cho mọi cấu hình. GĐ6 ngày 3: hiệu chuẩn trên dev (dev cũng chỉ có tiếng thật VIVOS, nên có thể không sửa được lệch trên nguồn khác; ghi khi làm) |
+| 4 | **RawBoost (khi fine-tune) làm kém ngoài miền ở MMS-300M**, cả ba tập ngoài miền, KTC theo câu không chứa 0 | Cấu hình mốc R (có RawBoost, theo bài GRPO) là cấu hình kém hơn. Một seed: chưa biết chênh lệch do seed lớn cỡ nào | R seed 2, 3 (lần 4) cho độ lệch giữa các seed. Không đổi R giữa chừng: các cấu hình khác so với R như plan |
 
 ## 5. Ngân sách quota
 
 | Lần | Quota dùng | Còn lại | Ghi chú |
 |---|---|---|---|
 | Trước GĐ5 | 0,74 giờ (pilot GĐ4) | 29,26 giờ đến 21/11 | |
+| 1 (`orpheus-finetune` v2) | 4,68 giờ | 24,58 giờ | Ước 4,8 giờ; khớp |
 
 ## 6. Chuẩn bị GĐ6: đọc sâu bài GRPO và `algo/rl.py` (làm trong lúc chờ GPU, 14/11)
 

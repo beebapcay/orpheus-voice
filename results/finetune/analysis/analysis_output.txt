@@ -1,0 +1,69 @@
+== 1. EER (%), thấp hơn là tốt hơn
+         config  test_seen_eer  test_f5_eer  test_minimax_eer  test_cvreal_eer  radar_vi_eer  itw_eer  radar_en_eer
+    S0_mms_300m           0.81         0.57              0.00             7.44         20.08     2.60         26.20
+S0_mms_300m_nda           0.89         0.76              0.04             2.10         18.07      NaN           NaN
+   S0_w2v_large           0.73         0.72              0.04             3.04         17.80     2.00         23.50
+   S0_w2v_small           0.93         2.11              0.15             6.90         27.21     4.00         27.20
+    ref_xlsr_2b            NaN          NaN               NaN              NaN         13.71      NaN           NaN
+          A0_s1           0.04         0.00              0.00             2.79         18.37     6.10         25.00
+           R_s1           0.04         0.04              0.00             2.70         23.07     7.60         26.70
+
+== 1b. Lỗi ở ngưỡng log-odds 0 (%): FAR giả bị nhận là thật, FRR thật bị coi là giả; actDCF − minDCF (lệch hiệu chuẩn)
+         config  radar_vi_far0  radar_vi_frr0  radar_vi_minDCF  radar_vi_act_minus_min  test_cvreal_frr0  test_f5_far0  test_minimax_far0
+    S0_mms_300m          37.06           4.81             0.46                    0.01              0.75          9.57               0.14
+S0_mms_300m_nda          34.51           5.30             0.44                    0.01              0.50          5.77               0.14
+   S0_w2v_large          26.84           7.06             0.38                    0.00              1.90          6.25               0.09
+   S0_w2v_small          40.54          10.79             0.57                    0.01              3.10         21.18               0.85
+    ref_xlsr_2b          28.07           3.13             0.33                    0.01               NaN           NaN                NaN
+          A0_s1          13.26          27.09             0.43                    0.19              8.30          0.38               0.00
+           R_s1          19.54          29.21             0.51                    0.20              8.50          1.16               0.00
+
+== 2. EER (%) theo hệ thống sinh, SEA-Spoof test (f5_tts, minimax: để riêng)
+         config  chatgpt  edge_tts  elevenlabs  f5_tts  heygen  minimax  vits
+    S0_mms_300m     0.00      0.20        1.82    0.57    0.61     0.00  1.21
+S0_mms_300m_nda     0.04      0.40        1.62    0.76    0.99     0.04  1.01
+   S0_w2v_large     0.02      0.00        0.99    0.72    1.41     0.04  0.42
+   S0_w2v_small     0.20      0.24        1.41    2.11    1.25     0.15  0.81
+          A0_s1     0.00      0.00        0.20    0.00    0.00     0.00  0.00
+           R_s1     0.00      0.00        0.02    0.04    0.00     0.00  0.00
+
+== 3. Tập 493 câu khó chung của GĐ3 (RADAR tiếng Việt): % còn sai (thấp hơn là tốt hơn)
+         config  n_fake  n_real  fake_wrong_at_eer_thr_%  real_wrong_at_eer_thr_%  fake_wrong_at0_%  real_wrong_at0_%
+    S0_mms_300m     238     255                   100.00                   100.00            100.00             52.55
+S0_mms_300m_nda     238     255                    90.76                    92.94             99.58             57.25
+   S0_w2v_large     238     255                   100.00                   100.00            100.00             69.02
+   S0_w2v_small     238     255                   100.00                   100.00            100.00             62.35
+    ref_xlsr_2b     238     255                   100.00                   100.00            100.00             44.71
+          A0_s1     238     255                    88.24                    72.16             80.25             81.57
+           R_s1     238     255                    83.19                    72.55             78.15             77.65
+
+== 4. Chênh lệch EER A − B (điểm %), KTC 95% bootstrap ghép cặp (1000 lượt)
+              A           B          set  eer_A  eer_B  diff_A_minus_B  ci95_lo  ci95_hi  p_A_gt_B
+           R_s1 S0_mms_300m    test_seen   0.04   0.81           -0.77    -1.05    -0.57      0.00
+           R_s1 S0_mms_300m      test_f5   0.04   0.57           -0.54    -0.76    -0.33      0.00
+           R_s1 S0_mms_300m test_minimax   0.00   0.00            0.00     0.00     0.00      0.00
+           R_s1 S0_mms_300m  test_cvreal   2.70   7.44           -4.74    -5.59    -4.16      0.00
+           R_s1 S0_mms_300m     radar_vi  23.07  20.08            2.98     2.41     3.67      1.00
+           R_s1 S0_mms_300m          itw   7.60   2.60            5.00     3.80     6.20      1.00
+           R_s1 S0_mms_300m     radar_en  26.70  26.20            0.50    -1.30     2.30      0.68
+          A0_s1 S0_mms_300m    test_seen   0.04   0.81           -0.77    -1.05    -0.57      0.00
+          A0_s1 S0_mms_300m      test_f5   0.00   0.57           -0.57    -0.78    -0.41      0.00
+          A0_s1 S0_mms_300m test_minimax   0.00   0.00            0.00     0.00     0.00      0.00
+          A0_s1 S0_mms_300m  test_cvreal   2.79   7.44           -4.65    -5.59    -4.00      0.00
+          A0_s1 S0_mms_300m     radar_vi  18.37  20.08           -1.71    -2.22    -1.12      0.00
+          A0_s1 S0_mms_300m          itw   6.10   2.60            3.50     2.50     4.60      1.00
+          A0_s1 S0_mms_300m     radar_en  25.00  26.20           -1.20    -2.80     0.30      0.06
+          A0_s1        R_s1    test_seen   0.04   0.04            0.00    -0.08     0.12      0.33
+          A0_s1        R_s1      test_f5   0.00   0.04           -0.04    -0.11     0.00      0.00
+          A0_s1        R_s1 test_minimax   0.00   0.00            0.00     0.00     0.00      0.00
+          A0_s1        R_s1  test_cvreal   2.79   2.70            0.09    -0.29     0.36      0.55
+          A0_s1        R_s1     radar_vi  18.37  23.07           -4.70    -5.24    -4.22      0.00
+          A0_s1        R_s1          itw   6.10   7.60           -1.50    -2.30    -0.60      0.00
+          A0_s1        R_s1     radar_en  25.00  26.70           -1.70    -2.90    -0.60      0.00
+           R_s1 ref_xlsr_2b     radar_vi  23.07  13.71            9.35     8.60    10.16      1.00
+          A0_s1 ref_xlsr_2b     radar_vi  18.37  13.71            4.66     3.98     5.34      1.00
+S0_mms_300m_nda S0_mms_300m    test_seen   0.89   0.81            0.08    -0.24     0.36      0.64
+S0_mms_300m_nda S0_mms_300m      test_f5   0.76   0.57            0.19    -0.11     0.43      0.87
+S0_mms_300m_nda S0_mms_300m test_minimax   0.04   0.00            0.04     0.00     0.13      0.76
+S0_mms_300m_nda S0_mms_300m  test_cvreal   2.10   7.44           -5.34    -6.24    -4.71      0.00
+S0_mms_300m_nda S0_mms_300m     radar_vi  18.07  20.08           -2.02    -2.58    -1.47      0.00

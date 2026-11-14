@@ -1,0 +1,126 @@
+[{"stream_name":"stdout","time":5.90013026,"data":"Code: /kaggle/input/datasets/beebapcay/orpheus-src | SEA-Spoof: /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi | RADAR/ItW: /kaggle/input/notebooks/beebapcay/orpheus-prep/data\n"}
+,{"stream_name":"stdout","time":5.967356882,"data":"git 115d896\n"}
+,{"stream_name":"stdout","time":5.967384175,"data":"staged 2026-11-14 12:49:11\n"}
+,{"stream_name":"stdout","time":5.967389299,"data":"\n"}
+,{"stream_name":"stdout","time":5.967393536,"data":"+ ls /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi | head; ls /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi/seaspoof_vi/flac | wc -l\n"}
+,{"stream_name":"stdout","time":5.983919032,"data":"seaspoof_vi\n"}
+,{"stream_name":"stdout","time":5.983939522,"data":"seaspoof_vi_audio_info.csv\n"}
+,{"stream_name":"stdout","time":5.983943936,"data":"seaspoof_vi_dev.csv\n"}
+,{"stream_name":"stdout","time":5.983947513,"data":"seaspoof_vi_test.csv\n"}
+,{"stream_name":"stdout","time":5.983950987,"data":"seaspoof_vi_train_10h.csv\n"}
+,{"stream_name":"stdout","time":5.983954564,"data":"seaspoof_vi_train.csv\n"}
+,{"stream_name":"stdout","time":5.983958073,"data":"seaspoof_vi_train_n1000.csv\n"}
+,{"stream_name":"stdout","time":5.983964559,"data":"seaspoof_vi_train_n200.csv\n"}
+,{"stream_name":"stdout","time":5.983966986,"data":"seaspoof_vi_train_n50.csv\n"}
+,{"stream_name":"stdout","time":5.983969512,"data":"VERSION\n"}
+,{"stream_name":"stdout","time":6.104806722,"data":"31886\n"}
+,{"stream_name":"stdout","time":6.10573007,"data":"+ nvidia-smi --query-gpu=name,memory.total --format=csv; free -g; df -h /kaggle/working /tmp; echo nproc=$(nproc); lscpu | grep -E 'Model name|^CPU\\(s\\)'\n"}
+,{"stream_name":"stdout","time":6.134845793,"data":"name, memory.total [MiB]\n"}
+,{"stream_name":"stdout","time":6.134875958,"data":"Tesla T4, 15360 MiB\n"}
+,{"stream_name":"stdout","time":6.134948822,"data":"Tesla T4, 15360 MiB\n"}
+,{"stream_name":"stdout","time":6.159127023,"data":"               total        used        free      shared  buff/cache   available\n"}
+,{"stream_name":"stdout","time":6.159143677,"data":"Mem:              31           1          26           0           4          30\n"}
+,{"stream_name":"stdout","time":6.159147717,"data":"Swap:              0           0           0\n"}
+,{"stream_name":"stdout","time":6.163842243,"data":"Filesystem      Size  Used Avail Use% Mounted on\n"}
+,{"stream_name":"stdout","time":6.163862557,"data":"/dev/loop2       20G  140K   20G   1% /kaggle/working\n"}
+,{"stream_name":"stdout","time":6.16386586,"data":"overlay         8.0T  7.1T  967G  89% /\n"}
+,{"stream_name":"stdout","time":6.166572386,"data":"nproc=4\n"}
+,{"stream_name":"stdout","time":6.174727185,"data":"CPU(s):                                  4\n"}
+,{"stream_name":"stdout","time":6.17474938,"data":"Model name:                              Intel(R) Xeon(R) CPU @ 2.00GHz\n"}
+,{"stream_name":"stdout","time":9.27064833,"data":"+ bash /tmp/orpheus/src/setup_antideepfake.sh /tmp/orpheus/work env\n"}
+,{"stream_name":"stdout","time":9.288786699,"data":"[05:50:40] Tải micromamba\n"}
+,{"stream_name":"stdout","time":11.368633009,"data":"[05:50:42] Tạo env Python 3.9, pip 24.0\n"}
+,{"stream_name":"stdout","time":18.739717786,"data":"[05:50:50] Cài torch 2.6.0 + torchaudio 2.6.0 (cu118)\n"}
+,{"stream_name":"stdout","time":136.449164301,"data":"[05:52:47] Clone fairseq\n"}
+,{"stream_name":"stdout","time":139.296912878,"data":"[05:52:50] Cài fairseq 862efab86f649c04ea31545ce28d13c59560113d (biên dịch, mất vài phút)\n"}
+,{"stream_name":"stdout","time":183.008058676,"data":"[05:53:34] Cài speechbrain 1.0.2 và các gói phụ\n"}
+,{"stream_name":"stdout","time":227.587699202,"data":"[05:54:19] Clone AntiDeepfake\n"}
+,{"stream_name":"stdout","time":228.122718492,"data":"[05:54:19] Kiểm tra môi trường\n"}
+,{"stream_name":"stderr","time":232.457323668,"data":"2026-11-14 05:54:23 | INFO | speechbrain.utils.quirks | Applied quirks (see `speechbrain.utils.quirks`): [disable_jit_profiling, allow_tf32]\n"}
+,{"stream_name":"stderr","time":232.457363548,"data":"2026-11-14 05:54:23 | INFO | speechbrain.utils.quirks | Excluded quirks specified by the `SB_DISABLE_QUIRKS` environment (comma-separated list): []\n"}
+,{"stream_name":"stdout","time":232.640534507,"data":"python       3.9.23\n"}
+,{"stream_name":"stdout","time":232.640560318,"data":"torch        2.6.0+cu118 | CUDA: True | Tesla T4\n"}
+,{"stream_name":"stdout","time":232.640566086,"data":"torchaudio   2.6.0+cu118\n"}
+,{"stream_name":"stdout","time":232.64057151,"data":"fairseq      1.0.0a0+862efab\n"}
+,{"stream_name":"stdout","time":232.640575973,"data":"speechbrain  1.0.2\n"}
+,{"stream_name":"stdout","time":232.640580427,"data":"numpy/pandas 1.21.2 1.4.3\n"}
+,{"stream_name":"stdout","time":232.640584939,"data":"fairseq Wav2Vec2Model import: OK\n"}
+,{"stream_name":"stdout","time":233.91286256,"data":"[05:54:25] Dựng môi trường mất 3 phút\n"}
+,{"stream_name":"stdout","time":233.915748285,"data":"[05:54:25] Xong bước env. Log đầy đủ: /tmp/orpheus/work/setup.log\n"}
+,{"stream_name":"stdout","time":233.917092608,"data":"Dựng môi trường xong sau 3.9 phút\n"}
+,{"stream_name":"stdout","time":233.917116807,"data":"+ /usr/bin/python3 /tmp/orpheus/src/finetune.py --base /tmp/orpheus/work --data-root /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi /kaggle/input/notebooks/beebapcay/orpheus-prep/data --out /kaggle/working/results --cache /tmp/orpheus/cache --run prefetch_mms_300m --model mms_300m --prefetch\n"}
+,{"stream_name":"stdout","time":234.063065926,"data":"[05:54:25] [mms_300m] tải checkpoint từ Hugging Face (mms-300m-anti-deepfake)\n"}
+,{"stream_name":"stdout","time":239.971868634,"data":"[05:54:31]   tải mms_300m.safetensors: 1.27 GB, 6 s (215 MB/s)\n"}
+,{"stream_name":"stdout","time":249.034740678,"data":"[05:54:40] [mms_300m] đã chuyển safetensors -\u003e mms_300m.ckpt (431 tensor)\n"}
+,{"stream_name":"stdout","time":249.098086962,"data":"[05:54:40] Đã có checkpoint khởi tạo /tmp/orpheus/cache/mms_300m.ckpt\n"}
+,{"stream_name":"stdout","time":252.049098052,"data":"[GPU 0] bắt đầu R_s1\n"}
+,{"stream_name":"stdout","time":272.049722653,"data":"[GPU 1] bắt đầu A0_s1\n"}
+,{"stream_name":"stdout","time":14215.182289893,"data":"[GPU 1] xong A0_s1 (mã 0) sau 232.4 phút\n"}
+,{"stream_name":"stdout","time":14215.182371139,"data":"+ grep -E 'KẾT QUẢ|THẤT BẠI|lỗi|Lỗi' /kaggle/working/results/train/A0_s1.driver.log | tail -5\n"}
+,{"stream_name":"stdout","time":14215.190192508,"data":"[08:30:26] [A0_s1] KẾT QUẢ HUẤN LUYỆN: {\"run\": \"A0_s1\", \"model\": \"mms_300m\", \"method\": \"sft\", \"train\": \"seaspoof_vi_train\", \"valid\": \"seaspoof_vi_dev\", \"returncode\": 0, \"train_seconds\": 9321, \"overrides\": \"{\\\"max_batch_length\\\": \\\"50\\\", \\\"number_of_epochs\\\": \\\"3\\\", \\\"optimizer_step_limit\\\": \\\"4600\\\", \\\"warmup\\\": \\\"460\\\", \\\"lr\\\": \\\"1e-6\\\", \\\"valid_step\\\": \\\"1000000000\\\", \\\"num_workers\\\": \\\"2\\\", \\\"seed\\\": \\\"1\\\", \\\"use_da\\\": \\\"False\\\"}\", \"max_batch_length\": \"50\", \"batches_per_epoch\": 1521, \"sec_per_it\": 2.0, \"peak_mem_mib\": 14645.0, \"gpu_util_mean\": 99.5, \"cpu_util_mean\": 61.8, \"monitor_samples\": 1845, \"n_valid\": 1, \"last_steps\": 4563, \"last_lr\": 6.83e-07, \"best_valid_eer\": 0.0, \"best_steps\": 4563, \"ckpt_mb\": 1270, \"status\": \"ok\"}\n"}
+,{"stream_name":"stdout","time":14215.190278006,"data":"[08:34:07] [A0_s1/seaspoof_vi_dev] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_dev\", \"model\": \"A0_s1\", \"n\": 2070, \"audio_h\": 2.205, \"gpu_seconds\": 216, \"x_realtime\": 36.8, \"n_real\": 1035, \"n_fake\": 1035, \"eer_%\": 0.0, \"minDCF\": 0.0, \"actDCF\": 0.0028985507246376, \"eer_threshold\": 0.6142559349536896}\n"}
+,{"stream_name":"stdout","time":14215.19028648,"data":"[09:05:50] [A0_s1/seaspoof_vi_test] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_test\", \"model\": \"A0_s1\", \"n\": 11996, \"audio_h\": 13.511, \"gpu_seconds\": 1900, \"x_realtime\": 25.6, \"n_real\": 4475, \"n_fake\": 7521, \"eer_%\": 1.201676646172839, \"minDCF\": 0.032518455958326, \"actDCF\": 0.0649441392778061, \"eer_threshold\": -4.603701591491699}\n"}
+,{"stream_name":"stdout","time":14215.190292188,"data":"[09:35:04] [A0_s1/radar_vi] KẾT QUẢ: {\"dataset\": \"radar_vi\", \"model\": \"A0_s1\", \"n\": 13438, \"audio_h\": 17.042, \"gpu_seconds\": 1753, \"x_realtime\": 35.0, \"n_real\": 7000, \"n_fake\": 6438, \"eer_%\": 18.37335019748813, \"minDCF\": 0.4281856344028757, \"actDCF\": 0.6199568499534016, \"eer_threshold\": -3.0251684188842773}\n"}
+,{"stream_name":"stdout","time":14215.190296975,"data":"[09:47:26] [A0_s1/ood_forget] KẾT QUẢ: {\"dataset\": \"ood_forget\", \"model\": \"A0_s1\", \"n\": 4000, \"audio_h\": 5.457, \"gpu_seconds\": 741, \"x_realtime\": 26.5, \"n_real\": 2000, \"n_fake\": 2000, \"eer_%\": 15.3, \"minDCF\": 0.3595, \"actDCF\": 0.84155, \"eer_threshold\": -6.292003154754639}\n"}
+,{"stream_name":"stdout","time":14215.265449468,"data":"[GPU 0] xong R_s1 (mã 0) sau 232.7 phút\n"}
+,{"stream_name":"stdout","time":14215.26548105,"data":"+ grep -E 'KẾT QUẢ|THẤT BẠI|lỗi|Lỗi' /kaggle/working/results/train/R_s1.driver.log | tail -5\n"}
+,{"stream_name":"stdout","time":14215.268053493,"data":"[08:32:53] [R_s1] KẾT QUẢ HUẤN LUYỆN: {\"run\": \"R_s1\", \"model\": \"mms_300m\", \"method\": \"sft\", \"train\": \"seaspoof_vi_train\", \"valid\": \"seaspoof_vi_dev\", \"returncode\": 0, \"train_seconds\": 9489, \"overrides\": \"{\\\"max_batch_length\\\": \\\"50\\\", \\\"number_of_epochs\\\": \\\"3\\\", \\\"optimizer_step_limit\\\": \\\"4600\\\", \\\"warmup\\\": \\\"460\\\", \\\"lr\\\": \\\"1e-6\\\", \\\"valid_step\\\": \\\"1000000000\\\", \\\"num_workers\\\": \\\"2\\\", \\\"seed\\\": \\\"1\\\"}\", \"max_batch_length\": \"50\", \"batches_per_epoch\": 1521, \"sec_per_it\": 2.04, \"peak_mem_mib\": 14645.0, \"gpu_util_mean\": 99.5, \"cpu_util_mean\": 61.9, \"monitor_samples\": 1878, \"n_valid\": 1, \"last_steps\": 4563, \"last_lr\": 6.83e-07, \"best_valid_eer\": 0.0, \"best_steps\": 4563, \"ckpt_mb\": 1270, \"status\": \"ok\"}\n"}
+,{"stream_name":"stdout","time":14215.268081577,"data":"[08:36:16] [R_s1/seaspoof_vi_dev] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_dev\", \"model\": \"R_s1\", \"n\": 2070, \"audio_h\": 2.205, \"gpu_seconds\": 201, \"x_realtime\": 39.4, \"n_real\": 1035, \"n_fake\": 1035, \"eer_%\": 0.0, \"minDCF\": 0.0, \"actDCF\": 0.0019323671497584, \"eer_threshold\": -0.2993066981434822}\n"}
+,{"stream_name":"stdout","time":14215.268088657,"data":"[09:05:50] [R_s1/seaspoof_vi_test] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_test\", \"model\": \"R_s1\", \"n\": 11996, \"audio_h\": 13.511, \"gpu_seconds\": 1771, \"x_realtime\": 27.5, \"n_real\": 4475, \"n_fake\": 7521, \"eer_%\": 1.608883580351181, \"minDCF\": 0.0427519845735478, \"actDCF\": 0.0661754298392805, \"eer_threshold\": -2.4303051233291626}\n"}
+,{"stream_name":"stdout","time":14215.268094963,"data":"[09:35:04] [R_s1/radar_vi] KẾT QUẢ: {\"dataset\": \"radar_vi\", \"model\": \"R_s1\", \"n\": 13438, \"audio_h\": 17.042, \"gpu_seconds\": 1753, \"x_realtime\": 35.0, \"n_real\": 7000, \"n_fake\": 6438, \"eer_%\": 23.068799094661163, \"minDCF\": 0.5099633204633205, \"actDCF\": 0.709505392091599, \"eer_threshold\": -1.5991261005401611}\n"}
+,{"stream_name":"stdout","time":14215.268100282,"data":"[09:47:26] [R_s1/ood_forget] KẾT QUẢ: {\"dataset\": \"ood_forget\", \"model\": \"R_s1\", \"n\": 4000, \"audio_h\": 5.457, \"gpu_seconds\": 741, \"x_realtime\": 26.5, \"n_real\": 2000, \"n_fake\": 2000, \"eer_%\": 16.150000000000002, \"minDCF\": 0.4085499999999999, \"actDCF\": 0.9982, \"eer_threshold\": -6.4081807136535645}\n"}
+,{"stream_name":"stdout","time":14215.268490509,"data":"Huấn luyện và chấm sau fine-tune xong sau 3.95 giờ\n"}
+,{"stream_name":"stdout","time":14215.268511369,"data":"Chấm zero-shot: seaspoof_vi_dev:mms_300m,w2v_large,w2v_small,mms_300m_nda seaspoof_vi_test:mms_300m,w2v_large,w2v_small,mms_300m_nda\n"}
+,{"stream_name":"stdout","time":16842.426080334,"data":"Chấm zero-shot xong (mã 0) sau 43.8 phút\n"}
+,{"stream_name":"stdout","time":16842.426149884,"data":"+ grep -E 'KẾT QUẢ|THẤT BẠI|lỗi|Lỗi' /kaggle/working/results/zeroshot.driver.log | tail -12\n"}
+,{"stream_name":"stdout","time":16842.429308493,"data":"[09:50:52] [mms_300m/seaspoof_vi_dev] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_dev\", \"model\": \"mms_300m\", \"n\": 2070, \"audio_h\": 2.205, \"gpu_seconds\": 204, \"x_realtime\": 38.9, \"n_real\": 1035, \"n_fake\": 1035, \"eer_%\": 1.1594202898550725, \"minDCF\": 0.0255072463768115, \"actDCF\": 0.1951690821256038, \"eer_threshold\": 5.670648574829102}\n"}
+,{"stream_name":"stdout","time":16842.429333748,"data":"[09:51:06] [w2v_large/seaspoof_vi_dev] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_dev\", \"model\": \"w2v_large\", \"n\": 2070, \"audio_h\": 2.205, \"gpu_seconds\": 198, \"x_realtime\": 40.1, \"n_real\": 1035, \"n_fake\": 1035, \"eer_%\": 1.6425120772946862, \"minDCF\": 0.044927536231884, \"actDCF\": 0.0594202898550724, \"eer_threshold\": 2.4656848907470703}\n"}
+,{"stream_name":"stdout","time":16842.429340309,"data":"[09:52:43] [w2v_small/seaspoof_vi_dev] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_dev\", \"model\": \"w2v_small\", \"n\": 2070, \"audio_h\": 2.205, \"gpu_seconds\": 105, \"x_realtime\": 75.9, \"n_real\": 1035, \"n_fake\": 1035, \"eer_%\": 1.2560386473429952, \"minDCF\": 0.0328502415458937, \"actDCF\": 0.0847342995169082, \"eer_threshold\": 2.158727049827576}\n"}
+,{"stream_name":"stdout","time":16842.42934737,"data":"[09:54:38] [mms_300m_nda/seaspoof_vi_dev] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_dev\", \"model\": \"mms_300m_nda\", \"n\": 2070, \"audio_h\": 2.205, \"gpu_seconds\": 202, \"x_realtime\": 39.3, \"n_real\": 1035, \"n_fake\": 1035, \"eer_%\": 1.5458937198067633, \"minDCF\": 0.0338164251207729, \"actDCF\": 0.0676328502415458, \"eer_threshold\": 3.1604257822036743}\n"}
+,{"stream_name":"stdout","time":16842.429354087,"data":"[10:11:21] [mms_300m/seaspoof_vi_test] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_test\", \"model\": \"mms_300m\", \"n\": 11996, \"audio_h\": 13.511, \"gpu_seconds\": 1116, \"x_realtime\": 43.6, \"n_real\": 4475, \"n_fake\": 7521, \"eer_%\": 3.435867838209438, \"minDCF\": 0.0820603969964174, \"actDCF\": 0.1436705477920667, \"eer_threshold\": 3.0359569787979126}\n"}
+,{"stream_name":"stdout","time":16842.429360849,"data":"[10:13:00] [w2v_large/seaspoof_vi_test] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_test\", \"model\": \"w2v_large\", \"n\": 11996, \"audio_h\": 13.511, \"gpu_seconds\": 1100, \"x_realtime\": 44.2, \"n_real\": 4475, \"n_fake\": 7521, \"eer_%\": 1.9248614122542544, \"minDCF\": 0.051600035357238, \"actDCF\": 0.0573095489055226, \"eer_threshold\": 1.7152554988861084}\n"}
+,{"stream_name":"stdout","time":16842.429367328,"data":"[10:20:43] [w2v_small/seaspoof_vi_test] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_test\", \"model\": \"w2v_small\", \"n\": 11996, \"audio_h\": 13.511, \"gpu_seconds\": 560, \"x_realtime\": 86.8, \"n_real\": 4475, \"n_fake\": 7521, \"eer_%\": 5.075868759280347, \"minDCF\": 0.1373621153136209, \"actDCF\": 0.1674694423584169, \"eer_threshold\": 2.197088122367859}\n"}
+,{"stream_name":"stdout","time":16842.42937286,"data":"[10:31:11] [mms_300m_nda/seaspoof_vi_test] KẾT QUẢ: {\"dataset\": \"seaspoof_vi_test\", \"model\": \"mms_300m_nda\", \"n\": 11996, \"audio_h\": 13.511, \"gpu_seconds\": 1089, \"x_realtime\": 44.7, \"n_real\": 4475, \"n_fake\": 7521, \"eer_%\": 1.1838554096945686, \"minDCF\": 0.0306782275921646, \"actDCF\": 0.0756201919541485, \"eer_threshold\": 3.391413688659668}\n"}
+,{"stream_name":"stdout","time":16842.429444323,"data":"+ cat /kaggle/working/results/train_summary.csv\n"}
+,{"stream_name":"stdout","time":16842.444633217,"data":"run,model,method,train,valid,returncode,train_seconds,overrides,max_batch_length,batches_per_epoch,sec_per_it,peak_mem_mib,gpu_util_mean,cpu_util_mean,monitor_samples,n_valid,last_steps,last_lr,best_valid_eer,best_steps,ckpt_mb,status\r\n"}
+,{"stream_name":"stdout","time":16842.44465104,"data":"A0_s1,mms_300m,sft,seaspoof_vi_train,seaspoof_vi_dev,0,9321,\"{\"\"max_batch_length\"\": \"\"50\"\", \"\"number_of_epochs\"\": \"\"3\"\", \"\"optimizer_step_limit\"\": \"\"4600\"\", \"\"warmup\"\": \"\"460\"\", \"\"lr\"\": \"\"1e-6\"\", \"\"valid_step\"\": \"\"1000000000\"\", \"\"num_workers\"\": \"\"2\"\", \"\"seed\"\": \"\"1\"\", \"\"use_da\"\": \"\"False\"\"}\",50,1521,2.0,14645.0,99.5,61.8,1845,1,4563,6.83e-07,0.0,4563,1270,ok\r\n"}
+,{"stream_name":"stdout","time":16842.444659616,"data":"R_s1,mms_300m,sft,seaspoof_vi_train,seaspoof_vi_dev,0,9489,\"{\"\"max_batch_length\"\": \"\"50\"\", \"\"number_of_epochs\"\": \"\"3\"\", \"\"optimizer_step_limit\"\": \"\"4600\"\", \"\"warmup\"\": \"\"460\"\", \"\"lr\"\": \"\"1e-6\"\", \"\"valid_step\"\": \"\"1000000000\"\", \"\"num_workers\"\": \"\"2\"\", \"\"seed\"\": \"\"1\"\"}\",50,1521,2.04,14645.0,99.5,61.9,1878,1,4563,6.83e-07,0.0,4563,1270,ok\r\n"}
+,{"stream_name":"stdout","time":16842.444975108,"data":"+ cat /kaggle/working/results/scores/summary.csv\n"}
+,{"stream_name":"stdout","time":16842.446731634,"data":"dataset,model,n,audio_h,gpu_seconds,x_realtime,n_real,n_fake,eer_%,minDCF,actDCF,eer_threshold\n"}
+,{"stream_name":"stdout","time":16842.446744903,"data":"seaspoof_vi_dev,A0_s1,2070,2.205,216,36.8,1035,1035,0.0,0.0,0.0028985507246376,0.6142559349536896\n"}
+,{"stream_name":"stdout","time":16842.446749354,"data":"seaspoof_vi_dev,R_s1,2070,2.205,201,39.4,1035,1035,0.0,0.0,0.0019323671497584,-0.2993066981434822\n"}
+,{"stream_name":"stdout","time":16842.446753393,"data":"seaspoof_vi_test,R_s1,11996,13.511,1771,27.5,4475,7521,1.608883580351181,0.0427519845735478,0.0661754298392805,-2.4303051233291626\n"}
+,{"stream_name":"stdout","time":16842.446757623,"data":"seaspoof_vi_test,A0_s1,11996,13.511,1900,25.6,4475,7521,1.201676646172839,0.032518455958326,0.0649441392778061,-4.603701591491699\n"}
+,{"stream_name":"stdout","time":16842.446761768,"data":"radar_vi,R_s1,13438,17.042,1753,35.0,7000,6438,23.068799094661163,0.5099633204633205,0.709505392091599,-1.5991261005401611\n"}
+,{"stream_name":"stdout","time":16842.446765824,"data":"radar_vi,A0_s1,13438,17.042,1753,35.0,7000,6438,18.37335019748813,0.4281856344028757,0.6199568499534016,-3.0251684188842773\n"}
+,{"stream_name":"stdout","time":16842.446769924,"data":"ood_forget,A0_s1,4000,5.457,741,26.5,2000,2000,15.3,0.3595,0.84155,-6.292003154754639\n"}
+,{"stream_name":"stdout","time":16842.446773899,"data":"ood_forget,R_s1,4000,5.457,741,26.5,2000,2000,16.150000000000002,0.4085499999999999,0.9982,-6.4081807136535645\n"}
+,{"stream_name":"stdout","time":16842.44704229,"data":"+ cat /kaggle/working/results/zeroshot/summary.csv\n"}
+,{"stream_name":"stdout","time":16842.448804871,"data":"dataset,model,n,audio_h,gpu_seconds,x_realtime,n_real,n_fake,eer_%,minDCF,actDCF,eer_threshold\n"}
+,{"stream_name":"stdout","time":16842.44881677,"data":"seaspoof_vi_dev,mms_300m,2070,2.205,204,38.9,1035,1035,1.1594202898550725,0.0255072463768115,0.1951690821256038,5.670648574829102\n"}
+,{"stream_name":"stdout","time":16842.448821387,"data":"seaspoof_vi_dev,w2v_large,2070,2.205,198,40.1,1035,1035,1.6425120772946862,0.044927536231884,0.0594202898550724,2.4656848907470703\n"}
+,{"stream_name":"stdout","time":16842.448834007,"data":"seaspoof_vi_dev,w2v_small,2070,2.205,105,75.9,1035,1035,1.2560386473429952,0.0328502415458937,0.0847342995169082,2.158727049827576\n"}
+,{"stream_name":"stdout","time":16842.448838266,"data":"seaspoof_vi_dev,mms_300m_nda,2070,2.205,202,39.3,1035,1035,1.5458937198067633,0.0338164251207729,0.0676328502415458,3.1604257822036743\n"}
+,{"stream_name":"stdout","time":16842.44884243,"data":"seaspoof_vi_test,mms_300m,11996,13.511,1116,43.6,4475,7521,3.435867838209438,0.0820603969964174,0.1436705477920667,3.0359569787979126\n"}
+,{"stream_name":"stdout","time":16842.448863006,"data":"seaspoof_vi_test,w2v_large,11996,13.511,1100,44.2,4475,7521,1.9248614122542544,0.051600035357238,0.0573095489055226,1.7152554988861084\n"}
+,{"stream_name":"stdout","time":16842.44886743,"data":"seaspoof_vi_test,w2v_small,11996,13.511,560,86.8,4475,7521,5.075868759280347,0.1373621153136209,0.1674694423584169,2.197088122367859\n"}
+,{"stream_name":"stdout","time":16842.448871551,"data":"seaspoof_vi_test,mms_300m_nda,11996,13.511,1089,44.7,4475,7521,1.1838554096945686,0.0306782275921646,0.0756201919541485,3.391413688659668\n"}
+,{"stream_name":"stdout","time":16842.449136504,"data":"+ du -sh /kaggle/working/results/*\n"}
+,{"stream_name":"stdout","time":16842.460725575,"data":"2.4G\t/kaggle/working/results/ckpt\n"}
+,{"stream_name":"stdout","time":16842.460740822,"data":"4.0K\t/kaggle/working/results/pip-freeze.txt\n"}
+,{"stream_name":"stdout","time":16842.461924304,"data":"514M\t/kaggle/working/results/scores\n"}
+,{"stream_name":"stdout","time":16842.4619364,"data":"52K\t/kaggle/working/results/setup.log\n"}
+,{"stream_name":"stdout","time":16842.462226739,"data":"1.5M\t/kaggle/working/results/train\n"}
+,{"stream_name":"stdout","time":16842.462233862,"data":"4.0K\t/kaggle/working/results/train_summary.csv\n"}
+,{"stream_name":"stdout","time":16842.46223734,"data":"4.0K\t/kaggle/working/results/versions.txt\n"}
+,{"stream_name":"stdout","time":16842.463533998,"data":"433M\t/kaggle/working/results/zeroshot\n"}
+,{"stream_name":"stdout","time":16842.463547346,"data":"8.0K\t/kaggle/working/results/zeroshot.driver.log\n"}
+,{"stream_name":"stdout","time":16842.463933263,"data":"Mọi lần chạy xong\n"}
+,{"stream_name":"stdout","time":16842.463946324,"data":"Tổng thời gian 4.68 giờ\n"}
+,{"stream_name":"stderr","time":16844.695751667,"data":"/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":16844.695778385,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":16844.997465037,"data":"/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":16844.997494847,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":16845.89229258,"data":"[NbConvertApp] Converting notebook __script__.ipynb to html\n"}
+,{"stream_name":"stderr","time":16846.950066006,"data":"[NbConvertApp] Writing 306936 bytes to __results__.html\n"}
+]
