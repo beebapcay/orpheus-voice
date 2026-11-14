@@ -31,6 +31,14 @@ Ví dụ thật, với bản post-trained của XLS-R-2B fine-tune trên Deepfak
 
 Lỗi trong miền giảm một nửa, nhưng lỗi trên In-the-Wild tăng gấp 5 lần.
 
+### 2.1. Ba bẫy thường gặp khi fine-tune trên một miền nhỏ
+
+| Bẫy | Biểu hiện | Cách phát hiện |
+|---|---|---|
+| **Tiếng thật chỉ từ một nguồn** | Mô hình học "thật = giống nguồn này". Tiếng thật từ nguồn khác (thiết bị, phòng thu, cách cắt khác) bị coi là giả nhiều hơn. Ví dụ đo được: sau fine-tune, tỉ lệ tiếng thật nguồn khác bị coi là giả ở ngưỡng 0 tăng từ ~5% lên ~28%, trong khi tỉ lệ tiếng giả lọt qua giảm từ ~37% xuống ~13–20% | Không chỉ nhìn EER: báo riêng hai loại lỗi ở ngưỡng cố định, và actDCF − minDCF (ví dụ trên tăng từ 0,007 lên 0,2) |
+| **Tập kiểm tra trong miền bão hoà** | Mô hình chưa fine-tune đã gần 0% EER trên chính bộ dữ liệu fine-tune, kể cả trên các hệ thống sinh được để riêng. Mọi cấu hình đều ra ~0%, không so được | Chấm mô hình chưa fine-tune trên tập kiểm tra **trước** khi chọn nó làm thước đo chính |
+| **Cấu hình không áp dụng như mình tưởng** | Một số toolkit coi vài tham số là tham số chạy, không ghi đè vào file cấu hình. Ví dụ: truyền giới hạn số bước qua dòng lệnh, toolkit dùng nó để dừng nhưng lịch learning rate vẫn tính theo giá trị cũ trong file, nên learning rate không giảm như dự kiến | Đọc file cấu hình đã giải (bản toolkit ghi ra lúc chạy) và learning rate thật trong log, không chỉ đọc lệnh đã truyền |
+
 ## 3. SFT và học tăng cường khác nhau ở đâu
 
 **SFT (fine-tune có giám sát):** đưa đáp án đúng, ép mô hình tăng xác suất của đáp án đó. Loss là $-\log p(\text{nhãn đúng})$. Câu nào mô hình đang sai càng nặng thì bị kéo càng mạnh.
@@ -134,6 +142,25 @@ SFT kéo mạnh nhất vào những câu mô hình **đang sai nặng**. Đó th
 
 Phân tích này cũng gợi ý vì sao GRPO kém trên mô hình chỉ pre-train: khi mô hình ban đầu đoán gần như ngẫu nhiên, các lần thử ít mang thông tin, nên tín hiệu học yếu.
 
+### 8.1. Nếu cài đặt chuẩn hoá phần thưởng theo cả batch
+
+Một số cài đặt tính $\bar r$, $\sigma$ trên **mọi mẫu của mọi câu trong batch**, không theo từng câu. Khi đó mọi câu trong batch dùng chung một $\sigma_\text{batch}$, và kỳ vọng lực kéo (cùng giả định như trên) đổi thành:
+
+| Cách | Lực kéo lên logit của nhãn đúng | Câu bị kéo mạnh nhất |
+|---|---|---|
+| SFT | $1 - p$ | Câu đang sai nặng |
+| GRPO chuẩn hoá theo nhóm | $\sqrt{p(1-p)}$ | Câu phân vân |
+| GRPO chuẩn hoá theo batch | $p(1-p)/\sigma_\text{batch}$ | Câu phân vân; câu sai nặng gần như không được kéo |
+| GRPO không có phần thưởng âm ($A = r$) | $p(1-p)$ | Như trên |
+
+Đã kiểm bằng mô phỏng Monte Carlo (64 mẫu mỗi câu, 10 câu mỗi batch, 4.000 lượt): khớp công thức đến 3 chữ số.
+
+Hai hệ quả:
+1. So với SFT, mỗi câu được nhân thêm trọng số $p/\sigma_\text{batch}$: GRPO gần như **bỏ qua câu mô hình đang sai chắc chắn**.
+2. Khi chuẩn hoá theo batch, "phần thưởng âm" **không đổi hướng** cập nhật so với biến thể không có phần thưởng âm, chỉ nhân độ lớn bước lên $1/\sigma_\text{batch}$ (batch đúng 95% thì ~4,6 lần, đúng 99% thì ~10 lần). Vậy khi một ablation thấy "bỏ phần thưởng âm làm kém đi", cần tách phần do **bước cập nhật nhỏ hơn** ra khỏi phần do bản thân phần thưởng âm.
+
+Cách kiểm trực tiếp, rẻ: fine-tune bằng cross-entropy có trọng số $p(y \mid x)$ cho mỗi câu (không cần lấy mẫu). Nếu kết quả gần GRPO thì cơ chế nằm ở trọng số này.
+
 ## 9. Ưu và nhược điểm
 
 | Ưu điểm | Nhược điểm |
@@ -151,3 +178,5 @@ Phân tích này cũng gợi ý vì sao GRPO kém trên mô hình chỉ pre-trai
 4. Với $p(\text{nhãn đúng}) = 0{,}7$, lợi thế của mẫu đúng và mẫu sai là bao nhiêu?
 5. Vì sao nói "GRPO cải thiện ngoài miền" cần nói rõ là so với cái gì?
 6. $\beta = 0$ và $\beta = 1$ cho kết quả thế nào? Rút ra điều gì?
+7. Chuẩn hoá phần thưởng theo nhóm và theo batch khác nhau thế nào về câu nào được kéo mạnh nhất?
+8. Sau fine-tune, EER giảm nhưng tiếng thật nguồn khác bị chặn nhiều hơn. Vì sao, và đo bằng gì?

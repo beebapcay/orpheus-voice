@@ -135,6 +135,7 @@ Cài đặt phổ biến (bản gốc của nhóm tác giả, được nhiều r
 |---|---|
 | Thiết kế cho điện thoại | Mô phỏng kênh truyền và thiết bị thu, **không** mô phỏng nhạc nền, tiếng ồn môi trường, vang phòng |
 | Có thể làm kém đi trên miền khác | Trong một nghiên cứu post-training 7 backbone, bản có RawBoost tốt hơn trên phần lớn các tập (In-the-Wild, ADD 2023, DEEP-VOICE), nhưng thường kém hơn trên FakeOrReal và trên dữ liệu mạng xã hội. Tác giả nghiên cứu đó cho rằng RawBoost không đủ cho âm thanh thực tế và đề nghị thêm nhiễu nền (MUSAN) |
+| Khi fine-tune cũng có thể làm kém ngoài miền | Quan sát một lần chạy (một seed, chưa lặp lại): fine-tune mô hình SSL 300M đã post-train trên một bộ dữ liệu nhỏ, bỏ RawBoost cho EER ngoài miền tốt hơn 1,5–4,7 điểm trên cả ba tập kiểm tra, trong miền thì ngang nhau. Cùng chiều với quan sát ở bước post-training: với backbone nhỏ, bản không RawBoost thường tốt hơn trên dữ liệu mới. Không nên mặc định bật RawBoost; cần so có và không trên tập ngoài miền |
 | Siêu tham số chọn trên một bộ dữ liệu | Khoảng giá trị ở mục 3 được chọn theo ASVspoof 2019 LA |
 | Chỉ báo kết quả chọn lọc | Bài chỉ trình bày một số tổ hợp tốt nhất (do giới hạn trang) |
 
