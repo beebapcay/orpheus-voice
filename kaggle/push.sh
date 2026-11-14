@@ -6,7 +6,8 @@
 #   bash kaggle/push.sh data                tạo/cập nhật dataset riêng tư <user>/orpheus-seaspoof-vi
 #                                           từ Data/seaspoof/data (FLAC + CSV, prep_seaspoof.py fetch).
 #                                           SEA-Spoof không được phân phối lại: dataset PHẢI riêng tư
-#   bash kaggle/push.sh push prep|zeroshot|finetune  đẩy kernel và bắt đầu chạy
+#   bash kaggle/push.sh push prep|zeroshot|finetune|finetune-b  đẩy kernel và bắt đầu chạy
+#                                           (finetune-b: kernel thứ hai, cùng run.py, để chạy song song)
 #   bash kaggle/push.sh status <kernel>
 #   bash kaggle/push.sh logs <kernel> [-f]  xem log (không tải output)
 #   bash kaggle/push.sh quota               quota GPU còn lại
@@ -151,11 +152,13 @@ EOF
   output)
     # bash kaggle/push.sh output zeroshot|finetune <version>
     K="${2:?zeroshot hoặc finetune}"; V="${3:?số version (xem results/runs/ hoặc dòng 'Kernel version N' lúc đẩy)}"; U=$(user)
-    case "$K" in zeroshot|finetune) ;; *) echo "Chỉ tải output của zeroshot, finetune (prep: dùng archive-log)"; exit 2;; esac
+    case "$K" in zeroshot|finetune|finetune-b) ;; *) echo "Chỉ tải output của zeroshot, finetune, finetune-b (prep: dùng archive-log)"; exit 2;; esac
+    # Nhãn version trong results/finetune/*.csv: "3" cho orpheus-finetune v3, "b1" cho orpheus-finetune-b v1
+    VTAG="$V"; [ "$K" = "finetune-b" ] && VTAG="b$V"
     # Mỗi version tải vào thư mục riêng, để không mất embedding của lần chạy trước
     raw="$ROOT/results/kaggle-raw/orpheus-$K-v$V"
     mkdir -p "$raw"
-    if [ "$K" = "finetune" ]; then
+    if [ "${K%-b}" = "finetune" ]; then
       # Không tải checkpoint (~1,3 GB mỗi lần huấn luyện) và embedding (emb.npy, *_emb.pkl: ~98%
       # dung lượng còn lại, tải ~0,5 MB/s ở GĐ5 lần 1); chúng ở lại output trên Kaggle.
       # Cần embedding thì: kg kernels output <user>/orpheus-finetune/<N> -p <thư mục> --file-pattern 'emb'
@@ -168,11 +171,11 @@ EOF
     python3 -I "$ROOT/kaggle/archive_run.py" collect --run-dir "$ROOT/results/runs/orpheus-$K-v$V" \
       --raw "$raw" --kernel "orpheus-$K" --version "$V" --quota "$q"
     rm -f "$q"
-    if [ "$K" = "finetune" ]; then
+    if [ "${K%-b}" = "finetune" ]; then
       # Lưu vào git: tóm tắt huấn luyện, log, điểm và độ đo. Không lưu embedding, shard, checkpoint.
       dst="$ROOT/results/finetune"; mkdir -p "$dst"
-      python3 -I "$ROOT/kaggle/archive_run.py" merge-finetune --raw "$raw" --dst "$dst" --version "$V"
-      echo "Đã chép vào results/finetune/. Checkpoint ở output Kaggle orpheus-finetune/$V (ckpt/)"
+      python3 -I "$ROOT/kaggle/archive_run.py" merge-finetune --raw "$raw" --dst "$dst" --version "$VTAG"
+      echo "Đã chép vào results/finetune/. Checkpoint ở output Kaggle orpheus-$K/$V (ckpt/)"
       ls "$raw"
       exit 0
     fi

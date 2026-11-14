@@ -14,9 +14,9 @@ import threading
 import time
 
 # ---- Sửa phần này cho mỗi lần chạy -------------------------------------------
-# GĐ5, lần 2 (chore/GD5-Ablation.md mục 2): P0 seed 1 (GPU 0) và B2 seed 1 (GPU 1).
-#   P0: MMS-300M khởi tạo từ trọng số fairseq gốc (chưa post-train), lớp FC ngẫu nhiên -> post-training
-#       đóng góp bao nhiêu (so với R). B2: W2V-Large post-trained -> ngôn ngữ pre-training (so với R).
+# GĐ5, lần 3 (chore/GD5-Ablation.md mục 2), kernel orpheus-finetune-b (chạy song song với lần 2):
+#   B1 seed 1 (GPU 0): W2V-Small post-trained (95M, tiếng Anh) -> kích thước backbone (so với B2).
+#   N0 seed 1 (GPU 1): MMS-300M bản NDA (post-train không RawBoost) -> RawBoost khi post-train (so với R).
 #   Bộ ghi đè SFT giữ NGUYÊN như lần 1 (quyết định E1', mục 4.1): `optimizer_step_limit` không vào
 #   được YAML nên lịch learning rate thực tế là warmup 460 bước lên 1e-6 rồi giảm rất chậm
 #   (total_steps 50000); đổi bộ ghi đè là đổi lịch và không so được với R_s1, A0_s1.
@@ -25,11 +25,11 @@ SFT = ["max_batch_length=50", "number_of_epochs=3", "optimizer_step_limit=4600",
 SCORE = ["seaspoof_vi_dev", "seaspoof_vi_test", "radar_vi", "ood_forget"]
 RUNS = {
     0: [
-        {"run": "P0_s1", "model": "mms_300m", "init": "fairseq", "train": "seaspoof_vi_train",
+        {"run": "B1_s1", "model": "w2v_small", "train": "seaspoof_vi_train",
          "valid": "seaspoof_vi_dev", "set": SFT + ["seed=1"], "score": SCORE},
     ],
     1: [
-        {"run": "B2_s1", "model": "w2v_large", "train": "seaspoof_vi_train",
+        {"run": "N0_s1", "model": "mms_300m_nda", "train": "seaspoof_vi_train",
          "valid": "seaspoof_vi_dev", "set": SFT + ["seed=1"], "score": SCORE},
     ],
 }
