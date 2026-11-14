@@ -13,7 +13,7 @@
 | Tiêu chí | Trọng số | Đồ án đáp ứng bằng | Kết quả bàn giao |
 |---|---|---|---|
 | Tổng quan: ít nhất 5 bài Q1/Q2 hoặc A/A* trong 3–5 năm, tình hình thế giới và trong nước | 30% | 5 hướng nổi bật (mục 2), 5 bài tính điểm (mục 2.6), tình hình tiếng Việt (mục 2.7) | Bảng tổng hợp, thẻ tóm tắt và phân tích ưu, nhược điểm của 5 bài |
-| Chạy demo | 20% | Chạy lại các mô hình có sẵn, demo web | Bảng EER zero-shot của 14 checkpoint và baseline trên RADAR tiếng Việt; demo Gradio |
+| Chạy demo | 20% | Chạy lại các mô hình có sẵn, demo web | Bảng EER zero-shot của 14 checkpoint và baseline trên RADAR tiếng Việt (**đã có**, mục 5.1); demo Gradio |
 | Ablation study | 30% | Bỏ hoặc thay từng yếu tố của giải pháp (mục 4.4) | Bảng ablation trên các tập tiếng Việt và ngoài miền |
 | Chọn 1 giải pháp, phân tích sâu, đề xuất cải tiến | 20% | So sánh SFT với GRPO trên tiếng Việt (mục 4.5) | Kết luận có số liệu trước và sau |
 
@@ -166,7 +166,7 @@ Các bài khác trong mục 2 (PartialSpoof, RAWM, BAM, ...) được trích d�
 
 ### 4.2. Câu hỏi nghiên cứu
 
-1. Backbone, ngôn ngữ pre-training, post-training và RawBoost ảnh hưởng thế nào đến phát hiện deepfake tiếng Việt?
+1. Những yếu tố nào quyết định khả năng phát hiện deepfake tiếng Việt, xét theo 3 nhóm: **mô hình nền** (kích thước, ngôn ngữ và cách pre-train), **cách train** (post-training, tăng cường dữ liệu), và **dữ liệu** (độ phủ hệ thống sinh, lượng dữ liệu tiếng Việt khi fine-tune)?
 2. SFT trên tiếng Việt có làm mô hình mất khả năng tổng quát hóa không?
 3. GRPO có giữ khả năng tổng quát hóa tốt hơn SFT trên tiếng Việt không, và thành phần nào tạo ra khác biệt?
 
@@ -174,7 +174,7 @@ Các bài khác trong mục 2 (PartialSpoof, RAWM, BAM, ...) được trích d�
 
 | Tập | Vai trò | Ghi chú |
 |---|---|---|
-| SEA-Spoof (phần tiếng Việt) | Fine-tune và kiểm tra trong miền | 81.020 câu, 7 hệ thống sinh; đang chờ duyệt. Dự phòng: MLAAD tiếng Việt + VIVOS |
+| SEA-Spoof (phần tiếng Việt) | Fine-tune và kiểm tra trong miền | 81.020 câu, 7 hệ thống sinh; có nhãn hệ thống sinh và người nói theo từng câu. Đang chờ tác giả duyệt. Dự phòng: MLAAD tiếng Việt + VIVOS |
 | Hệ thống sinh được để riêng | Kiểm tra hệ thống chưa gặp | Lần lượt để riêng một hệ thống khỏi tập fine-tune |
 | RADAR 2026 tiếng Việt | Kiểm tra ngoài miền | 13.438 câu: iFlytek, ElevenLabs, Cartesia, OpenAI, Fish Audio, Piper; có biến đổi âm thanh |
 | Tập con cân bằng của In-the-Wild và RADAR tiếng Anh | Đo mức quên kiến thức cũ | Không nằm trong dữ liệu huấn luyện của AntiDeepfake |
@@ -190,17 +190,20 @@ Các bài khác trong mục 2 (PartialSpoof, RAWM, BAM, ...) được trích d�
 
 ### 4.4. Ablation study (30%)
 
-Cấu hình mốc **R**: MMS-300M (đa ngôn ngữ, 317M tham số) post-trained, fine-tune SFT, có RawBoost. Mỗi cấu hình đổi đúng một yếu tố so với cấu hình ở cột "So với".
+Cấu hình mốc **R**: MMS-300M (đa ngôn ngữ, 317M tham số) post-trained bản Default (có RawBoost khi post-train), fine-tune SFT, có RawBoost. Chọn bản Default để so được với bài GRPO. Mỗi cấu hình đổi đúng một yếu tố so với cấu hình ở cột "So với".
 
 | Mã | Thay đổi | So với | Câu hỏi trả lời |
 |---|---|---|---|
-| S0 | Không fine-tune (zero-shot) | R | Fine-tune trên tiếng Việt có cần thiết? |
+| S0 | Không fine-tune (zero-shot) | R | Fine-tune trên tiếng Việt có cần thiết? (đã đo: 20,08% trên RADAR tiếng Việt) |
 | P0 | Bỏ post-training, khởi tạo từ trọng số gốc | R | Post-training đóng góp bao nhiêu? |
 | A0 | Bỏ RawBoost | R | Tăng cường dữ liệu giúp bao nhiêu? |
 | B2 | Đổi sang W2V-Large (tiếng Anh, 317M) | R | Ngôn ngữ pre-training, khi giữ nguyên kích thước và kiến trúc |
 | B1 | Đổi sang W2V-Small (tiếng Anh, 95M) | B2 | Kích thước backbone, khi giữ nguyên ngôn ngữ |
+| N0 | Khởi tạo từ bản post-train không RawBoost (NDA) | R | Lợi thế của bản NDA khi dùng thẳng trên tiếng Việt có còn sau fine-tune? (không bắt buộc) |
 
-Các backbone lớn hơn (XLS-R-1B, XLS-R-2B, MMS-1B) chỉ đánh giá zero-shot, vì fine-tune không vừa GPU 16 GB (mục 4.6).
+Các backbone lớn hơn (XLS-R-1B, XLS-R-2B, MMS-1B, HuBERT-XL) chỉ đánh giá zero-shot, vì fine-tune không vừa GPU 16 GB (mục 4.6). XLS-R-2B dùng thẳng (13,71% trên RADAR tiếng Việt) là dòng tham chiếu trong mọi bảng: fine-tune mô hình 317M có thắng mô hình 2,2B không fine-tune không.
+
+Ngoài EER, minDCF, actDCF: báo tỉ lệ tiếng giả bị nhận là thật và tiếng thật bị coi là giả ở cùng một ngưỡng, và kết quả trên nhóm câu mà mọi mô hình đều sai khi dùng thẳng (mục 5.1).
 
 Baseline so sánh: XLS-R + AASIST (W2V2-AASIST).
 
@@ -214,7 +217,8 @@ Baseline so sánh: XLS-R + AASIST (W2V2-AASIST).
 
 Phân tích bổ sung:
 - SFT so với GRPO khi chỉ có 50, 200, 1000 mẫu mỗi lớp.
-- Hiệu chuẩn điểm số để giảm actDCF.
+- Hiệu chuẩn điểm số để giảm actDCF. Khi dùng thẳng, các mô hình đã gần hiệu chuẩn tốt (actDCF chỉ hơn minDCF tối đa 0,018), nên bước này chỉ cần nếu fine-tune làm lệch.
+- Theo dõi nhóm 493 câu mà cả 7 mô hình đều sai khi dùng thẳng: fine-tune có sửa được không.
 - Phân tích theo từng hệ thống sinh, gồm các trường hợp EER cực đoan mà VietPrism đã ghi nhận.
 
 ### 4.6. Tài nguyên tính toán
@@ -230,6 +234,8 @@ Phân tích bổ sung:
 
 Ước lượng theo khoảng 16 byte mỗi tham số khi fine-tune với AdamW, chưa tính activation; sẽ đo thực tế trước khi chạy thí nghiệm.
 
+**Đã đo khi chấm zero-shot** (Kaggle, 2 × T4, 4 nhân CPU, 30 giờ GPU mỗi tuần): bản 317M trở xuống chấm nhanh 27–45 lần thời gian thực, bản ~1B 15–18 lần, bản 2,2B ~9 lần. Toàn bộ bảng zero-shot tốn 10,3 giờ GPU.
+
 **Phương án theo tầng**
 
 | Tầng | Cần gì | Nội dung | Đáp ứng |
@@ -242,10 +248,35 @@ Phân tích bổ sung:
 
 ## 5. Kết quả đầu ra
 
+### 5.1. Kết quả đã có: zero-shot trên RADAR tiếng Việt (14/11)
+
+Pipeline được kiểm chứng bằng ba mốc công bố, đều khớp: toy example 6,11%; MMS-300M trên In-the-Wild 2,90% (đo được 2,9016%); W2V2-AASIST trên In-the-Wild 11,22% (đo được 11,21%).
+
+| Backbone | Tham số | Pre-train | Có RawBoost khi post-train | Không RawBoost |
+|---|---|---|---|---|
+| W2V-Small | 95M | Anh | 27,21 | 23,24 |
+| W2V-Large | 317M | Anh | 17,80 | 16,62 |
+| MMS-300M | 317M | Đa ngôn ngữ | 20,08 | 18,07 |
+| HuBERT-XL | 964M | Anh | 20,49 | 30,67 |
+| MMS-1B | 965M | Đa ngôn ngữ | 14,32 | 14,20 |
+| XLS-R-1B | 965M | Đa ngôn ngữ | 14,99 | 15,60 |
+| XLS-R-2B | 2,2B | Đa ngôn ngữ | **13,71** | 14,23 |
+| W2V2-AASIST (baseline) | | | 30,12 | |
+
+EER (%) trên 13.438 câu (7.000 thật, 6.438 giả); khoảng tin cậy 95% bootstrap rộng khoảng ±0,6–0,8 điểm.
+
+**Nhận xét ban đầu**
+1. Mô hình post-trained dùng thẳng tốt hơn baseline chuyên biệt, nhưng còn xa mức trên In-the-Wild (1,2–2,9%): còn chỗ cho fine-tune.
+2. Bỏ RawBoost khi post-train tốt hơn ở cả 3 bản từ 317M trở xuống (1,2–4,0 điểm); ở bản từ 1B trở lên thì ngang hoặc ngược lại.
+3. Ngôn ngữ pre-train ảnh hưởng ít hơn kích thước mô hình: cặp cùng kiến trúc W2V-Large (tiếng Anh) và MMS-300M (đa ngôn ngữ) chênh 1,5–2,3 điểm theo chiều có lợi cho tiếng Anh, trong khi tăng kích thước giảm 3,9–9,4 điểm. RADAR tiếng Anh còn khó hơn tiếng Việt, và thứ hạng mô hình trên In-the-Wild dự báo đúng thứ hạng trên tiếng Việt (tương quan hạng 0,91). Giả thuyết: dữ liệu post-train chưa phủ các hệ thống sinh 2025–2026 và các biến đổi âm thanh của RADAR. Fine-tune ở phần ablation sẽ kiểm tra giả thuyết này.
+4. Các mô hình sai trên cùng một nhóm câu (3,7% câu giả qua mặt cả 7 mô hình, so với 0,001% nếu sai độc lập).
+
+### 5.2. Kết quả dự kiến
+
 | Kết quả | Dạng trình bày | Trả lời |
 |---|---|---|
-| Bảng zero-shot 14 checkpoint và baseline trên RADAR tiếng Việt | Bảng EER | Mô hình có sẵn làm tốt đến đâu trên tiếng Việt |
-| Bảng ablation 6 cấu hình × 5 nhóm tập kiểm tra | Bảng EER, minDCF (trung bình ± độ lệch chuẩn) | Câu hỏi 1 |
+| Bảng zero-shot 14 checkpoint và baseline trên RADAR tiếng Việt | Bảng EER | Mô hình có sẵn làm tốt đến đâu trên tiếng Việt (**đã có**, mục 5.1) |
+| Bảng ablation 6–7 cấu hình × 5 nhóm tập kiểm tra | Bảng EER, minDCF (trung bình ± độ lệch chuẩn), kèm dòng tham chiếu XLS-R-2B dùng thẳng | Câu hỏi 1 |
 | Mức thay đổi EER ngoài miền trước và sau SFT | Biểu đồ cột | Câu hỏi 2 |
 | SFT so với GRPO và các biến thể | Bảng và biểu đồ số mẫu theo EER | Câu hỏi 3 |
 | EER theo từng hệ thống sinh | Bảng chi tiết | Hệ thống nào khó phát hiện nhất |
@@ -271,8 +302,11 @@ Phân tích bổ sung:
 
 | Rủi ro | Cách xử lý |
 |---|---|
-| Môi trường cũ (Python 3.9, fairseq commit cố định) không chạy trên Colab | Kiểm chứng ngay ngày đầu triển khai; nếu thất bại thì đánh giá lại hướng |
-| SEA-Spoof chưa được duyệt | Dùng MLAAD tiếng Việt + VIVOS, ghi rõ hạn chế về khác biệt nguồn dữ liệu |
+| ~~Môi trường cũ (Python 3.9, fairseq commit cố định) không chạy trên Colab~~ | **Đã xử lý**: chạy được trên Colab và Kaggle, ba mốc kiểm chứng khớp |
+| SEA-Spoof cần tác giả duyệt và yêu cầu gửi email trước | Gửi email theo hướng dẫn trên trang dữ liệu; song song xin MLAAD (duyệt tự động) làm dự phòng |
+| Máy GPU miễn phí chỉ có 4 nhân CPU, đọc dữ liệu có thể chậm hơn tính toán | Đo trước khi tính ngân sách; chạy hai cấu hình song song trên hai GPU trong một phiên |
+| RADAR không có nhãn hệ thống sinh theo từng câu | Phân tích theo hệ thống sinh làm trên SEA-Spoof; trên RADAR chỉ báo chung và theo nhóm câu khó |
+| SEA-Spoof không được duyệt kịp | Dùng MLAAD tiếng Việt + VIVOS, ghi rõ hạn chế về khác biệt nguồn dữ liệu |
 | Không đủ GPU để fine-tune | Cấu hình mốc đã chọn MMS-300M (khoảng 5 GB khi fine-tune); nếu vẫn thiếu thì dùng W2V-Small hoặc tầng 0 |
 | Tập trong miền bão hòa gần 0% | Dùng hệ thống sinh được để riêng, RADAR tiếng Việt và mức quên làm thước đo chính |
 | Rò rỉ dữ liệu giữa huấn luyện và kiểm tra | Loại ASVspoof; ghi rõ RADAR có hệ thống sinh gần với SEA-Spoof |

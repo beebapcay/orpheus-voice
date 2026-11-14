@@ -4,7 +4,7 @@
 
 **Câu hỏi nghiên cứu**
 
-1. Backbone, ngôn ngữ pre-training, post-training và RawBoost ảnh hưởng thế nào đến phát hiện deepfake tiếng Việt?
+1. Những yếu tố nào quyết định khả năng phát hiện deepfake tiếng Việt, xét theo 3 nhóm: **mô hình nền** (kích thước, ngôn ngữ và cách pre-train), **cách train** (post-training, tăng cường dữ liệu RawBoost), và **dữ liệu** (độ phủ hệ thống sinh, lượng dữ liệu tiếng Việt khi fine-tune)? *(Đặt lại 14/11 sau GĐ3: zero-shot cho thấy ngôn ngữ ảnh hưởng ít hơn kích thước và độ phủ dữ liệu; xem `chore/GD3-Post-Training-Va-Zero-Shot.md` phát hiện 17, 18.)*
 2. Fine-tune có giám sát trên tiếng Việt có làm mô hình mất khả năng tổng quát hoá không?
 3. GRPO có giữ được khả năng tổng quát hoá tốt hơn trên tiếng Việt không, và thành phần nào của GRPO tạo ra khác biệt?
 
@@ -160,10 +160,11 @@ Mỗi giai đoạn trả lời một câu hỏi, và câu trả lời là đầu
 ## 5. Việc chạy nền (làm ngay ngày đầu)
 
 - [x] Xin quyền [SEA-Spoof](https://huggingface.co/datasets/Jack-ppkdczgx/SEA-Spoof) (tác giả duyệt thủ công).
-- [ ] Xin quyền [MLAAD](https://huggingface.co/datasets/mueller91/MLAAD) (duyệt tự động), phòng trường hợp SEA-Spoof chưa được duyệt.
+  - 14/11: README của SEA-Spoof yêu cầu **gửi email cho tác giả trước khi xin quyền** (wu_jinyang@a-star.edu.sg, imcc.sg@gmail.com), ghi họ tên, đơn vị, mục đích nghiên cứu, cam kết phi thương mại. Cần kiểm tra yêu cầu đã được duyệt chưa; nếu chưa, gửi email.
+- [ ] Xin quyền [MLAAD](https://huggingface.co/datasets/mueller91/MLAAD) (duyệt tự động), phòng trường hợp SEA-Spoof chưa được duyệt. **Làm ngay trước GĐ4.**
 - [ ] Xin quyền [F5-TTS Vietnamese](https://huggingface.co/hynt/F5-TTS-Vietnamese-ViVoice) bằng email trường, vì email cá nhân bị từ chối.
-- [ ] Tải [RADAR 2026](https://zenodo.org/records/22110815) và [In-the-Wild](https://huggingface.co/datasets/mueller91/In-The-Wild) vào nơi Colab/Kaggle đọc được. Với RADAR, chỉ giữ phần tiếng Việt và phần tiếng Anh cần dùng. (13/11: đã có `src/prep_data.py` và kernel Kaggle `orpheus-prep`; chờ chạy.)
-- [ ] Kiểm tra quota GPU của Kaggle/Colab trên tài khoản của từng thành viên. Máy M1 Pro dùng để đọc code, xử lý dữ liệu và chạy tầng 0.
+- [x] Tải [RADAR 2026](https://zenodo.org/records/22110815) và [In-the-Wild](https://huggingface.co/datasets/mueller91/In-The-Wild) vào nơi Colab/Kaggle đọc được: output kernel Kaggle `orpheus-prep` (13/11, ~10 GB).
+- [x] Kiểm tra quota GPU: Kaggle 30 giờ/tuần (T4 × 2, 4 nhân CPU, phiên 12 giờ); Colab miễn phí ~4 giờ/phiên. Máy M1 Pro dùng để đọc code, xử lý dữ liệu và chạy tầng 0. (Tài khoản các thành viên khác: chưa kiểm tra.)
 
 ## 6. Chi tiết từng giai đoạn
 
@@ -229,6 +230,8 @@ Lần theo `models/W2V.py` và `models/W2V_configs.py` của [AntiDeepfake](http
 
 **Điều kiện qua giai đoạn:** In-the-Wild của MMS-300M bản Default gần 2,90%. Repo đã sửa cách tính EER vào 16/10/2025, nên đối chiếu với bản mới nhất của bài.
 
+**Trạng thái (14/11): qua phần chạy.** In-the-Wild MMS-300M Default 2,9016%. Đủ 14 checkpoint và baseline trên RADAR tiếng Việt (tốt nhất XLS-R-2B 13,71%), kèm khoảng tin cậy và phân tích thêm. Đọc kỹ ngày 1 hoãn lại. Kết quả, phát hiện và quyết định: `chore/GD3-Post-Training-Va-Zero-Shot.md` mục 3, 5.6–5.7, 8.
+
 ### GĐ4. Dữ liệu tiếng Việt và pipeline (2 ngày)
 
 **Ngày 1: Dữ liệu** (đọc lướt phần dữ liệu của SEA-Spoof)
@@ -238,11 +241,15 @@ Lần theo `models/W2V.py` và `models/W2V_configs.py` của [AntiDeepfake](http
 - Nếu SEA-Spoof chưa được duyệt: dùng `fake/vi` của MLAAD và VIVOS. Tiếng nói thật và giả khi đó đến từ hai kho khác nhau, nên phải kiểm tra lối tắt và ghi rõ hạn chế.
 - Tập tự tạo: mỗi thành viên đọc khoảng 100 câu, F5-TTS Vietnamese nhái chính giọng đó với cùng câu.
 
+Thông tin SEA-Spoof đã kiểm (README công khai, 14/11): 553.746 câu, tiếng Việt 81.020 câu (14,63%), **trộn lẫn mọi ngôn ngữ trong 37 file parquet** (train 30 file, 64,7 GB; validation 3; evaluation 4), FLAC 16 kHz nhúng trong file. Có các cột `language`, `label`, `spoof_type`, `category`, `split`, `source_model`, `source_dataset`, `speaker_or_voice`. Cách lấy: đọc trước các cột metadata (rất nhẹ) qua HTTP Range, chọn câu, rồi chỉ tải âm thanh của phần cần, như đã làm với In-the-Wild ở GĐ3. Chi tiết: `chore/GD4-Du-Lieu-Va-Pipeline.md`.
+
 **Ngày 2: Pipeline**, xuất phát từ `hparams/ft_grpo/mms_300m_pre-post-sft.yaml`:
 - [ ] Đo bộ nhớ GPU thực tế với MMS-300M. Nếu vượt, giảm `max_batch_length` (mặc định 100 giây âm thanh mỗi batch).
 - [ ] Chỉnh `warmup` theo số bước thực tế. Cấu hình gốc đặt `warmup: 80000` trong khi `optimizer_step_limit: 50000`, nên với tập nhỏ learning rate gần như không tăng tới giá trị đặt.
 - [ ] Thử overfit một batch nhỏ để xác nhận pipeline học được.
-- [ ] Đo thời gian một epoch và một lần chấm, rồi tính: `Tổng giờ GPU = số lần chạy × (số epoch × giờ mỗi epoch + giờ chấm điểm)`.
+- [ ] Đo thời gian một epoch và một lần chấm, rồi tính: `Tổng giờ GPU = số lần chạy × (số epoch × giờ mỗi epoch + giờ chấm điểm)`. Chấm đã đo ở GĐ3 (một T4, bản 317M): `radar_vi` 24–38 phút, `ood_forget` 7–11 phút.
+- [ ] Đo tốc độ đọc dữ liệu khi huấn luyện: máy Kaggle T4 × 2 chỉ có 4 nhân CPU, và ở GĐ3 bước đọc dữ liệu có dấu hiệu là nút thắt.
+- [ ] Chạy hai cấu hình song song trên hai GPU trong một phiên (như GĐ3) để quota tính một lần cho hai lần chạy, nếu bộ nhớ và CPU cho phép.
 
 **Điều kiện qua giai đoạn:** ngân sách vừa với quota. Nếu MMS-300M vẫn không vừa sau khi giảm batch, chuyển cấu hình mốc sang W2V-Small. Nếu fine-tune không chạy được, chuyển sang tầng 0 (mục 2).
 
@@ -252,12 +259,17 @@ Lần theo `models/W2V.py` và `models/W2V_configs.py` của [AntiDeepfake](http
 
 | Mã | Backbone | Khởi tạo | Fine-tune | RawBoost | So với | Câu hỏi trả lời |
 |---|---|---|---|---|---|---|
-| **R** | MMS-300M (đa ngôn ngữ, 317M) | Post-trained | SFT | Có | | Mốc so sánh |
-| S0 | MMS-300M | Post-trained | Không | | R | Fine-tune có cần thiết? (lấy từ GĐ3) |
+| **R** | MMS-300M (đa ngôn ngữ, 317M), **bản Default** | Post-trained | SFT | Có | | Mốc so sánh |
+| S0 | MMS-300M bản Default | Post-trained | Không | | R | Fine-tune có cần thiết? (lấy từ GĐ3: RADAR tiếng Việt 20,08%) |
 | P0 | MMS-300M | Fairseq gốc (`base_300m.pt`) | SFT | Có | R | Post-training đóng góp bao nhiêu? |
 | A0 | MMS-300M | Post-trained | SFT | Không | R | RawBoost giúp bao nhiêu? |
 | B2 | W2V-Large (tiếng Anh, 317M) | Post-trained | SFT | Có | R | Ngôn ngữ pre-training (cùng kích thước, cùng 24 lớp, 1024 chiều) |
 | B1 | W2V-Small (tiếng Anh, 95M) | Post-trained | SFT | Có | B2 | Kích thước backbone (cùng ngôn ngữ). Không sạch: W2V-Small còn khác ở dropout, layerdrop, post-LN, gradient CNN × 0,1 |
+| N0 | MMS-300M **bản NDA** | Post-trained, không RawBoost | SFT | Có | R | RawBoost khi post-train: lợi thế ~2 điểm của bản NDA khi dùng thẳng (GĐ3) còn không sau fine-tune? *Thêm 14/11, 1 seed, không bắt buộc* |
+
+Vì sao giữ R là bản Default dù bản NDA tốt hơn khi dùng thẳng: để so được với bài GRPO (bài báo MMS-300M dùng thẳng trên In-the-Wild 2,91%, gần bản Default 2,90 hơn bản NDA 2,00). A0 (bỏ RawBoost **khi fine-tune**) khác N0 (bỏ RawBoost **khi post-train**).
+
+**Dòng tham chiếu trong mọi bảng kết quả:** XLS-R-2B dùng thẳng (RADAR tiếng Việt 13,71%), để biết fine-tune mô hình 317M có thắng mô hình 2,2B không fine-tune không.
 
 **Tập đánh giá cho mọi cấu hình**
 
@@ -271,12 +283,14 @@ Lần theo `models/W2V.py` và `models/W2V_configs.py` của [AntiDeepfake](http
 
 **Thước đo chính:** hệ thống sinh được để riêng, RADAR tiếng Việt và mức quên.
 
+**Báo thêm (từ GĐ3):** tỉ lệ giả bị nhận là thật và thật bị coi là giả ở ngưỡng log-odds 0 (không chỉ EER), actDCF − minDCF, và kết quả trên tập 493 câu khó chung `results/zeroshot/analysis/hard_ids_default7.csv`. Dùng `src/bootstrap_eer.py` cho khoảng tin cậy.
+
 RADAR có ElevenLabs và OpenAI, gần với các hệ thống trong SEA-Spoof, nên RADAR tiếng Việt không hoàn toàn là hệ thống chưa gặp.
 
 **Yếu tố gây nhiễu cần phân tích:** tiếng nói thật của SEA-Spoof đến từ VIVOS, còn của RADAR tiếng Việt đến từ Common Voice và FOSD. Fine-tune có thể khiến mô hình coi tiếng thật từ nguồn khác là giả. Không thêm Common Voice tiếng Việt vào tập huấn luyện để khắc phục, vì RADAR lấy tiếng thật từ chính kho này. Hiện tượng này được ghi nhận như một kết quả.
 
 **Cách chạy**
-- Ngày 1–2: seed 1 cho cả 5 cấu hình cần huấn luyện.
+- Ngày 1–2: seed 1 cho cả 5 cấu hình cần huấn luyện (R, P0, A0, B2, B1); N0 nếu còn quota.
 - Ngày 3–4: seed 2, 3 cho R; nếu còn quota, thêm seed cho P0 rồi B2.
 
 **Việc làm trong lúc chờ GPU:** đọc sâu bài GRPO và `algo/rl.py` (nhóm B) để chuẩn bị cho GĐ6.
@@ -300,6 +314,8 @@ Lần theo `grpo3_loss` trong `algo/rl.py`: lấy mẫu nhãn từ xác suất d
 | 1 | Chạy G1, G2, G3 | Bảng SFT so với GRPO trên các tập đánh giá |
 | 2 | So SFT và G1 với N = 50, 200, 1000 mẫu mỗi lớp | Biểu đồ số mẫu theo EER trên tập trong miền và tập chưa gặp |
 | 3 | Hiệu chuẩn điểm bằng log-odds, học hệ số trên dev. Phân tích các trường hợp EER cực đoan theo hệ thống sinh, như VietPrism đã ghi nhận | actDCF trước và sau; bản nháp câu vấn đáp 4 |
+
+*Lưu ý từ GĐ3:* mô hình chưa fine-tune đã gần hiệu chuẩn tốt theo DCF (actDCF − minDCF ≤ 0,018 trên RADAR tiếng Việt). Hiệu chuẩn chỉ có ý nghĩa nếu fine-tune làm lệch; nếu không lệch thì báo đúng như vậy và dành thời gian cho phân tích theo hệ thống sinh.
 
 actDCF dùng tham số ASVspoof 5 (β ≈ 1,9). Tập fine-tune và tập kiểm tra không được trùng người nói.
 
@@ -356,12 +372,13 @@ Hỏi chéo trong nhóm theo mục 7, sau đó ôn thêm nội dung môn học. 
 
 **Cắt theo đúng thứ tự,** chỉ chuyển sang mức sau khi mức trước không đủ:
 
-1. Bỏ G3.
-2. Bỏ B1.
-3. Fine-tune ít mẫu chỉ làm N = 50, 200.
-4. Zero-shot chỉ làm bản Default, không làm NDA.
-5. Giảm tập fine-tune xuống khoảng 10 giờ.
-6. Nếu không fine-tune được, chuyển sang tầng 0 (mục 2).
+1. Bỏ N0 (thêm 14/11, không bắt buộc).
+2. Bỏ G3.
+3. Bỏ B1.
+4. Fine-tune ít mẫu chỉ làm N = 50, 200.
+5. ~~Zero-shot chỉ làm bản Default, không làm NDA.~~ Không còn cần: đã chấm đủ 14 checkpoint (14/11).
+6. Giảm tập fine-tune xuống khoảng 10 giờ.
+7. Nếu không fine-tune được, chuyển sang tầng 0 (mục 2).
 
 **Không được cắt:** kiểm chứng code ở GĐ2, `evaluate.py`, đánh giá ngoài miền, 3 seed cho R và G1, so sánh SFT với GRPO, 5 thẻ của nhóm A.
 
@@ -372,6 +389,7 @@ Hỏi chéo trong nhóm theo mục 7, sau đó ôn thêm nội dung môn học. 
 | Kiểm tra trực tiếp | Sự tồn tại, dung lượng, giấy phép của các repo, checkpoint và dữ liệu ở mục 2; tên tensor của checkpoint W2V-Small; số câu tiếng Việt trong nhãn RADAR; danh sách hệ thống sinh trong `fake/vi` của MLAAD; hạng CORE 2023 (Interspeech A, ICML A*, ACM MM A*, ICASSP B; Odyssey và APSIPA không có); các file cấu hình SFT và GRPO cho MMS-300M, W2V-Large, W2V-Small |
 | Đọc code | `models/W2V.py`, `W2V_configs.py`, `algo/rl.py`, `install.sh`, các file `hparams`, `protocols/README.md` của AntiDeepfake. GĐ2 (13/11, commit `86098091`): thêm `main.py`, `dataio/dataio.py`, `utils.py`, `evaluation.py`, `utils_wandb.py`, `README_grpo.md`, `protocols/toy_example*`; giá trị mặc định `Wav2Vec2Config` của fairseq `862efab` |
 | Kiểm tra trực tiếp (13/11, GĐ3) | Nhãn RADAR eval theo ngôn ngữ (VI 7.000 / 6.438; câu dài nhất 45,7 s); nguồn tiếng thật RADAR (Bảng II bài RADAR); RADAR dev lấy tiếng thật từ LibriTTS; meta.csv In-the-Wild (19.963 / 11.816, 16 kHz); 14 checkpoint trên HF là `model.safetensors`, Zenodo là `.ckpt`; model card W2V2-AASIST và cách cắt 4 s trong repo gốc của Tak |
+| Kiểm tra trực tiếp (14/11, GĐ3 phân tích) | Phân tích lại 15 file điểm (`src/analyze_zeroshot.py`): hai loại lỗi, actDCF − minDCF, EER theo độ dài, sai trùng nhau, tương quan hạng với Bảng II của bài; khoảng tin cậy bootstrap (`src/bootstrap_eer.py`). README công khai của SEA-Spoof: số câu theo ngôn ngữ, cấu trúc file parquet, các cột metadata, yêu cầu email tác giả |
 | Đọc toàn văn | RawBoost (13/11), AntiDeepfake, GRPO, VietPrism, RADAR, wav2vec 2.0 (mục 2–5), XLS-R (bảng ngôn ngữ, mục 3–4, 5.2.5), MMS (mục 3.1, 4), VSASV (phương pháp tấn công), ALLM4ADD (toàn bài, 11/11), PartialSpoof (phần dữ liệu, mô hình, kết quả, 11/11), DFALLM, ASVspoof 5, Speech DF Arena |
 | Đọc phần tóm tắt (đã kiểm tra lại 11/11) | BAM, LlamaPartialSpoof, PartialEdit, FT-GRPO, SARA |
 | Đọc phần tóm tắt | Các bài còn lại trong mục 3 và phụ lục. Cần đọc toàn văn trước khi trích số liệu |

@@ -15,6 +15,8 @@ Kiến thức chung nằm trong `note/Post-Training-SSL.md` (bài AntiDeepfake) 
 | 2 | Lần 2: NDA của 3 backbone nhỏ, MMS-1B, XLS-R-1B | `results/zeroshot/`, `results/runs/orpheus-zeroshot-v2/` | **Xong (13/11, 2,71 giờ)** (mục 5.6) |
 | 2 | Lần 3: HuBERT-XL, XLS-R-2B (cả hai bản) | `results/zeroshot/`, `results/runs/orpheus-zeroshot-v3/` | **Xong (14/11, 5,18 giờ)** (mục 5.6) |
 | 2 | Khoảng tin cậy bootstrap | `src/bootstrap_eer.py`, `results/zeroshot/bootstrap_radar_vi.csv` | Xong (14/11, chạy trên máy) |
+| 2 | Phân tích lại trên máy (lỗi, độ dài câu, sai trùng, tương quan với bài) | `src/analyze_zeroshot.py`, `results/zeroshot/analysis/` | Xong (14/11), mục 5.7 |
+| | **Tổng kết, quyết định, thay đổi kế hoạch** | Mục 8 | Xong (14/11). **GĐ3 qua phần chạy**; đọc kỹ ngày 1 hoãn lại |
 
 Bài AntiDeepfake đọc ở bản **arXiv v4 (21/10/2025)**, tức sau khi repo sửa cách tính EER (16/10/2025). Số MMS-300M trong Bảng II khớp từng ô với bảng trên trang Hugging Face của checkpoint. Code đối chiếu ở commit `86098091` như GĐ2.
 
@@ -96,9 +98,13 @@ Cách dùng: tải `model.safetensors` từ Hugging Face, chuyển sang `.ckpt` 
 | 9 | Kết quả có RawBoost / không RawBoost đổi chiều theo tập và theo backbone (note, mục 5) | Không suy được tác dụng trên tiếng Việt từ số tiếng Anh | Bảng zero-shot RADAR tiếng Việt cần đủ Default và NDA (thứ tự cắt số 4 của plan chỉ dùng khi thiếu quota) |
 | 10 | **RADAR tiếng Anh khó ngang hoặc khó hơn RADAR tiếng Việt** (lần 1, mục 5.6): MMS-300M 26,2% (EN) so với 20,1% (VI); W2V-Large 23,5% so với 17,8% | Mức giảm từ In-the-Wild (~2–4%) xuống RADAR tiếng Việt (~18–27%) **không chỉ do ngôn ngữ**: phần lớn do các hệ thống sinh của RADAR. Lưu ý: tập EN chỉ 1.000 + 1.000 câu, nguồn tiếng thật khác (Common Voice + People's Speech) | Khi viết câu hỏi nghiên cứu "yếu tố quyết định", phải tách yếu tố ngôn ngữ khỏi yếu tố hệ thống sinh. RADAR VI và EN là cặp so sánh gần nhất hiện có (cùng benchmark, cùng năm) |
 | 11 | **W2V-Large (pre-train chỉ tiếng Anh) tốt hơn MMS-300M (đa ngôn ngữ, có tiếng Việt) trên RADAR tiếng Việt**: 17,80% so với 20,08%. Hai mô hình cùng kiến trúc, cùng 317M (GĐ2 mục 2) | Pre-train đa ngôn ngữ **không** tự động có lợi khi zero-shot. Nhưng đây là bản Default (có RawBoost), và MMS-300M Default là ngoại lệ xấu trên In-the-Wild (phát hiện 1) | Chờ bản NDA (lần 2) rồi mới kết luận. Là giả thuyết đáng kiểm tra lại sau fine-tune (B2 so với R ở GĐ5) **Lần 2:** bản NDA vẫn vậy (16,62 so với 18,07; chênh 1,45, KTC 95% [0,80; 2,09]). **Lần 3:** ở ~1B thì ngược lại (HuBERT-XL tiếng Anh kém MMS-1B 6,2 điểm), nhưng HuBERT-XL khác cả cách pre-train lẫn learning rate post-train, không phải cặp sạch |
-| 12 | **Lỗi chủ yếu là tiếng giả lọt qua.** Ở ngưỡng log-odds 0, MMS-300M nhận nhầm 37,1% câu giả tiếng Việt là thật, nhưng chỉ 4,8% câu thật bị coi là giả (In-the-Wild: 3,6% và 2,2%). Ngưỡng EER trên RADAR VI là 3,69, trên In-the-Wild là 0,51 | Điểm của tiếng giả tiếng Việt dồn về phía "thật" (trung vị −2,93 so với −5,99 trên In-the-Wild). Vừa khó phân biệt, vừa lệch hiệu chuẩn | Báo cả EER (không phụ thuộc ngưỡng) lẫn actDCF. Fine-tune ở GĐ5 cần cải thiện cả hai |
+| 12 | **Lỗi chủ yếu là tiếng giả lọt qua, nhưng điểm đã gần hiệu chuẩn tốt theo DCF** (sửa 14/11). Ở ngưỡng log-odds 0, các mô hình post-trained (trừ HuBERT-XL NDA) nhận nhầm 22–41% câu giả là thật, nhưng chỉ coi 3–11% câu thật là giả (MMS-300M: 37,1% và 4,8%; In-the-Wild: 3,6% và 2,2%). Tuy vậy, với tham số ASVspoof 5 (β ≈ 1,9, ngưỡng Bayes −0,64), actDCF chỉ cao hơn minDCF tối đa 0,018 ở 13/14 checkpoint. Ngoại lệ: HuBERT-XL NDA (0,34) và W2V2-AASIST (0,44, điểm không phải log-odds). Bản 13/11 ghi "lệch hiệu chuẩn" vì so ngưỡng EER (3,69) với 0; đó không phải cách đo hiệu chuẩn theo DCF | Vấn đề chính là **phân biệt** (hai phân bố điểm chồng lên nhau), không phải đặt sai ngưỡng. Hiệu chuẩn (GĐ6 ngày 3) ít có lợi cho mô hình chưa fine-tune | Báo cả hai loại lỗi ở ngưỡng 0 và actDCF − minDCF, trước và sau fine-tune. Hiệu chuẩn chỉ cần nếu fine-tune làm lệch (`results/zeroshot/analysis/errors_radar_vi.csv`) |
 | 13 | **W2V2-AASIST gần như đoán ngẫu nhiên trên RADAR**: 30,1% (VI), 43,6% (EN, minDCF 0,998); actDCF > 1 | Baseline chuyên biệt hỏng nặng khi gặp hệ thống sinh mới, khớp với nhận định của bài AntiDeepfake | Ghi vào báo cáo làm luận cứ cho việc dùng mô hình post-trained |
 | 14 | Tốc độ không tỉ lệ với kích thước: W2V-Large (317M) chạy 42,9x thời gian thực, W2V-Small (95M) 30,9x, MMS-300M 30,4x | Nút thắt nhiều khả năng ở bước đọc dữ liệu trên CPU, không ở GPU: máy Kaggle T4 × 2 chỉ có **4 nhân** (Intel Xeon 2,0 GHz, log lần 3) cho cả hai GPU. W2V-Small NDA chạy một mình cuối lần 2 đạt 91x. Tốc độ đo được: bản 1B ~15–18x, bản 2B ~8,6x thời gian thực | Khi fine-tune ở GĐ5: tăng số worker đọc dữ liệu có giới hạn (4 nhân); cân nhắc chạy một job mỗi lần cho bản 300M |
+| 15 | **Độ dài câu không phải nguyên nhân** (14/11). Chỉ dùng độ dài làm điểm thì EER 41%: RADAR không có lối tắt theo độ dài. Câu ngắn không khó hơn dù mô hình post-train trên đoạn 10–13 s; với bản 1B/2B, câu dưới 3 s còn dễ nhất (XLS-R-2B: 11,8% so với 16,7% ở nhóm 6–10 s) | Loại trừ giả thuyết "cắt câu khi post-train". Nhóm 6–10 s có tỉ lệ câu giả cao hơn (1.849 giả / 936 thật), có thể do hệ thống sinh khác nhau tạo câu dài ngắn khác nhau | Không cần cắt hay ghép câu khi chấm. Báo EER theo độ dài như phân tích phụ (`eer_by_duration.csv`) |
+| 16 | **Các mô hình sai trên cùng những câu** (14/11). Ở ngưỡng EER của từng mô hình: 3,7% câu giả lọt qua **cả 7** mô hình Default, và 3,6% câu thật bị cả 7 coi là giả; nếu sai độc lập thì chỉ khoảng 0,001%. Với 4 mô hình 1B/2B tốt nhất: 6,7% và 6,1%. Tổng cộng 493 câu (238 giả, 255 thật) khó với cả 7 mô hình | Lỗi có cấu trúc: có một nhóm tiếng giả (nhiều khả năng vài hệ thống sinh hoặc biến đổi âm thanh) và một nhóm tiếng thật mà dữ liệu post-train chưa phủ tới. Ghép nhiều mô hình (ensemble) sẽ giúp ít | Theo dõi `results/zeroshot/analysis/hard_ids_default7.csv` trước và sau fine-tune ở GĐ5–6. Nghe khoảng 20 câu mỗi loại để mô tả định tính (cho phần phân tích sâu) |
+| 17 | **Thứ hạng trên In-the-Wild dự báo tốt thứ hạng trên tiếng Việt** (14/11). Spearman giữa EER RADAR tiếng Việt và EER trong Bảng II của bài, qua 14 checkpoint: In-the-Wild 0,91 (0,88 khi bỏ HuBERT-XL), Deepfake-Eval-2024 0,81, DEEP-VOICE 0,80, ADD 2023 0,78, FoR-norm 0,61, FoR 0,19 | Mô hình tốt trên dữ liệu thực tế tiếng Anh thì cũng tốt trên tiếng Việt. Khác biệt nằm ở **mức EER** (In-the-Wild 1,2–18% so với tiếng Việt 13,7–30,7%), không ở thứ tự. Củng cố ý: khả năng phát hiện chung (cách train, dữ liệu, kích thước) quan trọng hơn yếu tố riêng của ngôn ngữ | Dùng cho câu hỏi 1 trong báo cáo. Giới hạn: chỉ 14 điểm, các cặp Default/NDA không độc lập (`rank_vs_paper.csv`) |
+| 18 | **Tổng hợp: "ngôn ngữ" hay "cách train và tài nguyên"** (14/11, trả lời câu hỏi của người dùng). Mức ảnh hưởng đo được trên RADAR tiếng Việt: kích thước mô hình 3,9–9,4 điểm (MMS-300M → MMS-1B; W2V-Small → W2V-Large); RawBoost khi post-train 1,2–4,0 điểm ở bản ≤ 317M, 10 điểm ở HuBERT-XL; cách pre-train và learning rate (HuBERT-XL so với MMS-1B) 6,2 điểm nhưng trộn với ngôn ngữ; ngôn ngữ pre-train (cặp sạch W2V-Large – MMS-300M) 1,5–2,3 điểm, theo chiều có lợi cho tiếng Anh; độ dài câu: không. RADAR tiếng Anh khó hơn tiếng Việt dù dữ liệu post-train thiên về tiếng Anh (MLS chiếm ~90% giờ tiếng thật) | Số liệu **không ủng hộ** giả thuyết "thiếu tài nguyên tiếng Việt là nguyên nhân chính". Nguyên nhân khả dĩ nhất: dữ liệu post-train chưa phủ các hệ thống sinh 2025–2026 và các biến đổi âm thanh của RADAR. Nhưng zero-shot không tách được "hệ thống mới tự nó khó" với "chưa được thấy khi train"; so RADAR EN với VI cũng bị trộn (khác hệ thống sinh, khác nguồn tiếng thật, EN chỉ 1.000 + 1.000 câu) | Đặt lại câu hỏi 1 theo 3 nhóm: mô hình nền, cách train, dữ liệu (plan mục đầu). GĐ5 kiểm tra: fine-tune trên SEA-Spoof (có ElevenLabs, OpenAI) mà RADAR tiếng Việt giảm mạnh thì nguyên nhân là độ phủ dữ liệu |
 
 ## 4. Dữ liệu kiểm tra
 
@@ -271,6 +277,56 @@ Nhận xét lần 1 (phát hiện 10–14 ở mục 3):
 
 Số liệu gốc: `results/zeroshot/summary.csv`, `results/zeroshot/<mô hình>/<tập>/metrics.csv`. Tỉ lệ lỗi ở ngưỡng 0 tính lại từ `scores.csv` (log-odds = logit thật − logit giả, như `src/evaluate.py`).
 
+### 5.7. Phân tích lại trên máy (14/11)
+
+Chạy lại từ các file điểm đã có, không tốn GPU: `python src/analyze_zeroshot.py` (đầu ra ở `results/zeroshot/analysis/`, gồm `analysis_output.txt`). Kết luận ghi ở phát hiện 12 (đã sửa), 15–18.
+
+**Hai loại lỗi và hiệu chuẩn** (RADAR tiếng Việt; FAR: giả bị nhận là thật, FRR: thật bị coi là giả, ở ngưỡng log-odds 0):
+
+| Mô hình | EER | FAR ở 0 | FRR ở 0 | actDCF − minDCF |
+|---|---|---|---|---|
+| XLS-R-2B | 13,71 | 28,1% | 3,1% | 0,013 |
+| MMS-1B NDA | 14,20 | 24,9% | 5,7% | 0,001 |
+| W2V-Large NDA | 16,62 | 26,2% | 6,3% | 0,010 |
+| MMS-300M NDA | 18,07 | 34,5% | 5,3% | 0,006 |
+| MMS-300M (mốc S0 của R) | 20,08 | 37,1% | 4,8% | 0,007 |
+| W2V-Small | 27,21 | 40,5% | 10,8% | 0,014 |
+| HuBERT-XL NDA | 30,67 | 22,1% | 47,6% | 0,336 |
+
+Đủ 15 mô hình: `errors_radar_vi.csv`.
+
+**EER theo độ dài câu** (số câu thật / giả: < 3 s 2.099 / 1.449; 3–6 s 3.896 / 2.973; 6–10 s 936 / 1.849; > 10 s 69 / 167):
+
+| Mô hình | < 3 s | 3–6 s | 6–10 s | > 10 s |
+|---|---|---|---|---|
+| XLS-R-2B | 11,8 | 13,7 | 16,7 | 14,4 |
+| MMS-1B | 12,1 | 14,4 | 16,3 | 15,8 |
+| W2V-Large | 15,7 | 17,2 | 19,7 | 18,7 |
+| MMS-300M | 20,5 | 21,2 | 18,9 | 18,7 |
+| W2V-Small NDA | 22,9 | 23,2 | 22,8 | 23,3 |
+
+Nhóm > 10 s quá ít câu để kết luận.
+
+**Sai trùng nhau** (ở ngưỡng EER của từng mô hình):
+
+| Nhóm mô hình | Lớp | Lỗi trung bình | Sai bởi tất cả | Nếu sai độc lập | Không mô hình nào sai |
+|---|---|---|---|---|---|
+| 7 bản Default | Giả | 18,4% | 3,7% | 0,001% | 58,3% |
+| 7 bản Default | Thật | 18,4% | 3,6% | 0,001% | 54,0% |
+| 4 bản 1B/2B tốt nhất | Giả | 14,1% | 6,7% | 0,04% | 77,2% |
+| 4 bản 1B/2B tốt nhất | Thật | 14,1% | 6,1% | 0,04% | 75,9% |
+
+**Tương quan hạng với Bảng II của bài** (Spearman, 14 checkpoint): In-the-Wild 0,91; DFE-2024 0,81; DEEP-VOICE 0,80; ADD 2023 0,78; FoR-norm 0,61; FoR 0,19.
+
+**RADAR tiếng Anh so với tiếng Việt** (EER; FAR ở ngưỡng 0):
+
+| Mô hình | RADAR EN | RADAR VI | FAR EN | FAR VI |
+|---|---|---|---|---|
+| W2V-Large | 23,5 | 17,8 | 46,0% | 26,8% |
+| MMS-300M | 26,2 | 20,1 | 49,0% | 37,1% |
+| W2V-Small | 27,2 | 27,2 | 55,9% | 40,5% |
+| W2V2-AASIST | 43,6 | 30,1 | | |
+
 ## 6. Nháp câu vấn đáp 3: kiến trúc bên dưới (phần post-training)
 
 > Phần backbone ở file GĐ2 mục 5. Công thức GRPO bổ sung ở GĐ6.
@@ -294,10 +350,14 @@ Số liệu gốc: `results/zeroshot/summary.csv`, `results/zeroshot/<mô hình>
 | Vì sao không tự post-train? | 74K giờ dữ liệu, 8 GPU H100; vượt xa GPU miễn phí. Đồ án dùng checkpoint công bố và tập trung vào fine-tune |
 | Hạn chế của post-training? | Kém trên dữ liệu mạng xã hội mới (EER trên 25%); dữ liệu lệch (~90% giờ thật từ MLS); lợi ích không đều giữa backbone |
 | Mô hình đã thấy tiếng Việt chưa? | Có thể qua FLEURS, FLEURS-R, MLAAD (đều đa ngôn ngữ); cần kiểm tra. Pre-train của MMS, XLS-R có tiếng Việt |
+| Mô hình có sẵn làm tốt đến đâu trên tiếng Việt? | Dùng thẳng trên RADAR tiếng Việt: tốt nhất XLS-R-2B 13,7% EER; bản 300M 16,6–20,1%; baseline W2V2-AASIST 30,1%. Trên In-the-Wild cùng mô hình chỉ 1,2–2,9%. Còn khoảng lớn cho fine-tune |
+| Vì sao tiếng Việt khó, có phải do ngôn ngữ? | Số liệu không ủng hộ: RADAR tiếng Anh còn khó hơn (MMS-300M 26,2% so với 20,1%); thứ hạng mô hình trên In-the-Wild dự báo đúng thứ hạng trên tiếng Việt (Spearman 0,91); ngôn ngữ pre-train chỉ chênh 1,5–2,3 điểm, nhỏ hơn kích thước mô hình (3,9–9,4). Khả dĩ nhất: dữ liệu post-train chưa có các hệ thống sinh 2025–2026 và biến đổi âm thanh của RADAR |
+| RawBoost có giúp trên tiếng Việt không? | Khi dùng thẳng: không với bản ≤ 317M (bỏ RawBoost tốt hơn 1,2–4,0 điểm, khoảng tin cậy không chứa 0); ở bản ≥ 1B thì ngang hoặc có RawBoost nhỉnh hơn. Khác In-the-Wild, nơi RawBoost giúp 6/7 backbone |
+| Số liệu của nhóm tin được không? | Ba mốc kiểm chứng khớp số công bố đến 4 chữ số (toy 6,1101%, In-the-Wild MMS-300M 2,9016%, W2V2-AASIST 11,2122%); có khoảng tin cậy bootstrap; mọi lần chạy có log và code lưu trong `results/runs/` |
 
 ## 7. Kiểm tra điều kiện qua GĐ3
 
-- [ ] Đọc kỹ AntiDeepfake và RawBoost theo mục 1; tự trả lời câu hỏi cuối hai note
+- [ ] Đọc kỹ AntiDeepfake và RawBoost theo mục 1; tự trả lời câu hỏi cuối hai note (**hoãn**, 14/11: người dùng ưu tiên chạy code, đọc sau; không chặn GĐ4)
 - [x] Chọn tập kiểm tra, cố định danh sách câu (`protocols/ids/`)
 - [x] Script chuẩn bị dữ liệu và chấm, thử trên máy với `main.py` giả (chia shard, chạy tiếp, gộp, độ đo theo từng nguồn)
 - [x] Kaggle CLI và đăng nhập OAuth (mục 5.5)
@@ -307,3 +367,33 @@ Số liệu gốc: `results/zeroshot/summary.csv`, `results/zeroshot/<mô hình>
 - [x] W2V2-AASIST trên In-the-Wild gần 11,22%: 11,2122%
 - [x] Bảng EER zero-shot trên RADAR tiếng Việt: 14 checkpoint và baseline, kèm khoảng tin cậy bootstrap (mục 5.6)
 - [x] Mốc `ood_forget` cho MMS-300M, W2V-Large, W2V-Small (và W2V2-AASIST)
+
+## 8. Tổng kết GĐ3 và thay đổi kế hoạch (14/11)
+
+**Trạng thái:** GĐ3 **qua phần chạy**. Điều kiện của plan (In-the-Wild MMS-300M Default gần 2,90%) đạt 2,9016%. Bảng zero-shot đủ 14 checkpoint và baseline, kèm khoảng tin cậy. Phần đọc kỹ ngày 1 hoãn lại theo quyết định của người dùng, không chặn GĐ4. GPU dùng 10,32 giờ quota Kaggle (3 lần chạy) cộng 33 phút CPU cho prep.
+
+**Năm kết quả chính**
+1. Dùng thẳng trên RADAR tiếng Việt: XLS-R-2B tốt nhất (13,71%), bản 300M 16,6–20,1%, baseline 30,1%. Còn xa mức In-the-Wild (1,2–2,9%).
+2. Bỏ RawBoost khi post-train tốt hơn ở cả 3 bản ≤ 317M (+1,2 đến +4,0 điểm); bản ≥ 1B thì ngang hoặc ngược lại.
+3. Ngôn ngữ không phải yếu tố lớn nhất: kích thước, cách train và độ phủ dữ liệu ảnh hưởng nhiều hơn (phát hiện 17, 18).
+4. Lỗi có cấu trúc: các mô hình sai trên cùng nhóm câu, cả giả lẫn thật (phát hiện 16).
+5. Điểm đã gần hiệu chuẩn tốt theo DCF; vấn đề là phân biệt (phát hiện 12, đã sửa).
+
+**Quyết định** (14/11; người dùng giao ghi vào kế hoạch. Q1, Q2 có thể xem lại trước khi chạy GĐ5)
+
+| # | Quyết định | Lý do |
+|---|---|---|
+| Q1 | **Giữ R = MMS-300M bản Default** (có RawBoost khi post-train) | So được với bài GRPO: bài báo MMS-300M dùng thẳng trên In-the-Wild 2,91%, gần bản Default (2,90) hơn bản NDA (2,00). File cấu hình GRPO (`mms_300m_pre-post-sft.yaml`) không ghi rõ bản nào |
+| Q2 | **Thêm cấu hình N0** = R nhưng khởi tạo từ bản NDA, 1 seed, không bắt buộc | Trả lời phần "RawBoost khi post-train" của câu hỏi 1: lợi thế 2 điểm của bản NDA khi dùng thẳng có còn sau fine-tune không. A0 (bỏ RawBoost khi fine-tune) giữ nguyên ý nghĩa |
+| Q3 | **Đặt lại câu hỏi 1 theo 3 nhóm yếu tố:** mô hình nền (kích thước, ngôn ngữ, cách pre-train); cách train (post-train, tăng cường dữ liệu, SFT/GRPO); dữ liệu (độ phủ hệ thống sinh, lượng dữ liệu tiếng Việt) | Phát hiện 18. Đề tài không đổi |
+| Q4 | **Thêm dòng tham chiếu XLS-R-2B dùng thẳng (13,71%)** vào bảng kết quả GĐ5–6 | Mốc thực tế: fine-tune mô hình 300M có thắng mô hình 2B không fine-tune không |
+| Q5 | **Báo cả hai loại lỗi ở ngưỡng 0 và theo dõi tập câu khó chung** trước và sau fine-tune | Đo trực tiếp rủi ro "tiếng thật nguồn khác bị coi là giả" (tiếng thật SEA-Spoof từ VIVOS) và xem fine-tune có sửa đúng nhóm câu khó không |
+| Q6 | **Giảm kỳ vọng vào bước hiệu chuẩn** ở GĐ6 ngày 3 | Mô hình chưa fine-tune đã gần hiệu chuẩn tốt; chỉ hiệu chuẩn nếu fine-tune làm lệch |
+
+**Mang sang GĐ4**
+- Chi phí chấm đo được (một T4): `radar_vi` 24–38 phút với bản ≤ 317M (W2V-Small NDA chạy một mình: 11 phút), ~58 phút với bản 1B, ~2 giờ với bản 2B; `ood_forget` ~7–11 phút với bản 300M.
+- Máy Kaggle T4 × 2 chỉ có 4 nhân CPU: đo tốc độ đọc dữ liệu khi huấn luyện trước khi tính ngân sách.
+- Quota Kaggle 30 giờ/tuần, làm mới 7 giờ sáng thứ Bảy. Hạn nộp 30/11: còn hai tuần trọn (14–20/11, 21–27/11) và vài ngày cuối.
+- Tập câu khó chung `results/zeroshot/analysis/hard_ids_default7.csv` (493 câu).
+
+Chi tiết thay đổi: `chore/research-plan.md` (câu hỏi 1, GĐ4–6, thứ tự cắt), `chore/avd-sum-report.md` (mục 4–6), `chore/GD4-Du-Lieu-Va-Pipeline.md`.

@@ -1,6 +1,6 @@
 # Tiến độ học
 
-Ghi lại mức độ đã đọc của từng phần, để biết phần nào cần quay lại đọc kỹ. Cập nhật lần cuối: 13/11/2026 (GĐ3, xong lần chấm zero-shot đầu tiên).
+Ghi lại mức độ đã đọc của từng phần, để biết phần nào cần quay lại đọc kỹ. Cập nhật lần cuối: 14/11/2026 (GĐ3 qua phần chạy, chuẩn bị GĐ4).
 
 **Mức đọc:** **Kỹ** = đọc bài gốc, tự trả lời được câu hỏi. **Lướt** = chỉ đọc tóm tắt hoặc note, chưa đối chiếu bài gốc hay code. **Chưa** = chưa đọc.
 
@@ -10,8 +10,9 @@ Ghi lại mức độ đã đọc của từng phần, để biết phần nào 
 |---|---|---|
 | 1. Bản đồ các hướng | Ngày 1 kỹ; ngày 2, 3 lướt | Đã qua, còn nợ đọc kỹ ngày 2, 3 |
 | 2. Backbone SSL và môi trường | Ngày 1 lướt; ngày 2 xong | **Đã qua** (13/11). Còn nợ đọc kỹ ngày 1 |
-| 3. Post-training và zero-shot | Ngày 1 chưa đọc (đã có tài liệu); ngày 2 xong (đủ 14 checkpoint + baseline) | Còn: đọc kỹ ngày 1, tự kiểm tra; quyết định Default hay NDA cho mốc R (phát hiện 1 file GĐ3) |
-| 4–8 | Chưa | |
+| 3. Post-training và zero-shot | Ngày 1 chưa đọc (đã có tài liệu, **hoãn** 14/11); ngày 2 xong | **Đã qua phần chạy** (14/11): đủ 14 checkpoint + baseline, phân tích lại, quyết định ở mục 8 file GĐ3. Còn nợ đọc kỹ ngày 1 |
+| 4. Dữ liệu tiếng Việt và pipeline | Chưa | Đã chuẩn bị (`chore/GD4-Du-Lieu-Va-Pipeline.md`). Chặn bởi quyền SEA-Spoof (mục 1 file GĐ4) |
+| 5–8 | Chưa | |
 
 ## GĐ1. Bản đồ các hướng
 
@@ -79,11 +80,12 @@ Hướng dẫn chi tiết từng ô ở mục 4.2 của `chore/GD2-Backbone-Va-M
 | Ngày | Nội dung | Mức | Cần quay lại |
 |---|---|---|---|
 | 1 | AntiDeepfake, RawBoost (nhóm B) | Chưa (tài liệu sẵn 13/11) | Đọc theo bảng trang ở mục 1 của file GĐ3: lượt 1 (kiến trúc, kết quả) trước, lượt 2 (dữ liệu, siêu tham số) sau |
-| 2 | Chuẩn bị dữ liệu, chấm zero-shot trên Kaggle | Lần 1 xong (13/11): qua 3 mốc kiểm chứng; lần 2 đang chạy | Đọc kết quả ở mục 5.6 và phát hiện 10–14 (mục 3) file GĐ3 |
+| 2 | Chuẩn bị dữ liệu, chấm zero-shot trên Kaggle, phân tích lại | **Xong** (14/11) | Đọc tổng kết ở mục 8, kết quả ở mục 5.6–5.7, phát hiện 1–18 ở mục 3 file GĐ3 |
 
 Tài liệu: `note/Post-Training-SSL.md`, `note/RawBoost.md`, `chore/GD3-Post-Training-Va-Zero-Shot.md`, `chore/Quy-Trinh-Chay-Kaggle.md`.
 
 Việc ngày 1:
+*(Hoãn 14/11 theo quyết định của người dùng: ưu tiên chạy code, đọc sau. Không chặn GĐ4.)*
 - [ ] Lượt 1 AntiDeepfake: Hình 1–2, Bảng II, Bảng III, mục V
 - [ ] Lượt 1 RawBoost: Hình 1, Bảng 2
 - [ ] Tự trả lời 7 câu cuối mỗi note
@@ -94,3 +96,18 @@ Việc ngày 2:
 - [x] Lần 1: toy 6,1101%; In-the-Wild MMS-300M 2,9016%; RADAR tiếng Việt cho 3 backbone + baseline (W2V-Large tốt nhất, 17,80%)
 - [x] Lần 2 (7 checkpoint, xong 13/11): bản 1B ~14–16%; NDA tốt hơn Default ở cả 3 bản ≤ 317M (bảng đủ ở mục 5.6 file GĐ3)
 - [x] Lần 3 (HuBERT-XL, XLS-R-2B, xong 14/11): XLS-R-2B Default tốt nhất 13,71%; khoảng tin cậy bootstrap cho cả bảng
+- [x] Phân tích lại trên máy (14/11): hai loại lỗi, độ dài câu, sai trùng nhau, tương quan với bài; tổng kết và quyết định (mục 8 file GĐ3)
+
+## GĐ4. Dữ liệu tiếng Việt và pipeline
+
+| Ngày | Nội dung | Mức | Cần quay lại |
+|---|---|---|---|
+| 1 | SEA-Spoof: phần mô tả dữ liệu tiếng Việt và hệ thống sinh (nhóm C, đọc lướt) | Chưa | README công khai đã tóm ở mục 2 file GĐ4 |
+| 2 | Pipeline fine-tune (`mms_300m_pre-post-sft.yaml`) | Chưa | |
+
+Tài liệu: `chore/GD4-Du-Lieu-Va-Pipeline.md`.
+
+Việc trước ngày 1 (người dùng, mục 1 file GĐ4):
+- [ ] Kiểm tra quyền SEA-Spoof; nếu chưa duyệt, gửi email cho tác giả theo README
+- [ ] Xin quyền MLAAD (dự phòng)
+- [ ] `hf auth login` trên máy

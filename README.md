@@ -6,7 +6,7 @@
 
 | Thư mục | Nội dung |
 |---|---|
-| `src/` | Code của nhóm: `evaluate.py` (EER, minDCF, actDCF), `setup_antideepfake.sh` (dựng môi trường), `prep_data.py` (dữ liệu kiểm tra), `score_zeroshot.py` và `score_w2v2_aasist.py` (chấm zero-shot) |
+| `src/` | Code của nhóm: `evaluate.py` (EER, minDCF, actDCF), `setup_antideepfake.sh` (dựng môi trường), `prep_data.py` (dữ liệu kiểm tra), `score_zeroshot.py` và `score_w2v2_aasist.py` (chấm zero-shot), `bootstrap_eer.py` (khoảng tin cậy EER), `analyze_zeroshot.py` (phân tích kết quả zero-shot, chạy trên máy) |
 | `protocols/ids/` | Danh sách câu cố định của từng tập kiểm tra (RADAR, In-the-Wild) |
 | `kaggle/` | Kernel Kaggle (`prep`, `zeroshot`) và `push.sh` để đẩy, xem trạng thái, tải kết quả |
 | `results/` | Kết quả chạy: `zeroshot/` (điểm, độ đo đã gộp), `runs/` (bằng chứng từng lần chạy Kaggle: code đã đẩy, log, môi trường, `RUN.md`); embedding và file thô không đưa vào git |
