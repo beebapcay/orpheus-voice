@@ -11,6 +11,7 @@
 #   bash server/vast.sh start [tham số run.py]      chạy nền server/run.py run ... (ví dụ --tiers 0)
 #   bash server/vast.sh status                      results/status.txt + cuối driver.log
 #   bash server/vast.sh log <tên lần> [số dòng]     log của một lần chạy
+#   bash server/vast.sh skip <tên lần>...           bỏ qua các lần đang chờ (ghi results/skip.txt, có hiệu lực ngay)
 #   bash server/vast.sh fetch                       tải kết quả về results/server/raw/ (không checkpoint)
 #   bash server/vast.sh collect <nhãn>              gộp vào results/server/ và lưu bằng chứng results/runs/server-<nhãn>/
 #   bash server/vast.sh stop --yes                  dừng điều phối và mọi lần đang chạy
@@ -90,6 +91,10 @@ case "$CMD" in
   log)
     load; N="${2:?tên lần chạy}"
     remote "tail -n ${3:-30} $R/results/jobs/$N.log; echo '--- main.log'; tail -c 3000 $R/results/train/$N/main.log 2>/dev/null | tr '\r' '\n' | tail -n 8"
+    ;;
+  skip)
+    load; shift; [ $# -gt 0 ] || { echo "cần tên lần chạy"; exit 2; }
+    remote "mkdir -p $R/results && printf '%s\n' $* >> $R/results/skip.txt && cat $R/results/skip.txt"
     ;;
   fetch)
     load

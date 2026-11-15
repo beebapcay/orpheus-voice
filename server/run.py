@@ -5,7 +5,8 @@ trường orpheus-driver (server/bootstrap.sh tạo).
   python server/run.py list                       danh sách lần chạy theo tầng, trạng thái
   python server/run.py prefetch                   tải trước checkpoint khởi tạo (một lần, tuần tự)
   python server/run.py run --tiers 0              thử đo (tầng 0)
-  python server/run.py run --tiers 1 2 3 4 5 [--workers N] [--gpus 0,1,2,3]
+  python server/run.py run --tiers 1 2 3 4 5 6 [--workers N] [--gpus 0,1,2,3]
+  (bỏ qua một lần đang chờ: thêm tên vào results/skip.txt; xoá results/jobs/<tên>.json để chạy lại)
   python server/run.py run --only R_s1 G1_s1      chỉ một số lần
   python server/run.py run ... --dry-run          in lệnh, không chạy
   python server/run.py status                     in results/status.txt
@@ -144,15 +145,34 @@ def write_status(jobs):
 claimed = set()   # lần đã có GPU nhận trong lần điều phối này (nhận dưới khoá: hai GPU không lấy trùng)
 
 
+def skip_list():
+    """results/skip.txt: tên lần chạy cần bỏ qua (mỗi dòng một tên), đọc lại mỗi lần GPU nhận việc, nên
+    thêm tên vào được khi điều phối đang chạy (`vast.sh skip <tên>...`)."""
+    p = os.path.join(OUT, "skip.txt")
+    return {l.strip() for l in open(p)} - {""} if os.path.exists(p) else set()
+
+
 def worker(gpu, queue, jobs, dry):
+    skipped = []
     while True:
         with lock:
+            skip = skip_list()
+            for x in queue:
+                if x["name"] in skip and x["name"] not in claimed:
+                    claimed.add(x["name"])
+                    skipped.append(x["name"])
+                    if not dry:
+                        write_state(x["name"], state="skipped")
             j = next((x for x in queue if x["name"] not in claimed), None)
-            if j is None:
-                return
-            claimed.add(j["name"])
-            if not dry:
-                write_state(j["name"], state="running", gpu=gpu, start=time.time(), tier=j["tier"])
+            if j is not None:
+                claimed.add(j["name"])
+                if not dry:
+                    write_state(j["name"], state="running", gpu=gpu, start=time.time(), tier=j["tier"])
+        # log() cũng lấy `lock` (không vào lại được), nên chỉ ghi log sau khi đã nhả khoá
+        while skipped:
+            log(f"bỏ qua {skipped.pop()} (results/skip.txt)")
+        if j is None:
+            return
         cmd = command(j, gpu)
         log(f"[GPU {gpu}] bắt đầu {j['name']} (tầng {j['tier']})")
         if dry:
@@ -240,7 +260,7 @@ def main():
         p = sub.add_parser(name)
         p.add_argument("--workers", type=int, default=E.NUM_WORKERS)
         if name == "run":
-            p.add_argument("--tiers", type=int, nargs="*", default=[1, 2, 3, 4, 5])
+            p.add_argument("--tiers", type=int, nargs="*", default=[1, 2, 3, 4, 5, 6])
             p.add_argument("--only", nargs="*", default=None)
             p.add_argument("--gpus", default=None, help="ví dụ 0,1,2,3; mặc định mọi GPU")
             p.add_argument("--retry-failed", action="store_true")

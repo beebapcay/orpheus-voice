@@ -272,6 +272,8 @@ Plan: so SFT và G1 với N = 50, 200, 1000 câu mỗi lớp (P3 không cắt). 
 
 **Vì sao làm lại cả GĐ5, không chỉ GĐ6:** mọi bảng của báo cáo so các cấu hình với nhau (G1 với R, A0; R với P0, B2, B1, N0; đường cong ít mẫu với bản đủ). Nếu một phía chạy trên T4 và phía kia trên GPU khác thì chênh lệch lẫn cả yếu tố phần cứng: GPU Ampere/Ada mặc định dùng TF32 cho convolution (T4 không có), tốc độ đọc dữ liệu khác nên chuỗi ngẫu nhiên của RawBoost khác. Độ lệch giữa seed đã ~1,5 điểm RADAR VI (GĐ5 phát hiện 8), nên một độ lệch hệ thống nhỏ do phần cứng cũng đủ làm sai kết luận. Làm lại cả bộ cũng sửa điểm yếu 1 seed của GĐ5 (mục 7.1: A0 − R chỉ p = 0,08).
 
+*Bảng tầng dưới là bản đầu (54 lần). **Đã cập nhật 15/11 thành 73 lần theo hướng "chẩn đoán và sửa" (mục 12); bảng hiện hành: `server/README.md` mục 1.***
+
 **Bộ server (54 lần, `server/experiments.py`), mọi cấu hình 3 seed:**
 
 | Tầng | Nội dung | Số lần |
@@ -408,3 +410,31 @@ Theo kỳ vọng gradient (note `Post-Training-Va-GRPO.md` mục 8): với câu 
 | SFT với "trọng số kiểu GRPO" (cross-entropy nhân p(y\|x), GĐ5 mục 6.3 b) | Cơ chế nằm ở trọng số theo p chứ không ở lấy mẫu | Giống G1 |
 
 Phần ít mẫu (tầng 4) trong chế độ này chủ yếu đo "ít dữ liệu thì bão hoà nhanh hơn, quên ra sao", nên xếp sau các thí nghiệm cơ chế. Vấn đề 2 không sửa được bằng hàm loss; muốn kiểm phải thêm tiếng thật đa nguồn vào dữ liệu fine-tune (không dùng Common Voice, FOSD vì trùng RADAR), là thay đổi dữ liệu lớn: ghi làm hướng phát triển, hoặc làm nếu người dùng chốt.
+
+## 12. Đã chốt sau đánh giá lại (15/11, người dùng đồng ý mọi đề xuất) và tổng hợp phát hiện GĐ6
+
+**Quyết định**
+
+| # | Việc | Đã chốt |
+|---|---|---|
+| Q1 | Trọng tâm câu hỏi 3 | **Chẩn đoán và sửa:** vì sao GRPO (đúng code gốc) không giữ tổng quát hoá tốt hơn SFT khi miền fine-tune đã bão hoà; thiết kế bản GRPO sửa theo nguyên nhân và kiểm so với SFT, GRPO gốc. Đây là phần "phân tích sâu + đề xuất cải tiến" (20%) |
+| Q2 | Thí nghiệm sửa và kiểm cơ chế, mỗi cái 3 seed | (a) **G1s**: bỏ khuếch đại, `rl_config={std_floor: 1.0}` (kỳ vọng gradient p(1 − p), gần như bỏ chia cho độ lệch chuẩn; ý tưởng gần Dr. GRPO, phải đọc bài gốc trước khi trích); (b) **G1b**: β = 1 (núm của bài báo); (c) bản sửa tốt hơn trong (a), (b) ghép **không RawBoost** (G1sA hoặc G1bA; so với A0); (d) **G1lr**: lr 1e-7, đối chứng cường độ. Giữ G2, G3 của plan |
+| Q3 | Phạm vi bộ server | Lõi (S0, R, G1, A0) + sửa và cơ chế + các yếu tố GĐ5 (P0, B2, N0, B1), mọi cấu hình 3 seed; ít mẫu và seed 4, 5 xếp cuối. 73 lần, `server/experiments.py`, `server/README.md` mục 1 |
+| Q4 | Nơi chạy | **Thuê server vast.ai** (máy 2 × RTX 3090, 20 vCPU, 81 GB RAM, 775 GB đã xem là đủ; khuyến nghị máy verified nếu có). Bộ server là bộ chính; Kaggle (quota mới từ 7 giờ 21/11) chạy lặp độc lập hoặc bổ sung, chốt sau |
+| Q5 | Lối tắt tiếng thật một nguồn (VIVOS) | Ghi làm hạn chế và hướng phát triển (thêm tiếng thật đa nguồn, không dùng Common Voice, FOSD vì trùng RADAR); không làm trong đồ án |
+
+**Phát hiện chính của GĐ6 đến 15/11** (chi tiết ở các mục được trỏ)
+
+| # | Phát hiện | Mục |
+|---|---|---|
+| 1 | GRPO (G1) ở batch 50 vừa T4 chỉ khi bật `expandable_segments` (hết bộ nhớ do phân mảnh); đỉnh 13,9 / ~14,7 GB; chậm 1,55 lần SFT | 3.1 |
+| 2 | `main.py` huấn luyện fp32 dù YAML ghi fp16; `inner_step_size` đếm theo batch | 2, 4 |
+| 3 | SFT làm kém ngoài miền có ý nghĩa thống kê (R 5 seed − S0: RADAR VI +4,12, p = 0,008; ItW +3,84, p = 0,011; FRR +28, p < 0,001); RawBoost khi fine-tune làm kém (A0 − R −5,83, p = 0,047); post-training quan trọng (P0 − R, p ≤ 0,024) | 10.1 |
+| 4 | Độ lệch giữa seed lớn (RADAR VI 1,88; FRR ở ngưỡng 0 dao động 23,7–42,8%): mọi so sánh phải theo seed, không theo KTC bootstrap theo câu | 7.1, 10.1 |
+| 5 | Hiệu chuẩn học trên dev (chỉ tiếng thật VIVOS) làm actDCF ngoài miền tệ hơn ở mọi biến thể; chỉ giúp tập cùng nguồn tiếng thật | 7.2 |
+| 6 | MLAAD: VoxCPM2 chiếm gần hết lỗi (S0 15,8%, nhận 95,6% là thật); fine-tune sửa thứ hạng nhưng không sửa ngưỡng (R lọt 29–59%, G1 8%) | 7.3, 10.2 |
+| 7 | G1, G2 (1 seed) nằm trong khoảng của R ở mọi thước đo ngoài miền; không thấy GRPO giữ tổng quát hoá tốt hơn | 10.2 |
+| 8 | Giả thuyết cơ chế cũ (GRPO bỏ qua câu sai chắc) bị bác: G1 kéo câu sai chắc mạnh bằng SFT và lật tiếng thật sang giả nhiều hơn | 10.2 |
+| 9 | Nguyên nhân: miền fine-tune bão hoà; cuối huấn luyện 66–76% batch có mọi nhãn lấy mẫu đều đúng; chuẩn hoá phần thưởng khiến GRPO tiếp tục làm sắc câu đã đúng (~30 lần SFT ở p = 0,999): G1 99,4% câu dev đúng với p > 0,999 (R 91–97%) | 11 |
+
+**Việc tiếp theo** (session sau): người dùng thuê máy và gửi chuỗi SSH; Claude chạy `server/vast.sh` (init, check, code, data, bootstrap, tầng 0), báo tốc độ, chốt số worker, chạy tầng 1–6; sau tầng 2 chọn bản ghép ở tầng 4 (`skip` bản kia); gom kết quả (`fetch`, `collect`) và phân tích trên `results/server/`. Kiểm bài Dr. GRPO trước khi trích.

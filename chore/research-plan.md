@@ -6,7 +6,7 @@
 
 1. Những yếu tố nào quyết định khả năng phát hiện deepfake tiếng Việt, xét theo 3 nhóm: **mô hình nền** (kích thước, ngôn ngữ và cách pre-train), **cách train** (post-training, tăng cường dữ liệu RawBoost), và **dữ liệu** (độ phủ hệ thống sinh, lượng dữ liệu tiếng Việt khi fine-tune)? *(Đặt lại 14/11 sau GĐ3: zero-shot cho thấy ngôn ngữ ảnh hưởng ít hơn kích thước và độ phủ dữ liệu; xem `chore/GD3-Post-Training-Va-Zero-Shot.md` phát hiện 17, 18.)*
 2. Fine-tune có giám sát trên tiếng Việt có làm mô hình mất khả năng tổng quát hoá không?
-3. GRPO có giữ được khả năng tổng quát hoá tốt hơn trên tiếng Việt không, và thành phần nào của GRPO tạo ra khác biệt?
+3. GRPO có giữ được khả năng tổng quát hoá tốt hơn trên tiếng Việt không, và thành phần nào của GRPO tạo ra khác biệt? *(Đặt lại 15/11 sau GĐ6 lần 1: GRPO đúng code gốc không giữ tổng quát hoá tốt hơn SFT khi miền fine-tune đã bão hoà; câu hỏi chuyển thành "vì sao, và bản GRPO sửa theo nguyên nhân có giúp không"; xem `chore/GD6-GRPO.md` mục 11, 12.)*
 
 **Tổng thời gian:** 21 ngày, gồm 20 ngày làm việc và 1 ngày dự phòng.
 

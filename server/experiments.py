@@ -13,13 +13,17 @@ Công thức huấn luyện giữ NGUYÊN như Kaggle (GĐ5 mục 4.1, lịch E1
   - Môi trường: NVIDIA_TF32_OVERRIDE=0 (tắt TF32 trên GPU Ampere/Ada: tính fp32 như T4).
 Mỗi cấu hình 3 seed (GĐ5 phát hiện 8, GĐ6 mục 7.1); R và G1 thêm seed 4, 5 ở tầng cuối.
 
-Tầng (chạy theo thứ tự; tầng sau chỉ bắt đầu khi GPU rảnh và tầng trước đã được xếp hết):
+Tầng (chạy theo thứ tự; tầng sau chỉ bắt đầu khi GPU rảnh và tầng trước đã được xếp hết). Câu hỏi 3 theo
+hướng "chẩn đoán và sửa" (chốt 15/11, chore/GD6-GRPO.md mục 11, 12):
   0  thử đo: tốc độ, bộ nhớ, số worker đọc dữ liệu (chạy riêng, trước tất cả)
-  1  câu hỏi chính: S0 (dùng thẳng, 4 backbone), R, A0, G1 × 3 seed
-  2  thành phần GRPO: G2, G3 × 3 seed
+  1  lõi: S0 (dùng thẳng, 4 backbone), R, G1, A0 × 3 seed
+  2  sửa GRPO và kiểm cơ chế × 3 seed: G1s (bỏ khuếch đại: std_floor 1.0), G1b (beta 1.0),
+     G1lr (lr 1e-7, đối chứng cường độ); G2, G3 (thành phần GRPO của plan)
   3  các yếu tố GĐ5: P0, B2, N0, B1 × 3 seed
-  4  ít mẫu (ngày 2 GĐ6): SFT và G1 với N = 50/200/1000 mỗi lớp × 3 seed (cùng 4.563 bước như bản đủ)
-  5  thêm seed 4, 5 cho R và G1; mốc tham chiếu XLS-R-2B dùng thẳng trên RADAR VI
+  4  ghép bản sửa với công thức tốt nhất của GĐ5 (không RawBoost khi fine-tune): G1sA, G1bA × 3 seed.
+     Chỉ cần bản ghép của cách sửa tốt hơn ở tầng 2; bỏ bản kia bằng `vast.sh skip <tên>...`
+  5  ít mẫu (ngày 2 GĐ6): SFT và G1 với N = 50/200/1000 mỗi lớp × 3 seed (cùng 4.563 bước như bản đủ)
+  6  thêm seed 4, 5 cho R và G1; mốc tham chiếu XLS-R-2B dùng thẳng trên RADAR VI
 """
 import math
 
@@ -65,6 +69,16 @@ CONFIGS = {
     "G1": dict(method="grpo_v1"),
     "G2": dict(method="grpo_v2"),
     "G3": dict(method="grpo_v1", extra_set=["rl_config={beta: 0.0}"]),
+    # Sửa GRPO (GĐ6 mục 11–12): khi miền fine-tune đã bão hoà, chia phần thưởng cho độ lệch chuẩn của
+    # batch (rất nhỏ) khuếch đại cập nhật, GRPO tiếp tục làm sắc câu đã đúng (~30 lần SFT ở p = 0,999).
+    # std_floor 1.0: mẫu số σ + 1 gần như hằng, tức gần như bỏ chia cho độ lệch chuẩn; kỳ vọng gradient
+    # theo log-odds nhãn đúng thành p(1 − p) (bằng SFT ở p gần 1, nhẹ tay với câu sai chắc). Lưu ý: cũng
+    # làm bước cập nhật nhỏ hơn SFT ở câu ranh giới (0,25 so với 0,5), nên so thêm với G1lr.
+    "G1s": dict(method="grpo_v1", extra_set=["rl_config={std_floor: 1.0}"]),
+    "G1b": dict(method="grpo_v1", extra_set=["rl_config={beta: 1.0}"]),        # phạt KL mạnh (núm của bài báo)
+    "G1lr": dict(method="grpo_v1", extra_set=["lr=1e-7"]),                    # đối chứng: chỉ giảm cường độ
+    "G1sA": dict(method="grpo_v1", extra_set=["rl_config={std_floor: 1.0}", "use_da=False"]),
+    "G1bA": dict(method="grpo_v1", extra_set=["rl_config={beta: 1.0}", "use_da=False"]),
     "P0": dict(init="fairseq"),
     "B2": dict(model="w2v_large"),
     "N0": dict(model="mms_300m_nda"),
@@ -96,27 +110,34 @@ def build(workers=NUM_WORKERS):
     for s in (1, 2, 3):
         for code in ("R", "G1", "A0"):
             J.append(cfg(code, s, 1))
-    # Tầng 2: thành phần GRPO
+    # Tầng 2: sửa GRPO, kiểm cơ chế, thành phần GRPO
     for s in (1, 2, 3):
-        for code in ("G2", "G3"):
+        for code in ("G1s", "G1b"):
+            J.append(cfg(code, s, 2))
+    for s in (1, 2, 3):
+        for code in ("G1lr", "G2", "G3"):
             J.append(cfg(code, s, 2))
     # Tầng 3: các yếu tố của GĐ5
     for s in (1, 2, 3):
         for code in ("P0", "B2", "N0", "B1"):
             J.append(cfg(code, s, 3))
-    # Tầng 4: ít mẫu. Cùng STEPS bước và lịch E1' như bản đủ: dừng bằng optimizer_step_limit, số epoch
+    # Tầng 4: bản sửa ghép không RawBoost
+    for s in (1, 2, 3):
+        for code in ("G1sA", "G1bA"):
+            J.append(cfg(code, s, 4))
+    # Tầng 5: ít mẫu. Cùng STEPS bước và lịch E1' như bản đủ: dừng bằng optimizer_step_limit, số epoch
     # đủ lớn để giới hạn số bước là thứ dừng trước (dư 2 epoch; epoch dư dừng ngay ở batch đầu)
     for s in (1, 2, 3):
         for n, bpe in FEW_SHOT_BPE.items():
             ep = math.ceil(STEPS / bpe) + 2
             for code, method in (("SFT", "sft"), ("G1", "grpo_v1")):
-                J.append(train_job(f"{code}{n}_s{s}", 4, method=method, seed=s, train=f"seaspoof_vi_train_{n}",
+                J.append(train_job(f"{code}{n}_s{s}", 5, method=method, seed=s, train=f"seaspoof_vi_train_{n}",
                                    epochs=ep, step_limit=STEPS, workers=workers))
-    # Tầng 5: thêm seed; mốc XLS-R-2B (chỉ chấm)
+    # Tầng 6: thêm seed; mốc XLS-R-2B (chỉ chấm)
     for s in (4, 5):
         for code in ("R", "G1"):
-            J.append(cfg(code, s, 5))
-    J.append(zeroshot_job("ref_xlsr_2b", 5, ["xlsr_2b"], ["radar_vi"]))
+            J.append(cfg(code, s, 6))
+    J.append(zeroshot_job("ref_xlsr_2b", 6, ["xlsr_2b"], ["radar_vi"]))
 
     names = [j["name"] for j in J]
     assert len(names) == len(set(names)), "trùng tên lần chạy"
