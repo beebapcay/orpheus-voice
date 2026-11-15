@@ -63,7 +63,7 @@ def sources(a):
         out[name] = {ds: load(os.path.join(a.zeroshot, d, ds, "scores.csv"))
                      for ds in ("seaspoof_vi_test", "radar_vi", "ood_forget", "mlaad_vi_test")}
     for run in sorted(os.listdir(a.finetune)):
-        if run.startswith(("pilot", "analysis")) or not os.path.isdir(os.path.join(a.finetune, run)):
+        if run.startswith(("pilot", "probe", "analysis")) or not os.path.isdir(os.path.join(a.finetune, run)):
             continue
         out[run] = {ds: load(os.path.join(a.finetune, run, ds, "scores.csv"))
                     for ds in ("seaspoof_vi_test", "radar_vi", "ood_forget", "mlaad_vi_test")}

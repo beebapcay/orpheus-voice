@@ -8,7 +8,7 @@ Câu hỏi của giai đoạn: fine-tune bằng GRPO trên tiếng Việt có gi
 |---|---|---|---|
 | 1 | Chuẩn bị lần thử đo GRPO: đọc code GRPO (YAML v1/v2, `main.py`, `algo/rl.py`), kiểm ghi đè lồng `rl_config`, tích luỹ gradient, mô phỏng số batch | Mục 2; `src/mem_probe.py`; `src/finetune.py` (`--probe-mem`, `--oom-retry`, `--train-longest`, `--discard-ckpt`, `--env`); `kaggle/finetune/run.py` | Xong (15/11), đã thử trên máy |
 | 1 | **Lần thử đo bộ nhớ và tốc độ GRPO trên T4** (L1) | `orpheus-finetune` v5, mục 3 | Đang chạy |
-| 1 | Báo kết quả lần thử; người dùng chốt: Kaggle hay thuê server, dùng quota còn lại tuần này thế nào | Mục 3, 5 | Chờ |
+| 1 | Báo kết quả lần thử; người dùng chốt: Kaggle hay thuê server, dùng quota còn lại tuần này thế nào | Mục 3, 5 | **Kaggle: đã chốt** (15/11, mục 5); quota tuần này: chờ kết quả lần thử |
 | 1–2 | G1 (3 seed), G2, G3 | | Chưa |
 | 2 | Ít mẫu (N = 50, 200, 1000), hoặc cắt (L7) | | Chưa |
 | 3 | Hiệu chuẩn điểm, phân tích theo hệ thống sinh | | Chưa |
@@ -87,4 +87,14 @@ Kết quả: (chờ lần chạy).
 | Lần | Quota dùng | Còn lại | Ghi chú |
 |---|---|---|---|
 | Trước GĐ6 | | 11,60 giờ đến 21/11 | Kiểm 15/11 |
-| Thử đo (`orpheus-finetune` v5) | | | Ước ~0,75 giờ |
+| Thử đo (`orpheus-finetune` v5) | | | Ước ~0,75 giờ; đẩy 9:17, được cấp máy ngay |
+
+**Đã chốt (15/11, người dùng):** chạy GĐ6 trên Kaggle như hiện tại, một tài khoản; không thuê server (nên không cần chạy lại R, A0). Không tạo tài khoản Kaggle thứ hai: điều khoản Kaggle cấm một người có hơn một tài khoản đang hoạt động (theo kết quả tìm kiếm trích kaggle.com/terms; trang render bằng JavaScript nên chưa đọc trực tiếp), rủi ro mất cả tài khoản chính (dataset riêng tư, output và checkpoint GĐ5). Theo ước tính trước lần thử, tổng quota đủ (GĐ6 ~17 giờ; ~31 giờ nếu thêm 2 seed cho R và G1 cùng G1 không RawBoost; có ~10,85 giờ tuần này + 30 giờ từ 21/11); chỉ là xong GPU muộn hơn (~22–23/11).
+
+**Đánh giá plan theo số liệu GĐ5 (15/11, đề xuất, chờ người dùng chốt sau lần thử):**
+
+| # | Vấn đề | Số liệu | Đề xuất |
+|---|---|---|---|
+| P1 | 3 seed có thể không đủ để kết luận G1 so với R | Ngưỡng chênh lệch có ý nghĩa (t-test hai mẫu, 3 seed mỗi bên, giả định độ lệch seed của G1 như R): RADAR VI ~3,4 điểm (s = 1,52), ItW ~3,9 điểm (s = 1,71). Phần SFT làm hỏng mà GRPO có thể gỡ lại: RADAR VI R − S0 = 3,9 điểm; ItW 5,63 − 2,60 = 3,0 điểm (bài GRPO, MMS-300M: 14,17 − 2,91 = 11,3 điểm). Trên ItW, kể cả GRPO gỡ lại hết vẫn dưới ngưỡng | Thêm 2 seed cho cả R và G1 (~10–11 giờ, tuần sau): ngưỡng còn ~2,2 điểm RADAR VI, ~2,5 điểm ItW |
+| P2 | G1 so với A0 lệch hai yếu tố (hàm loss và RawBoost) | A0 − R = −5,65 điểm RADAR VI (RawBoost khi fine-tune làm kém, GĐ5 phát hiện 4) | Thêm "G1 không RawBoost" (1 seed, `use_da=False`): bảng 2 × 2 {SFT, GRPO} × {có, không RawBoost} |
+| P3 | Ngày 2 (ít mẫu N = 50/200/1000) không đo được gì | SEA-Spoof bão hoà từ S0 (mọi hệ thống ≤ 2,1%) | Cắt (mục cắt thứ 4 của plan), dành quota cho P1, P2 |
