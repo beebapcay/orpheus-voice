@@ -215,7 +215,7 @@ Mỗi kết quả, một câu giải thích:
 2. **Fine-tune sửa thứ hạng nhưng không sửa ngưỡng cho VoxCPM2:** EER còn 0,29–0,40%, nhưng 29–32% câu VoxCPM2 vẫn lọt qua ở ngưỡng 0 (bốn hệ thống khác 0%). Điểm của VoxCPM2 nằm giữa tiếng thật VIVOS và các hệ thống khác: tách được nếu chọn lại ngưỡng, nhưng ngưỡng mặc định thì không.
 3. Hai bản 317M tiếng Anh (W2V-Large, W2V-Small) dùng thẳng chỉ kém trên VoxCPM2 bằng nửa hai bản MMS-300M (6,6–6,9% so với 12,7–15,8%), cùng chiều với W2V-Large ≤ MMS-300M ở RADAR VI (GĐ3, GĐ5 B2).
 
-Khi có G1: so cột VoxCPM2 (cả EER và % lọt ở ngưỡng 0) của G1 với R.
+Khi có G1: so cột VoxCPM2 (cả EER và % lọt ở ngưỡng 0) của G1 với R. Giả thuyết cơ chế (GĐ5 mục 6.3) dự đoán GRPO ít kéo các câu mô hình đang sai chắc chắn, nên nếu VoxCPM2 giống câu "sai chắc chắn" của train thì G1 có thể để lọt nhiều hơn R.
 
 ### 7.4. Mốc SFT cho kiểm giả thuyết cơ chế (L9; `src/analyze_mechanism.py`, `results/finetune/analysis/mechanism_output.txt`)
 
@@ -236,7 +236,19 @@ R, A0 (và G1, G2, G3) cùng xuất phát từ S0 MMS-300M, nên so được t�
 1. **Trên dev, SFT kéo mạnh nhất đúng những câu S0 sai chắc** (Δz ~11, gấp ~8 lần câu S0 đã đúng chắc), khớp trọng số 1 − p của SFT (GĐ5 mục 6.3).
 2. **Ngoài miền, SFT đẩy tiếng thật về phía "giả" ở mọi nhóm**, kể cả câu S0 đúng chắc (RADAR VI 19–24%, RADAR EN ~50% bị lật). Đây là cơ chế của FRR tăng (GĐ5 phát hiện 3, 9). A0 (không RawBoost) đẩy ít hơn R ở nhóm đúng chắc (RADAR VI 16% so với 19–24%; RADAR EN 38% so với 49–51%).
 
-Dự đoán cho G1 (giả thuyết, sẽ kiểm khi có điểm): (a) trên dev, Δz của nhóm "giả, sai chắc" nhỏ hơn R nhiều so với các nhóm khác (GRPO trọng số p(1 − p)/σ, gần 0 khi p → 0); (b) nếu GRPO quên ít hơn thì tỉ lệ lật "thật, đúng chắc" ngoài miền thấp hơn R. Giả thuyết cơ chế (GĐ5 mục 6.3) dự đoán GRPO ít kéo các câu mô hình đang sai chắc chắn, nên nếu VoxCPM2 giống câu "sai chắc chắn" của train thì G1 có thể để lọt nhiều hơn R.
+Dự đoán cho G1 (giả thuyết, sẽ kiểm khi có điểm): (a) trên dev, Δz của nhóm "giả, sai chắc" nhỏ hơn R nhiều so với các nhóm khác (GRPO trọng số p(1 − p)/σ, gần 0 khi p → 0); (b) nếu GRPO quên ít hơn thì tỉ lệ lật "thật, đúng chắc" ngoài miền thấp hơn R.
+
+## 8. Ngày 2 (ít mẫu): phương án, chờ người dùng chốt
+
+Plan: so SFT và G1 với N = 50, 200, 1000 câu mỗi lớp (P3 không cắt). Tập con có sẵn từ GĐ4, lồng nhau, giả chia đều 5 hệ thống train: `seaspoof_vi_train_n50` (0,10 giờ), `_n200` (0,42 giờ), `_n1000` (2,03 giờ). Số batch mỗi epoch ở batch 50 s (mô phỏng `DynamicBatchSampler`, khớp pilot GĐ4 với n50): **12 / 42 / 178**. Điểm N đủ (8.910 mỗi lớp) là R và G1 đã có.
+
+| Phương án | Số bước | Lịch learning rate | Đo được gì | Chi phí |
+|---|---|---|---|---|
+| A. 3 epoch như bản đủ | 36 / 126 / 534 | Giữ E1' (warmup 460): N = 50, 200 không ra khỏi warmup, lr tối đa 7,8e-8 / 2,7e-7 | Gần như không fine-tune ở N nhỏ: lẫn "ít dữ liệu" với "ít bước" | Rẻ |
+| **B. Cùng 534 bước cho mọi N** (= 3 epoch của n1000; đề xuất) | 534 (45 / 13 / 3 epoch) | warmup 53 (10%), lr đỉnh 1e-6 rồi gần như giữ nguyên (cùng dạng E1') | Chỉ đổi lượng dữ liệu, giữ số lần cập nhật; N nhỏ lặp lại dữ liệu nhiều (dễ overfit, đó cũng là điều cần đo) | Huấn luyện ~18 phút (SFT), ~27 phút (G1) |
+| C. Cùng 4.563 bước như bản đủ | 4.563 | E1' | Như B nhưng sát bản đủ | ~30 giờ cho 6 lần: không vừa |
+
+Đề xuất thêm cho B: chỉ chấm `seaspoof_vi_test` (trong miền, kể cả F5-TTS, MiniMax để riêng), `radar_vi`, `ood_forget` (thước đo chính F3); bỏ dev và MLAAD (bão hoà) để chấm còn ~1 giờ mỗi lần. Mỗi lần ~1,5 giờ; 6 lần (SFT, G1 × 3 N, 1 seed) ≈ 3 lần trên GPU trống của lần 5 + 3 lần ở một kernel nữa (~3,1 giờ). Tổng tuần sau ~20,5 giờ trong 30. Hạn chế: 1 seed mỗi N, nên chênh lệch < ~3 điểm RADAR VI không kết luận được (GĐ5 phát hiện 8).
 
 **Đã chốt (15/11, người dùng):** chạy GĐ6 trên Kaggle như hiện tại, một tài khoản; không thuê server (nên không cần chạy lại R, A0). Không tạo tài khoản Kaggle thứ hai: điều khoản Kaggle cấm một người có hơn một tài khoản đang hoạt động (theo kết quả tìm kiếm trích kaggle.com/terms; trang render bằng JavaScript nên chưa đọc trực tiếp), rủi ro mất cả tài khoản chính (dataset riêng tư, output và checkpoint GĐ5). Theo ước tính trước lần thử, tổng quota đủ (GĐ6 ~17 giờ; ~31 giờ nếu thêm 2 seed cho R và G1 cùng G1 không RawBoost; có ~10,85 giờ tuần này + 30 giờ từ 21/11); chỉ là xong GPU muộn hơn (~22–23/11).
 
