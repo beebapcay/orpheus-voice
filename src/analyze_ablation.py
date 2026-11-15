@@ -61,12 +61,12 @@ def sources(a):
     out = {}
     for name, d in S0.items():
         out[name] = {ds: load(os.path.join(a.zeroshot, d, ds, "scores.csv"))
-                     for ds in ("seaspoof_vi_test", "radar_vi", "ood_forget")}
+                     for ds in ("seaspoof_vi_test", "radar_vi", "ood_forget", "mlaad_vi_test")}
     for run in sorted(os.listdir(a.finetune)):
         if run.startswith(("pilot", "analysis")) or not os.path.isdir(os.path.join(a.finetune, run)):
             continue
         out[run] = {ds: load(os.path.join(a.finetune, run, ds, "scores.csv"))
-                    for ds in ("seaspoof_vi_test", "radar_vi", "ood_forget")}
+                    for ds in ("seaspoof_vi_test", "radar_vi", "ood_forget", "mlaad_vi_test")}
     return {k: v for k, v in out.items() if any(x is not None for x in v.values())}
 
 
@@ -106,6 +106,9 @@ def main():
         r = S[cfg].get("radar_vi")
         if r is not None:
             v["radar_vi"] = (r.score[r.label == 1], r.score[r.label == 0])
+        m = S[cfg].get("mlaad_vi_test")
+        if m is not None:
+            v["mlaad"] = (m.score[m.label == 1], m.score[m.label == 0])
         o = S[cfg].get("ood_forget")
         if o is not None:
             for pre, name in (("ItW-", "itw"), ("RADAR2026-", "radar_en")):
@@ -119,7 +122,7 @@ def main():
     rows = []
     for cfg, v in V.items():
         row = {"config": cfg}
-        for name in ("test_seen", "test_f5", "test_minimax", "test_cvreal", "radar_vi", "itw", "radar_en"):
+        for name in ("test_seen", "test_f5", "test_minimax", "test_cvreal", "mlaad", "radar_vi", "itw", "radar_en"):
             if name in v:
                 m = metrics(*v[name], beta)
                 row[f"{name}_eer"] = m["eer"]
@@ -130,8 +133,8 @@ def main():
         rows.append(row)
     main_t = pd.DataFrame(rows)
     main_t.to_csv(os.path.join(a.out, "table_main.csv"), index=False)
-    cols = ["config", "test_seen_eer", "test_f5_eer", "test_minimax_eer", "test_cvreal_eer", "radar_vi_eer",
-            "itw_eer", "radar_en_eer"]
+    cols = ["config", "test_seen_eer", "test_f5_eer", "test_minimax_eer", "test_cvreal_eer", "mlaad_eer",
+            "radar_vi_eer", "itw_eer", "radar_en_eer"]
     print("== 1. EER (%), thấp hơn là tốt hơn")
     print(main_t[[c for c in cols if c in main_t]].to_string(index=False, float_format=fmt))
     cols = ["config", "radar_vi_far0", "radar_vi_frr0", "radar_vi_minDCF", "radar_vi_act_minus_min",
@@ -139,6 +142,23 @@ def main():
     print("\n== 1b. Lỗi ở ngưỡng log-odds 0 (%): FAR giả bị nhận là thật, FRR thật bị coi là giả; "
           "actDCF − minDCF (lệch hiệu chuẩn)")
     print(main_t[[c for c in cols if c in main_t]].to_string(index=False, float_format=fmt))
+
+    # 1c. Trung bình ± độ lệch chuẩn qua các seed (cấu hình có từ 2 seed: <mã>_s<seed>)
+    import re as _re
+    main_t["base"] = main_t.config.map(lambda c: _re.sub(r"_s\d+$", "", c))
+    num = [c for c in main_t.columns if c not in ("config", "base")]
+    g = main_t[main_t.config.str.match(r".+_s\d+$")].groupby("base")
+    multi = [b for b, d in g if len(d) >= 2]
+    if multi:
+        agg = g[num].agg(["mean", "std"]).loc[multi]
+        agg.columns = [f"{a}_{b}" for a, b in agg.columns]
+        agg.insert(0, "n_seed", g.size().loc[multi])
+        agg.to_csv(os.path.join(a.out, "table_seeds.csv"))
+        show = ["n_seed"] + [f"{c}_{st}" for c in ("test_cvreal_eer", "radar_vi_eer", "itw_eer", "radar_en_eer",
+                                                  "radar_vi_frr0") for st in ("mean", "std") if f"{c}_{st}" in agg]
+        print("\n== 1c. Trung bình và độ lệch chuẩn (ddof 1) qua các seed")
+        print(agg[show].to_string(float_format=fmt))
+    main_t = main_t.drop(columns="base")
 
     # 2. Theo hệ thống sinh (SEA-Spoof test; tiếng thật: real_vivos)
     rows = []
@@ -180,7 +200,7 @@ def main():
         A, B = pair.split(":")
         if A not in V or B not in V:
             continue
-        for name in ("test_seen", "test_f5", "test_minimax", "test_cvreal", "radar_vi", "itw", "radar_en"):
+        for name in ("test_seen", "test_f5", "test_minimax", "test_cvreal", "mlaad", "radar_vi", "itw", "radar_en"):
             if name not in V[A] or name not in V[B]:
                 continue
             (ra, fa), (rb, fb) = V[A][name], V[B][name]

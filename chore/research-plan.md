@@ -257,7 +257,7 @@ Thông tin SEA-Spoof đã kiểm (README công khai, 14/11): 553.746 câu, tiế
 
 ### GĐ5. Ablation (4 ngày)
 
-**Trạng thái (14/11): đang chạy.** Lần 1 (R, A0 seed 1) xong. Lịch learning rate thực tế lệch E1 của GĐ4 (`total_steps` không ghi đè được, lr cuối 6,83e-7 thay vì ~1e-8); đã chốt giữ cho cả GĐ5–6 (E1'). Thêm tập kiểm tra MLAAD `fake/vi` vì hệ thống để riêng của SEA-Spoof đã bão hoà từ S0. Kết quả, phát hiện, quyết định: `chore/GD5-Ablation.md`.
+**Trạng thái (15/11): qua.** 10 lần huấn luyện (R × 3 seed, A0, P0, B2, B1, N0), 17,65 giờ quota Kaggle. RADAR VI: R 24,02 ± 1,52%, A0 18,37% (tốt nhất), P0 31,46%, B1 34,67%; SFT làm quên trên ItW với MMS-300M, không với W2V-Large. Lịch learning rate thực tế lệch E1 của GĐ4 (E1'). Hệ thống để riêng SEA-Spoof và tập MLAAD thêm vào đều bão hoà; nút thắt là tiếng thật nguồn khác. Kết quả, phát hiện 1–9, quyết định chờ chốt F1–F3: `chore/GD5-Ablation.md` mục 3, 4, 8.
 
 Đổi một yếu tố mỗi lần. Fine-tune trên tiếng Việt. R chạy 3 seed; các cấu hình khác chạy 1 seed trước, thêm seed nếu còn quota.
 

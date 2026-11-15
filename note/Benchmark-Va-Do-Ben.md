@@ -131,3 +131,16 @@ Riêng tiếng vang đã làm EER tăng khoảng 50% tương đối.
 3. Vì sao cắt khoảng lặng là một biến đổi có chủ đích?
 4. Phần tiếng Việt của RADAR gồm những nguồn tiếng thật và hệ thống sinh nào?
 5. Đội A và đội J cho thấy điều gì về việc chọn mô hình theo tập phát triển?
+
+## Độ bất định do seed huấn luyện (bổ sung)
+
+Khoảng tin cậy bootstrap lấy lại câu chỉ đo độ bất định do **chọn câu kiểm tra**. Khi so hai mô hình đã huấn luyện, còn độ bất định do **seed huấn luyện** (thứ tự batch, khởi tạo, tăng cường dữ liệu ngẫu nhiên).
+
+Quan sát (một cấu hình fine-tune 300M, 3 seed): EER trên một tập ngoài miền 23,1 / 23,2 / 25,8%, độ lệch chuẩn ~1,5 điểm; trên In-the-Wild 7,6 / 4,5 / 4,8%. Khoảng tin cậy theo câu chỉ rộng ~±0,5 điểm, nên hai seed của **cùng một cấu hình** đã "khác nhau có ý nghĩa" theo khoảng này.
+
+| Nguyên tắc | Lý do |
+|---|---|
+| Chạy cấu hình mốc ít nhất 3 seed, báo trung bình ± độ lệch chuẩn | Có thước đo độ lệch do huấn luyện |
+| Chênh lệch của cấu hình 1 seed dưới ~2 độ lệch chuẩn của mốc thì chưa kết luận | Khoảng tin cậy theo câu đánh giá thấp độ bất định |
+| Không dùng khoảng tin cậy theo câu làm bằng chứng duy nhất khi so các lần huấn luyện | Chỉ phù hợp khi so các mô hình cố định (ví dụ checkpoint công bố) |
+

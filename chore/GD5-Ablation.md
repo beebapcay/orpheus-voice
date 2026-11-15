@@ -11,7 +11,8 @@ Câu hỏi của giai đoạn: yếu tố nào quyết định kết quả trên
 | 1 | Báo kết quả lần 1 cho người dùng, chờ duyệt trước khi chạy tiếp | Mục 3.1, 4 | Đã báo (14/11); chờ chốt phát hiện 1, 2 |
 | 1–2 | Lần 2: P0, B2 seed 1 | `orpheus-finetune` v3, mục 3.2 | **Xong** (15/11 ~1:46, 4,14 giờ) |
 | 1–2 | Lần 3: B1, N0 seed 1 | `orpheus-finetune-b` v1, mục 3.3 | **Xong** (15/11 ~2:03, 3,89 giờ) |
-| 3–4 | Lần 4: R seed 2, 3; MLAAD | `orpheus-finetune` v4 | Đã đẩy 15/11 ~1:50 |
+| 3–4 | Lần 4: R seed 2, 3; MLAAD | `orpheus-finetune` v4, mục 3.4 | **Xong** (15/11 8:30, 4,94 giờ) |
+| 4 | Tổng kết GĐ5 | Mục 8 | Xong (15/11) |
 | Trong lúc chờ GPU | Đọc sâu bài GRPO và `algo/rl.py` (chuẩn bị GĐ6) | Mục 6, `src/grpo_gradient_sim.py` | Xong (14/11) |
 | Trong lúc chờ GPU | Script bảng kết quả trên máy; code cho P0 (khởi tạo fairseq, kiểm nạp trọng số trước khi huấn luyện) | `src/analyze_ablation.py`, `src/finetune.py --init fairseq` | Xong (14/11), thử trên máy; P0 chưa chạy trên Kaggle |
 
@@ -193,6 +194,41 @@ Mỗi kết quả, một câu giải thích (1 seed):
 2. **Lợi thế của bản NDA còn nguyên sau fine-tune:** N0 tốt hơn R 2,57 điểm trên RADAR VI (dùng thẳng: 2,02) và 2,20 điểm trên ItW. Cùng chiều với GĐ3: với bản 300M, RawBoost khi post-train làm kém ngoài miền.
 3. **RawBoost lúc nào cũng làm kém RADAR VI ở MMS-300M:** khi post-train (N0 tốt hơn R) và khi fine-tune (A0 tốt hơn R, A0 tốt hơn N0 2,13 điểm). Cấu hình tốt nhất trên RADAR VI đến giờ là A0 (18,37%), tức không dùng RawBoost khi fine-tune.
 
+### 3.4. Lần 4 (`orpheus-finetune` v4, 15/11, 4,94 giờ; `results/runs/orpheus-finetune-v4/`)
+
+COMPLETE, 0 cảnh báo. R seed 2, 3 (cùng cấu hình, lịch E1'); chấm thêm MLAAD; chấm S0 trên MLAAD.
+
+**R qua 3 seed, EER (%)** (thấp hơn là tốt hơn; trung bình ± độ lệch chuẩn, ddof 1; `table_seeds.csv`):
+
+| Tập | Seed 1 | Seed 2 | Seed 3 | **Trung bình ± độ lệch chuẩn** | S0 MMS-300M |
+|---|---|---|---|---|---|
+| test_seen | 0,04 | 0,04 | 0,04 | 0,04 ± 0,00 | 0,81 |
+| test_cvreal | 2,70 | 4,56 | 6,15 | 4,47 ± 1,72 | 7,44 |
+| **RADAR VI** | 23,07 | 23,23 | 25,77 | **24,02 ± 1,52** | 20,08 |
+| **ItW** | 7,60 | 4,50 | 4,80 | **5,63 ± 1,71** | 2,60 |
+| RADAR EN | 26,70 | 28,10 | 28,10 | 27,63 ± 0,81 | 26,20 |
+| RADAR VI FRR ở ngưỡng 0 (%) | 29,21 | 33,83 | 35,06 | 32,70 ± 3,08 | 4,81 |
+| MLAAD | | 0,09 | 0,16 | | 5,18 |
+
+**MLAAD `fake/vi`** (5 hệ thống TTS tiếng Việt chưa gặp, tiếng thật VIVOS của test; EER %): S0 MMS-300M 5,18; S0 MMS-300M NDA 4,65; S0 W2V-Large 2,22; S0 W2V-Small 2,23; R seed 2 **0,09**; R seed 3 **0,16** (R − S0: −5,09 [−5,58; −4,53]).
+
+Mỗi kết quả, một câu giải thích:
+1. **Độ lệch do seed huấn luyện lớn:** cùng cấu hình, RADAR VI chênh tới 2,70 điểm giữa seed 1 và 3 (KTC theo câu [2,21; 3,10], không chứa 0), ItW chênh tới 3,1 điểm. KTC bootstrap theo câu (rộng ~±0,5 điểm) **đánh giá thấp** độ bất định thật; chênh lệch 1 seed dưới ~3 điểm (≈ 2 độ lệch chuẩn) không đủ để kết luận (phát hiện 8).
+2. **Fine-tune làm kém RADAR VI ở cả 3 seed** (+2,98, +3,14, +5,69 so với S0) và làm quên trên ItW ở cả 3 seed (+1,9 đến +5,0). Kết luận của câu hỏi 2 (SFT làm kém ngoài miền với MMS-300M) đứng vững qua seed.
+3. **Fine-tune bắt gần hết TTS tiếng Việt chưa gặp khi tiếng thật cùng nguồn với train:** MLAAD từ 5,18% xuống 0,09–0,16%. Trái với RADAR VI (kém đi). Khác biệt chính giữa hai tập là nguồn tiếng thật: MLAAD dùng VIVOS (cùng nguồn train), RADAR dùng Common Voice và FOSD. Trên RADAR, fine-tune giảm FAR (37 → 17–21%) nhưng tăng FRR (4,8 → 29–35%). Vậy phần kém đi trên RADAR VI chủ yếu do **tiếng thật nguồn khác**, không do hệ thống sinh lạ (phát hiện 9).
+
+**Đọc lại các so sánh 1 seed với độ lệch giữa seed của R** (RADAR VI, R = 24,02 ± 1,52):
+
+| Cấu hình | RADAR VI | So với trung bình R | Cách 2 độ lệch chuẩn (~3 điểm)? | Kết luận |
+|---|---|---|---|---|
+| A0 (không RawBoost khi fine-tune) | 18,37 | −5,65 | Có | RawBoost khi fine-tune làm kém: vững |
+| N0 (bản NDA) | 20,50 | −3,52 | Vừa qua | NDA tốt hơn: khả dĩ, cần thêm seed |
+| B2 (W2V-Large) | 21,03 | −2,99 | Sát ngưỡng | W2V-Large tốt hơn: chưa chắc |
+| P0 (chỉ pre-train) | 31,46 | +7,44 | Có | Post-training quan trọng: vững |
+| B1 (W2V-Small) | 34,67 | +10,65 | Có | Backbone nhỏ kém hẳn: vững |
+
+Trên ItW (R = 5,63 ± 1,71): A0 6,10 và N0 5,40 nằm trong khoảng của R (các chênh lệch ItW của A0, N0 ở mục 3.1, 3.3 không còn đáng tin); B2 1,40 và P0 14,90 vẫn cách xa.
+
 ## 4. Phát hiện ảnh hưởng thí nghiệm
 
 | # | Phát hiện | Ảnh hưởng | Việc cần làm |
@@ -228,6 +264,8 @@ Mỗi kết quả, một câu giải thích (1 seed):
 Kế hoạch dùng: chấm S0 (4 mô hình) ở lần 4. Nếu S0 cũng gần 0% thì MLAAD không phân biệt được cấu hình và dừng ở đó; nếu đủ khó thì chấm lại checkpoint các lần 1–3 (đang ở output Kaggle).
 
 | 5 | **Fine-tune trên SEA-Spoof làm kém RADAR tiếng Việt ở mọi cấu hình có RawBoost đã chạy** (R +2,98, B2 +3,23 so với bản dùng thẳng của chính backbone; P0 còn tệ hơn); chỉ A0 (không RawBoost) tốt hơn S0 (−1,71) | Câu hỏi 1 phần "dữ liệu": có thêm dữ liệu tiếng Việt cùng hệ thống sinh (ElevenLabs, ChatGPT) vẫn không giúp RADAR VI; tiếng thật một nguồn (phát hiện 3) và RawBoost (phát hiện 4) lấn át lợi ích | Chờ N0, B1, R seed 2–3 để xem có nhất quán; cân nhắc ở GĐ6: so GRPO với cả R và A0 |
+| 8 | **Độ lệch do seed huấn luyện cỡ 1,5 điểm (RADAR VI) và 1,7 điểm (ItW)**, lớn hơn KTC bootstrap theo câu (~±0,5); hai seed của cùng cấu hình có thể khác nhau "có ý nghĩa" theo KTC theo câu (R seed 3 − seed 1 = +2,70 [2,21; 3,10]) | KTC theo câu không dùng để kết luận chênh lệch giữa cấu hình 1 seed. Ngưỡng thực tế: ~2 độ lệch chuẩn của R (~3 điểm RADAR VI) | Báo cáo dùng trung bình ± độ lệch chuẩn của R làm thước. Nếu còn quota: thêm seed cho N0, B2 (gần ngưỡng). GĐ6: G1 cần 3 seed như plan |
+| 9 | **Phần kém đi trên RADAR VI do tiếng thật nguồn khác, không do hệ thống sinh lạ:** trên MLAAD (TTS tiếng Việt chưa gặp, tiếng thật VIVOS) fine-tune giảm EER 5,18 → ~0,1%; trên RADAR VI (tiếng thật Common Voice, FOSD) EER tăng, FRR tăng 4,8 → ~33% | Trả lời phần "dữ liệu" của câu hỏi 1: độ phủ hệ thống sinh của dữ liệu fine-tune đủ cho TTS tiếng Việt mới; nút thắt là độ đa dạng tiếng thật. MLAAD sau fine-tune cũng bão hoà, nên không cần chấm lại các checkpoint khác trên MLAAD | Ghi vào báo cáo. Hướng tiếp: thêm tiếng thật đa nguồn khi fine-tune (lưu ý không dùng Common Voice vì trùng nguồn RADAR), hoặc hiệu chuẩn theo nguồn |
 | 7 | **Mọi cấu hình fine-tune có RawBoost đều kém bản dùng thẳng của chính backbone trên RADAR VI**: R +2,98, B2 +3,23, B1 +7,46, N0 +2,43 điểm; chỉ A0 (không RawBoost) tốt hơn (−1,71). B1 lệch hiệu chuẩn nặng nhất (FRR ở ngưỡng 0: 62% RADAR VI, 78% Common Voice) | Kết luận chính cho câu hỏi 2 (SFT làm hại ngoài miền tiếng Việt) và cho câu hỏi 1 phần "cách train" (RawBoost). Tất cả 1 seed; R seed 2–3 (lần 4) cho biết độ lệch giữa seed | Báo cáo cả EER lẫn FRR. GĐ6: cân nhắc dùng A0 làm thêm một mốc so với GRPO (cần người dùng chốt) |
 | 6 | **Post-training gần như không giúp trong miền nhưng quyết định ngoài miền** (P0 − R: test_seen 0,00; RADAR VI +8,39; ItW +7,30; F5 +5,90) | Trả lời trực tiếp "post-training đóng góp bao nhiêu" của câu hỏi 1. Khớp các bài gốc (mục 6.4) | Ghi vào báo cáo kèm cảnh báo 1 seed |
 
@@ -238,7 +276,9 @@ Kế hoạch dùng: chấm S0 (4 mô hình) ở lần 4. Nếu S0 cũng gần 0%
 | Trước GĐ5 | 0,74 giờ (pilot GĐ4) | 29,26 giờ đến 21/11 | |
 | 1 (`orpheus-finetune` v2) | 4,68 giờ | 24,58 giờ | Ước 4,8 giờ; khớp |
 | 2 (`orpheus-finetune` v3) | 4,14 giờ | | Xếp hàng ~3,5 giờ không tốn quota |
-| 3 (`orpheus-finetune-b` v1) | 3,89 giờ | ~16,5 giờ (sau lần 2 và 3) | Chạy song song với lần 2 |
+| 3 (`orpheus-finetune-b` v1) | 3,89 giờ | 16,54 giờ (sau lần 2 và 3) | Chạy song song với lần 2 |
+| 4 (`orpheus-finetune` v4) | 4,94 giờ | **11,60 giờ** đến 21/11 | Thêm chấm MLAAD (~0,7 giờ) |
+| **Tổng GĐ5** | **17,65 giờ** (4 lần, 10 lần huấn luyện) | | Ước ban đầu ~15 giờ; thêm MLAAD, S0 trên SEA-Spoof |
 
 ## 6. Chuẩn bị GĐ6: đọc sâu bài GRPO và `algo/rl.py` (làm trong lúc chờ GPU, 14/11)
 
@@ -309,8 +349,30 @@ Cách đọc cho GĐ5:
 
 ## 7. Kiểm tra điều kiện qua GĐ5
 
-- [ ] Seed 1 của 5 cấu hình cần huấn luyện: R, A0, P0, B2, B1
-- [ ] R đủ 3 seed
-- [ ] Bảng EER, minDCF (trung bình, độ lệch chuẩn cho R), một câu giải thích cho từng kết quả
-- [ ] Phân tích riêng theo từng hệ thống sinh
-- [ ] Bằng chứng mọi lần chạy trong `results/runs/`
+- [x] Seed 1 của 5 cấu hình cần huấn luyện: R, A0, P0, B2, B1 (thêm N0)
+- [x] R đủ 3 seed
+- [x] Bảng EER, minDCF (trung bình, độ lệch chuẩn cho R), một câu giải thích cho từng kết quả (mục 3, `results/finetune/analysis/`)
+- [x] Phân tích riêng theo từng hệ thống sinh (`table_by_system.csv`; MLAAD theo hệ thống ở `results/zeroshot/*/mlaad_vi_test/metrics.csv`)
+- [x] Bằng chứng mọi lần chạy trong `results/runs/` (`orpheus-finetune-v2`, `-v3`, `-v4`, `orpheus-finetune-b-v1`)
+
+## 8. Tổng kết GĐ5 và mang sang GĐ6 (15/11)
+
+**Trạng thái:** GĐ5 **qua**, đủ 5 điều kiện ở mục 7. 10 lần huấn luyện (R × 3, A0, P0, B2, B1, N0) + S0 trên SEA-Spoof và MLAAD, 4 lần chạy Kaggle, 17,65 giờ quota. Còn 11,60 giờ đến 21/11.
+
+**Năm kết quả chính** (EER RADAR VI, thấp hơn là tốt hơn; R = 24,02 ± 1,52 qua 3 seed)
+1. **SFT trên tiếng Việt làm kém ngoài miền với MMS-300M** (câu hỏi 2): RADAR VI kém bản dùng thẳng ở cả 3 seed (+3,0 đến +5,7 điểm), ItW 2,6 → 5,6 ± 1,7%. Nhưng W2V-Large không quên trên ItW (1,4%): mức quên phụ thuộc backbone.
+2. **Post-training là yếu tố lớn nhất ngoài miền, không đóng góp trong miền:** P0 bằng R trong miền, kém 7–8 điểm ngoài miền.
+3. **Kích thước quan trọng:** W2V-Small kém W2V-Large 13,6 điểm RADAR VI sau fine-tune.
+4. **RawBoost làm kém ngoài miền tiếng Việt với bản 300M**, cả khi fine-tune (A0 18,37%, tốt nhất GĐ5, cách R ~3,7 độ lệch chuẩn) lẫn khi post-train (N0 20,50%, khả dĩ). Ngôn ngữ pre-training "có tiếng Việt" không giúp (B2 ≤ R).
+5. **Nút thắt là tiếng thật nguồn khác, không phải hệ thống sinh lạ:** fine-tune bắt gần hết TTS tiếng Việt chưa gặp (MLAAD 5,18 → ~0,1%), nhưng coi ~33% tiếng thật RADAR VI là giả ở ngưỡng 0 (S0: 4,8%).
+
+**Giới hạn cần ghi trong báo cáo:** 1 seed cho A0, P0, B2, B1, N0; độ lệch giữa seed ~1,5 điểm nên chênh lệch < ~3 điểm chưa kết luận được (N0, B2 sát ngưỡng). Lịch learning rate E1' (lệch E1, mục 4.1). R seed 1 và các lần khác cùng chạy trên T4 (không đổi GPU). Hệ thống để riêng của SEA-Spoof và MLAAD đều bão hoà, nên "tổng quát hoá sang hệ thống sinh mới" chỉ đo được ở mức S0 và qua RADAR.
+
+**Câu hỏi chờ người dùng chốt trước GĐ6**
+| # | Câu hỏi | Đề xuất | Lý do |
+|---|---|---|---|
+| F1 | Dùng 11,60 giờ quota còn lại đến 21/11 thế nào | Dành cho GĐ6 (G1 seed 1 + đo GRPO): GRPO chưa đo bộ nhớ, tốc độ; đo sớm để biết ngân sách tuần sau | Thêm seed cho N0, B2 (~8 giờ) làm chắc phát hiện 4 nhưng chiếm gần hết quota tuần này |
+| F2 | Mốc so sánh cho GRPO ở GĐ6 | So G1 với **cả R và A0** (cùng có RawBoost thì so R; GRPO không RawBoost thì so A0) | A0 là SFT tốt nhất; nếu GRPO chỉ hơn R mà không hơn A0, thì "tắt RawBoost" là cách rẻ hơn |
+| F3 | Thước đo chính của GĐ6 | RADAR VI (EER + FRR ở ngưỡng 0), ItW, RADAR EN; bỏ hệ thống để riêng SEA-Spoof và MLAAD khỏi thước đo chính (bão hoà) | Phát hiện 2, 9 |
+
+**Mang sang GĐ6:** cấu hình SFT và lịch E1' (mục 4.1); bảng R 3 seed làm thước độ lệch; `src/analyze_ablation.py` (thêm cặp G1:R, G1:A0); phân tích GRPO ở mục 6 (giả thuyết GRPO bỏ qua câu sai chắc chắn: kiểm bằng FRR trên RADAR VI và theo hệ thống). Kernel `orpheus-finetune` và `orpheus-finetune-b` chạy song song được; phiên OAuth Kaggle CLI chỉ sống ~3 giờ (nên dùng API token).

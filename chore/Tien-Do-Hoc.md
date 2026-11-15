@@ -12,7 +12,7 @@ Ghi lại mức độ đã đọc của từng phần, để biết phần nào 
 | 2. Backbone SSL và môi trường | Ngày 1 lướt; ngày 2 xong | **Đã qua** (13/11). Còn nợ đọc kỹ ngày 1 |
 | 3. Post-training và zero-shot | Ngày 1 chưa đọc (đã có tài liệu, **hoãn** 14/11); ngày 2 xong | **Đã qua phần chạy** (14/11): đủ 14 checkpoint + baseline, phân tích lại, quyết định ở mục 8 file GĐ3. Còn nợ đọc kỹ ngày 1 |
 | 4. Dữ liệu tiếng Việt và pipeline | Ngày 1 lướt bài SEA-Spoof; ngày 2 xong | **Đã qua** (14/11): chia tập đã chốt (D1–D3), pilot fine-tune xong, cấu hình huấn luyện đã chốt (E1–E3). Tổng kết ở mục 7 file GĐ4 |
-| 5. Ablation | Lướt GRPO (bài + phân tích code, mục 6 file GĐ5) và Bảng III AntiDeepfake (14/11) | **Đang chạy** (14/11): lần 1 (R, A0 seed 1) trên Kaggle |
+| 5. Ablation | Lướt GRPO (bài + phân tích code, mục 6 file GĐ5) và Bảng III AntiDeepfake (14/11) | **Đã qua** (15/11): 10 lần huấn luyện; tổng kết ở mục 8 file GĐ5 |
 | 6–8 | Chưa | |
 
 ## GĐ1. Bản đồ các hướng
@@ -121,4 +121,5 @@ Việc trước ngày 1 (người dùng, mục 1 file GĐ4):
 |---|---|---|
 | Bài GRPO (công thức, Bảng 1, ablation, phụ lục A.1) | Lướt (tóm tắt của Claude, 14/11) | Đọc kỹ trước GĐ6 nếu GĐ5 cho thấy SFT làm quên trên tiếng Việt; phần đối chiếu code ở mục 6.2–6.3 file GĐ5 |
 | `algo/rl.py`, chuẩn hoá phần thưởng theo batch | Lướt (mục 6.3 file GĐ5) | Tự giải thích được bảng "kỳ vọng gradient" trước vấn đáp câu 3 |
-| Bảng III AntiDeepfake (post-train trước fine-tune) | Lướt (mục 6.4 file GĐ5) | Đọc lại khi có kết quả P0 |
+| Bảng III AntiDeepfake (post-train trước fine-tune) | Lướt (mục 6.4 file GĐ5) | Đọc lại khi có kết quả P0 (đã có: mục 3.2 file GĐ5) |
+| Kết quả GĐ5 | Chưa đọc | Đọc mục 8 (tổng kết), rồi mục 3.4 (bảng đọc lại theo độ lệch seed) file GĐ5 |
