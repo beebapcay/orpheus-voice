@@ -375,4 +375,6 @@ Cách đọc cho GĐ5:
 | F2 | Mốc so sánh cho GRPO ở GĐ6 | So G1 với **cả R và A0** (cùng có RawBoost thì so R; GRPO không RawBoost thì so A0) | A0 là SFT tốt nhất; nếu GRPO chỉ hơn R mà không hơn A0, thì "tắt RawBoost" là cách rẻ hơn |
 | F3 | Thước đo chính của GĐ6 | RADAR VI (EER + FRR ở ngưỡng 0), ItW, RADAR EN; bỏ hệ thống để riêng SEA-Spoof và MLAAD khỏi thước đo chính (bão hoà) | Phát hiện 2, 9 |
 
+**Đã chốt (15/11, người dùng):** F2: so G1 với cả R và A0. F3: thước đo chính RADAR VI, ItW, RADAR EN (EER kèm FRR ở ngưỡng 0); SEA-Spoof và MLAAD vẫn chấm và báo nhưng không dùng để kết luận. F1: chưa chạy GĐ6; người dùng yêu cầu đánh giá lại plan và kết quả trước.
+
 **Mang sang GĐ6:** cấu hình SFT và lịch E1' (mục 4.1); bảng R 3 seed làm thước độ lệch; `src/analyze_ablation.py` (thêm cặp G1:R, G1:A0); phân tích GRPO ở mục 6 (giả thuyết GRPO bỏ qua câu sai chắc chắn: kiểm bằng FRR trên RADAR VI và theo hệ thống). Kernel `orpheus-finetune` và `orpheus-finetune-b` chạy song song được; phiên OAuth Kaggle CLI chỉ sống ~3 giờ (nên dùng API token).
