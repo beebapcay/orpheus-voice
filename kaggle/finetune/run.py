@@ -14,26 +14,48 @@ import threading
 import time
 
 # ---- Sửa phần này cho mỗi lần chạy -------------------------------------------
-# GĐ5, lần 4 (chore/GD5-Ablation.md mục 2): R seed 2 (GPU 0) và R seed 3 (GPU 1), cho độ lệch giữa
-#   các seed của cấu hình mốc. Chấm thêm tập MLAAD fake/vi (mục 4.2), rồi chấm S0 trên MLAAD.
-#   Bộ ghi đè SFT giữ NGUYÊN như lần 1 (quyết định E1', mục 4.1): `optimizer_step_limit` không vào
-#   được YAML nên lịch learning rate thực tế là warmup 460 bước lên 1e-6 rồi giảm rất chậm
-#   (total_steps 50000); đổi bộ ghi đè là đổi lịch và không so được với R_s1, A0_s1.
+# GĐ6, lần thử đo GRPO (chore/GD6-GRPO.md mục 2; GĐ5 mục 9, L1): bộ nhớ và tốc độ của GRPO trên
+#   T4, chưa huấn luyện thật. Mỗi lần đo chạy ngắn (optimizer_step_limit), không giữ checkpoint,
+#   không chấm; main.py chạy qua mem_probe.py để ghi đỉnh bộ nhớ PyTorch thật. --oom-retry 0: hết
+#   bộ nhớ thì ghi nhận, không tự giảm batch. "_long": chỉ 240 câu dài nhất của train (thử áp lực:
+#   batch toàn câu ~9–16 s, tốn bộ nhớ attention nhất).
+#   GPU 0: G1 (grpo_v1, đủ: clip + mô hình cũ + KL) ở batch 50 như R; nếu hết bộ nhớ thì thử lại
+#          với PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True (không đổi phép tính).
+#   GPU 1: G1 ở batch 25 + tích luỹ gradient 2 (phương án giữ số bước: 1.536 so với 1.521 bước
+#          mỗi epoch; inner_step_size 2000 batch = 1000 bước optimizer như cấu hình gốc), rồi G2
+#          (grpo_v2, không clip, không mô hình cũ) ở batch 50.
+#   Lịch learning rate như E1' (warmup 460, lr 1e-6); với số bước ngắn chỉ nằm trong warmup.
 SFT = ["max_batch_length=50", "number_of_epochs=3", "optimizer_step_limit=4600", "warmup=460",
        "lr=1e-6", "valid_step=1000000000", "num_workers=2"]
 SCORE = ["seaspoof_vi_dev", "seaspoof_vi_test", "radar_vi", "ood_forget", "mlaad_vi_test"]
+PROBE = ["number_of_epochs=1", "warmup=460", "lr=1e-6", "valid_step=1000000000", "num_workers=2",
+         "seed=1"]
+B50 = ["max_batch_length=50"]
+B25X2 = ["max_batch_length=25", "grad_accumulation_factor=2", "rl_config={inner_step_size: 2000}"]
+PARGS = ["--probe-mem", "--oom-retry", "0", "--discard-ckpt"]
+LONG = ["--train-longest", "240"]
+EXP = ["--env", "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"]
+_p = {"model": "mms_300m", "train": "seaspoof_vi_train", "valid": "seaspoof_vi_train_n50",
+      "score": [], "probe": True}
 RUNS = {
     0: [
-        {"run": "R_s2", "model": "mms_300m", "train": "seaspoof_vi_train",
-         "valid": "seaspoof_vi_dev", "set": SFT + ["seed=2"], "score": SCORE},
+        dict(_p, run="probe_G1_b50", method="grpo_v1", set=PROBE + B50 + ["optimizer_step_limit=150"],
+             args=PARGS),
+        dict(_p, run="probe_G1_b50_long", method="grpo_v1", set=PROBE + B50, args=PARGS + LONG),
+        dict(_p, run="probe_G1_b50_long_exp", method="grpo_v1", set=PROBE + B50, args=PARGS + LONG + EXP,
+             only_if_failed=["probe_G1_b50", "probe_G1_b50_long"]),
     ],
     1: [
-        {"run": "R_s3", "model": "mms_300m", "train": "seaspoof_vi_train",
-         "valid": "seaspoof_vi_dev", "set": SFT + ["seed=3"], "score": SCORE},
+        dict(_p, run="probe_G1_b25x2", method="grpo_v1",
+             set=PROBE + B25X2 + ["optimizer_step_limit=150"], args=PARGS),
+        dict(_p, run="probe_G1_b25x2_long", method="grpo_v1", set=PROBE + B25X2, args=PARGS + LONG),
+        dict(_p, run="probe_G2_b50", method="grpo_v2", set=PROBE + B50 + ["optimizer_step_limit=100"],
+             args=PARGS),
+        dict(_p, run="probe_G2_b50_long", method="grpo_v2", set=PROBE + B50, args=PARGS + LONG),
     ],
 }
 # Chấm zero-shot sau khi mọi lần huấn luyện xong (score_zeroshot.py, hai GPU), vào results/zeroshot/
-ZEROSHOT = ["mlaad_vi_test:mms_300m,w2v_large,w2v_small,mms_300m_nda"]
+ZEROSHOT = []
 # -------------------------------------------------------------------------------
 
 T0 = time.time()
@@ -94,14 +116,19 @@ for m, ini in sorted({(r["model"], r.get("init", "post")) for runs in RUNS.value
         "--init", ini, "--prefetch"], check=True)
 
 failures = []
+probe_failures = []   # lần chạy đo ("probe"): hết bộ nhớ là kết quả, không phải lỗi của kernel
 
 
 def worker(gpu, runs):
     for r in runs:
+        dep = r.get("only_if_failed")
+        if dep and not any(d in probe_failures + failures for d in dep):
+            print(f"[GPU {gpu}] bỏ qua {r['run']} (chỉ chạy khi {dep} lỗi)", flush=True)
+            continue
         cmd = [sys.executable, f"{code}/finetune.py", *common, "--gpu", str(gpu),
                "--run", r["run"], "--model", r["model"], "--method", r.get("method", "sft"),
                "--init", r.get("init", "post"),
-               "--train", r["train"], "--valid", r["valid"], "--set", *r["set"]]
+               "--train", r["train"], "--valid", r["valid"], *r.get("args", []), "--set", *r["set"]]
         if r["score"]:
             cmd += ["--score", *r["score"]]
         logf = f"{out}/train/{r['run']}.driver.log"
@@ -111,9 +138,12 @@ def worker(gpu, runs):
         with open(logf, "w") as lf:
             rc = subprocess.run(cmd, stdout=lf, stderr=subprocess.STDOUT).returncode
         print(f"[GPU {gpu}] xong {r['run']} (mã {rc}) sau {(time.time() - t0) / 60:.1f} phút", flush=True)
-        sh(f"grep -E 'KẾT QUẢ|THẤT BẠI|lỗi|Lỗi' {logf} | tail -5")
+        sh(f"grep -E 'KẾT QUẢ|THẤT BẠI|lỗi|Lỗi|hết bộ nhớ' {logf} | tail -5")
+        if r.get("probe"):
+            sh(f"grep -h 'MEM_PROBE ' {out}/train/{r['run']}/main.log | tail -1; "
+               f"grep -h -E 'OutOfMemoryError|CUDA out of memory' {out}/train/{r['run']}/main.log | tail -2")
         if rc != 0:
-            failures.append(r["run"])
+            (probe_failures if r.get("probe") else failures).append(r["run"])
 
 
 HEARTBEAT_SEC = 600   # in tiến độ ra log chính mỗi 10 phút (log huấn luyện nằm ở file riêng)
@@ -184,6 +214,8 @@ hb_stop.set()
 for f in ("train_summary.csv", "scores/summary.csv", "zeroshot/summary.csv"):
     sh(f"cat {out}/{f}")
 sh(f"du -sh {out}/*")
+if probe_failures:
+    print(f"Lần đo không chạy hết (xem oom trong train_summary.csv): {probe_failures}", flush=True)
 print(f"Thất bại: {failures}" if failures else "Mọi lần chạy xong", flush=True)
 print(f"Tổng thời gian {(time.time() - T0) / 3600:.2f} giờ", flush=True)
 sys.exit(1 if failures else 0)

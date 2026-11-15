@@ -149,6 +149,32 @@ def preflight_load(args, ckpt_init):
     return warns
 
 
+def longest_subset(train_csv, n, path):
+    """CSV gồm n câu dài nhất (theo cột Duration, cột mà DynamicBatchSampler dùng để chia batch)
+    của train_csv: bài thử áp lực bộ nhớ, vì batch toàn câu dài tốn bộ nhớ attention nhiều nhất
+    (bậc hai theo số khung) trong khi tổng thời lượng batch vẫn bị giới hạn như nhau."""
+    rows = list(csv.DictReader(open(train_csv)))
+    rows.sort(key=lambda r: float(r["Duration"]), reverse=True)
+    rows = rows[:n]
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        w.writerows(rows)
+    d = [float(r["Duration"]) for r in rows]
+    log(f"tập con {n} câu dài nhất: {min(d):.2f}–{max(d):.2f} s, "
+        f"{sum(r['Label'] == 'real' for r in rows)} thật -> {path}")
+    return path
+
+
+def parse_mem_probe(text):
+    """Dòng MEM_PROBE cuối cùng (src/mem_probe.py): đỉnh bộ nhớ PyTorch thật sự cấp phát."""
+    hits = re.findall(r"MEM_PROBE max_allocated_mib=(\d+) max_reserved_mib=(\d+) total_mib=(\d+)", text)
+    if not hits:
+        return {}
+    a, r, t = hits[-1]
+    return {"peak_alloc_mib": int(a), "peak_reserved_mib": int(r), "gpu_total_mib": int(t)}
+
+
 def run_train(args, ckpt_init, overrides, allowed_warns=()):
     repo = os.path.join(args.base, "AntiDeepfake")
     yaml = f"hparams/ft_grpo/{args.model.replace('_nda', '')}_pre-post-{args.method}.yaml"
@@ -158,18 +184,25 @@ def run_train(args, ckpt_init, overrides, allowed_warns=()):
     train_csv, valid_csv = (sz.find_csv(args, n) for n in (args.train, args.valid))
     if not train_csv or not valid_csv:
         sys.exit(f"Không thấy {args.train}.csv hoặc {args.valid}.csv trong {args.data_root}")
+    if args.train_longest:
+        train_csv = longest_subset(train_csv, args.train_longest,
+                                   os.path.join(run_dir, f"{args.train}_longest{args.train_longest}.csv"))
     env = dict(os.environ, CUDA_VISIBLE_DEVICES=str(args.gpu), PYTHONUNBUFFERED="1",
                CUBLAS_WORKSPACE_CONFIG=":4096:8")   # main.py bật use_deterministic_algorithms
+    env.update(dict(kv.split("=", 1) for kv in args.env))
     ov = dict(overrides)
-    for attempt in range(3):
+    # main.py gốc, hoặc main.py chạy qua mem_probe.py (cùng phép tính, ghi thêm đỉnh bộ nhớ thật)
+    entry = [os.path.join(HERE, "mem_probe.py"), "main.py"] if args.probe_mem else ["main.py"]
+    for attempt in range(args.oom_retry + 1):
         if os.path.exists(exp) and not args.resume:
             shutil.rmtree(exp)
-        cmd = [args.mm, "run", "-n", "antideepfake", "python", "main.py", yaml,
+        cmd = [args.mm, "run", "-n", "antideepfake", "python", *entry, yaml,
                "--base_path", args.base, "--output_folder", exp,
                "--train_csv", train_csv, "--valid_csv", valid_csv, "--ckpt_path", ckpt_init]
         for k, v in ov.items():
             cmd += [f"--{k}", str(v)]
-        log(f"[{args.run}] huấn luyện, GPU {args.gpu}: {' '.join(cmd[4:])}")
+        log(f"[{args.run}] huấn luyện, GPU {args.gpu}"
+            + (f", env {' '.join(args.env)}" if args.env else "") + f": {' '.join(cmd[4:])}")
         log_path = os.path.join(run_dir, "main.log")
         mon = Monitor(args.gpu, os.path.join(run_dir, "monitor.csv"))
         mon.start()
@@ -183,7 +216,14 @@ def run_train(args, ckpt_init, overrides, allowed_warns=()):
                  and l.strip() not in allowed_warns]
         if warns:
             raise RuntimeError(f"[{args.run}] cảnh báo nạp trọng số: {warns[:3]}")
-        if rc != 0 and any(p in text for p in OOM_PATTERNS):
+        oom = rc != 0 and any(p in text for p in OOM_PATTERNS)
+        if oom and attempt == args.oom_retry:
+            # --oom-retry 0 (GRPO): không tự giảm batch, vì đổi batch là đổi số bước và lịch
+            # learning rate (không còn so được với R, A0; GĐ5 mục 9, L1)
+            log(f"[{args.run}] hết bộ nhớ GPU với max_batch_length={ov.get('max_batch_length', 100)}; "
+                f"không thử lại (--oom-retry {args.oom_retry})")
+            break
+        if oom:
             mbl = float(ov.get("max_batch_length", 100)) / 2
             log(f"[{args.run}] hết bộ nhớ GPU với max_batch_length={ov.get('max_batch_length', 100)}; "
                 f"thử lại với {mbl:g}")
@@ -194,7 +234,19 @@ def run_train(args, ckpt_init, overrides, allowed_warns=()):
     info = {"run": args.run, "model": args.model, "method": args.method, "train": args.train,
             "valid": args.valid, "returncode": rc, "train_seconds": round(secs),
             "overrides": json.dumps(ov), "max_batch_length": ov.get("max_batch_length", 100)}
+    if args.train_longest:
+        info["train_longest"] = args.train_longest
+    if args.env:
+        info["env"] = " ".join(args.env)
+    info["oom"] = any(p in text for p in OOM_PATTERNS)
     info.update(parse_train_log(text))
+    # Tích luỹ gradient: thanh tqdm đếm batch; mỗi bước optimizer (và lịch learning rate) gồm
+    # `grad_accumulation_factor` batch
+    gaf = int(ov.get("grad_accumulation_factor", 1))
+    info["grad_accumulation_factor"] = gaf
+    if "sec_per_it" in info:
+        info["sec_per_opt_step"] = round(info["sec_per_it"] * gaf, 3)
+    info.update(parse_mem_probe(text))
     info.update(mon.summary())
     vals = parse_exp_log(os.path.join(exp, "exp_log.txt"))
     json.dump(vals, open(os.path.join(run_dir, "valid_history.json"), "w"), indent=1)
@@ -212,6 +264,11 @@ def run_train(args, ckpt_init, overrides, allowed_warns=()):
     found = sorted(glob.glob(os.path.join(exp, "save", "CKPT+*", "ssl.ckpt")))
     if not found:
         info["status"] = "no_ckpt"
+        return info, None
+    if args.discard_ckpt:
+        # Lần chạy đo (bộ nhớ, tốc độ): không giữ mô hình, không chấm
+        shutil.rmtree(os.path.join(exp, "save"), ignore_errors=True)
+        info["status"] = "ok"
         return info, None
     ckpt_dir = os.path.join(args.out, "ckpt")
     os.makedirs(ckpt_dir, exist_ok=True)
@@ -260,6 +317,18 @@ def main():
     ap.add_argument("--keep-exp", action="store_true", help="giữ save/ (có trạng thái optimizer)")
     ap.add_argument("--prefetch", action="store_true",
                     help="chỉ tải checkpoint khởi tạo vào cache rồi thoát (gọi trước khi chạy song song)")
+    ap.add_argument("--oom-retry", type=int, default=2,
+                    help="số lần giảm một nửa max_batch_length rồi chạy lại khi hết bộ nhớ GPU "
+                         "(mặc định 2, như GĐ4–5); GRPO dùng 0 để không lặng lẽ đổi batch")
+    ap.add_argument("--probe-mem", action="store_true",
+                    help="chạy main.py qua mem_probe.py: ghi đỉnh bộ nhớ PyTorch thật (MEM_PROBE)")
+    ap.add_argument("--train-longest", type=int, default=0,
+                    help="chỉ huấn luyện trên N câu dài nhất của --train (thử áp lực bộ nhớ)")
+    ap.add_argument("--discard-ckpt", action="store_true",
+                    help="lần chạy đo: không giữ checkpoint, không chấm")
+    ap.add_argument("--env", nargs="*", default=[],
+                    help="biến môi trường thêm cho main.py, KHOÁ=giá trị "
+                         "(ví dụ PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True)")
     args = ap.parse_args()
     args.mm = os.path.join(args.base, "bin", "micromamba")
     os.environ["MAMBA_ROOT_PREFIX"] = os.path.join(args.base, "mamba")
@@ -299,7 +368,7 @@ def main():
     append_summary(os.path.join(args.out, "train_summary.csv"), info)
     log(f"[{args.run}] KẾT QUẢ HUẤN LUYỆN: {json.dumps(info, ensure_ascii=False)}")
     if ckpt is None:
-        sys.exit(1)
+        sys.exit(0 if args.discard_ckpt and info.get("status") == "ok" else 1)
     if args.score:
         base_model = args.model
         cmd = [sys.executable, os.path.join(HERE, "score_zeroshot.py"), "--base", args.base,
