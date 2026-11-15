@@ -80,6 +80,14 @@ Mọi lần chạy GPU, kể cả lần lỗi, đều phải để lại bằng 
 
 **Các lần đã lưu:** xem `results/runs/README.md`.
 
+## Quy tắc quota cho huấn luyện (từ GĐ5)
+
+- Một lần huấn luyện không chạy tiếp được giữa chừng (checkpoint chỉ lưu sau epoch cuối; không lưu optimizer, bộ đếm epoch, lịch learning rate). Chỉ đẩy khi quota còn lại > thời gian ước tính + dự phòng (SFT ~4–5 giờ một kernel hai GPU).
+- Phần chưa đủ quota để tuần sau, chạy từ lần kế tiếp với đúng `run.py` đã lưu trong `results/runs/`.
+- Hai kernel (`orpheus-finetune`, `orpheus-finetune-b`, cùng `run.py`) chạy song song được; quota trừ theo từng phiên.
+- Xếp hàng (`QUEUED`) có thể vài giờ, không tốn quota. CLI không có lệnh huỷ (chỉ trên web); không đẩy lại kernel đang xếp hàng.
+- Output Kaggle của từng version giữ checkpoint (`ckpt/`), không tải về máy.
+
 ## Giới hạn cần nhớ
 
 | Giới hạn | Giá trị | Ghi chú |

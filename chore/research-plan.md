@@ -319,6 +319,8 @@ Lần theo `grpo3_loss` trong `algo/rl.py`: lấy mẫu nhãn từ xác suất d
 | 2 | So SFT và G1 với N = 50, 200, 1000 mẫu mỗi lớp | Biểu đồ số mẫu theo EER trên tập trong miền và tập chưa gặp |
 | 3 | Hiệu chuẩn điểm bằng log-odds, học hệ số trên dev. Phân tích các trường hợp EER cực đoan theo hệ thống sinh, như VietPrism đã ghi nhận | actDCF trước và sau; bản nháp câu vấn đáp 4 |
 
+*Lưu ý từ GĐ5 (15/11, chi tiết `chore/GD5-Ablation.md` mục 9):* G1 so với cả R và A0 (F2); thước đo chính RADAR VI, ItW, RADAR EN kèm FRR ở ngưỡng 0 (F3; SEA-Spoof và MLAAD bão hoà); bộ nhớ GRPO trên T4 chưa đo, không được đổi batch mà không giữ số bước; giữ lịch learning rate E1'; sau SFT actDCF − minDCF ≈ 0,2 nên hiệu chuẩn ở ngày 3 có ý nghĩa; ngày 2 (ít mẫu) cân nhắc đo ngoài miền hoặc cắt.
+
 *Lưu ý từ GĐ3:* mô hình chưa fine-tune đã gần hiệu chuẩn tốt theo DCF (actDCF − minDCF ≤ 0,018 trên RADAR tiếng Việt). Hiệu chuẩn chỉ có ý nghĩa nếu fine-tune làm lệch; nếu không lệch thì báo đúng như vậy và dành thời gian cho phân tích theo hệ thống sinh.
 
 actDCF dùng tham số ASVspoof 5 (β ≈ 1,9). Tập fine-tune và tập kiểm tra không được trùng người nói.

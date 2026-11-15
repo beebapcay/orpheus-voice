@@ -378,3 +378,32 @@ Cách đọc cho GĐ5:
 **Đã chốt (15/11, người dùng):** F2: so G1 với cả R và A0. F3: thước đo chính RADAR VI, ItW, RADAR EN (EER kèm FRR ở ngưỡng 0); SEA-Spoof và MLAAD vẫn chấm và báo nhưng không dùng để kết luận. F1: chưa chạy GĐ6; người dùng yêu cầu đánh giá lại plan và kết quả trước.
 
 **Mang sang GĐ6:** cấu hình SFT và lịch E1' (mục 4.1); bảng R 3 seed làm thước độ lệch; `src/analyze_ablation.py` (thêm cặp G1:R, G1:A0); phân tích GRPO ở mục 6 (giả thuyết GRPO bỏ qua câu sai chắc chắn: kiểm bằng FRR trên RADAR VI và theo hệ thống). Kernel `orpheus-finetune` và `orpheus-finetune-b` chạy song song được; phiên OAuth Kaggle CLI chỉ sống ~3 giờ (nên dùng API token).
+
+## 9. Đánh giá plan sau GĐ5 và lưu ý cho GĐ6 (15/11)
+
+**Tiến độ:** GĐ5 xong 15/11 (plan dành 4 ngày). Còn 15 ngày đến hạn 30/11; GĐ6–8 và dự phòng cần ~8 ngày.
+
+| Câu hỏi nghiên cứu | Trạng thái sau GĐ5 |
+|---|---|
+| 1. Yếu tố quyết định | Trả lời tốt: post-training > kích thước > RawBoost > độ đa dạng tiếng thật; ngôn ngữ pre-training không giúp |
+| 2. SFT có làm quên | Có với MMS-300M (vững qua 3 seed), không với W2V-Large |
+| 3. GRPO | Chưa làm (GĐ6) |
+
+**Điểm yếu cần ghi trong báo cáo:** (1) kết quả RADAR VI trộn "quên" với "lệch nguồn tiếng thật" (tiếng thật train chỉ VIVOS); MLAAD tách được một phần (phát hiện 9). (2) 5 cấu hình 1 seed; N0, B2 sát ngưỡng độ lệch seed. (3) Thước đo trong miền bão hoà (SEA-Spoof, MLAAD).
+
+**Lưu ý cho GĐ6**
+| # | Lưu ý | Việc cần làm |
+|---|---|---|
+| L1 | **Bộ nhớ GRPO chưa đo.** SFT đã 14,6 / 15 GB trên T4 ở batch 50 s; GRPO giữ thêm `ref_detector` và `old_detector` (~2,5 GB). Giảm batch sẽ đổi số bước và lịch learning rate, không so được với R, A0 | Chạy thử ngắn trước (đo bộ nhớ, giây mỗi bước). Phương án giữ số bước: batch 25 + tích luỹ gradient 2 (`grad_accumulation_factor` của SpeechBrain, **cần kiểm** có nhận qua dòng lệnh không và có làm lệch lịch learning rate không). Hoặc chạy trên server GPU 24 GB (L5) |
+| L2 | **Mốc so sánh (F2):** G1 so với cả R (3 seed, có RawBoost) và A0 (không RawBoost) | `src/analyze_ablation.py --pairs G1_s1:R_s1 G1_s1:A0_s1 ...`; dùng R = 24,02 ± 1,52 (RADAR VI) làm thước độ lệch seed |
+| L3 | **Thước đo chính (F3):** RADAR VI, ItW, RADAR EN, kèm FRR ở ngưỡng 0; SEA-Spoof và MLAAD chỉ báo | |
+| L4 | **Cùng bộ ghi đè SFT** (lịch E1', mục 4.1) cho mọi lần GRPO: `max_batch_length=50 number_of_epochs=3 optimizer_step_limit=4600 warmup=460 lr=1e-6 valid_step=1000000000 num_workers=2 seed=<n>`, file `hparams/ft_grpo/mms_300m_pre-post-grpo_v1.yaml` (G1), `_v2` (G2); G3 = G1 với `beta=0` | `src/finetune.py --method grpo_v1` đã có sẵn tham số `--method` |
+| L5 | **Server thuê là phương án được** (người dùng hỏi 15/11): GPU 24 GB giải L1, không xếp hàng, không giới hạn quota. Nếu dùng: chạy lại R và A0 trên server để so cùng phần cứng; xoá SEA-Spoof khi trả máy. Cấu hình vast.ai: mục 2 (ghi chú xếp hàng) | Người dùng quyết; hiện plan là Kaggle |
+| L6 | **Không chạy tiếp giữa chừng được:** checkpoint chỉ lưu sau epoch cuối (E3), không lưu optimizer, bộ đếm epoch, lịch learning rate. Chỉ đẩy một lần chạy khi quota còn lại > thời gian ước tính + dự phòng; phần thiếu để tuần sau, chạy tiếp từ lần kế tiếp với tham số đã lưu | Kaggle làm gì khi hết quota giữa phiên: chưa kiểm |
+| L7 | **Ngày 2 GĐ6 (ít mẫu N = 50/200/1000):** trong miền chắc bão hoà | Đo ngoài miền, hoặc cắt để dành quota cho G1 đủ 3 seed (G1 3 seed không được cắt theo plan) |
+| L8 | **Ngày 3 GĐ6 (hiệu chuẩn) có ý nghĩa:** sau fine-tune actDCF − minDCF ≈ 0,2 (GĐ3: ≤ 0,018). Hạn chế: dev chỉ có tiếng thật VIVOS | Báo actDCF trước và sau trên RADAR VI; ghi rõ hạn chế |
+| L9 | **Giả thuyết cơ chế GRPO** (mục 6.3): GRPO trong code bỏ qua câu mô hình sai chắc chắn. Lỗi chính sau SFT là tiếng thật nguồn khác bị coi là giả | Kiểm: GRPO có giảm FRR trên RADAR VI và `test_cvreal` so với R không |
+| L10 | **Quota:** 11,60 giờ còn lại tuần này mất sau 7 giờ sáng 21/11; tuần sau 30 giờ. GĐ6 (G1 × 3, G2, G3; GRPO ước chậm ~1,7 lần SFT) ~25–30 giờ | Người dùng chưa chốt dùng 11,60 giờ (F1) |
+| L11 | **Kaggle CLI:** phiên OAuth chỉ sống ~3 giờ sau `kaggle auth login --force`; nên dùng API token `~/.kaggle/access_token`. Hai kernel `orpheus-finetune`, `orpheus-finetune-b` chạy song song được; xếp hàng có thể vài giờ (không tốn quota) | `chore/Quy-Trinh-Chay-Kaggle.md` |
+| L12 | **Checkpoint các lần GĐ5** chỉ ở output Kaggle: `orpheus-finetune` v2 (R_s1, A0_s1), v3 (P0_s1, B2_s1), v4 (R_s2, R_s3); `orpheus-finetune-b` v1 (B1_s1, N0_s1). Điểm từng câu đã ở `results/finetune/` | Hiệu chuẩn (ngày 3) chỉ cần điểm, không cần GPU |
+
