@@ -736,3 +736,9 @@ Thời gian: 2 GPU ~3,2–4,4 ngày, 4 GPU ~1,6–2,2 ngày (tốc độ 2,5–3
 Danh sách 76 lần cũ giữ nguyên lệnh (so từng lần với bản trước), chỉ đổi số tầng.
 
 **Việc còn lại trước điểm kiểm B và cuối bộ:** A1 (mô hình hai yếu tố trong `src/analyze_ablation.py`, cần trước điểm kiểm B); đo độ trôi trọng số (`src/weight_drift.py`, chạy trên server trước `cleanup`); phân tích riêng cho D1 (khi có kết quả).
+
+### 14.8. Hoãn thuê vast.ai (15/11 tối)
+
+Lần thuê đầu (instance 60795414, máy 16146: 2 × RTX 3090, Xeon E5-2650 v2, 32 vCPU, 258 GB RAM, ổ 256 GB, trạng thái "deverified") không khởi động được container: "OCI runtime create failed: could not apply required modification to OCI specification" (lỗi phía host khi gắn GPU vào container; khớp trạng thái deverified). **Người dùng hoãn thuê máy**, sẽ nhờ bạn chạy bộ server trên máy của bạn đó. Code đã đẩy đủ lên GitHub (`server/`, `src/`, `protocols/ids/`; hướng dẫn `server/README.md`).
+
+Lưu ý khi chạy trên máy của người khác: SEA-Spoof không được phân phối lại (giấy phép của bộ dữ liệu, quyết định từ GĐ4), nên không gửi âm thanh SEA-Spoof cho người khác. Hai cách giữ đúng: (a) chủ tài khoản đã được duyệt SEA-Spoof tự chép dữ liệu lên máy đó qua SSH (`vast.sh data`, chạy được với mọi máy SSH vào được) và xoá khi xong (`cleanup --yes`); hoặc (b) người chạy tự xin quyền SEA-Spoof trên Hugging Face rồi tạo dữ liệu bằng `src/prep_seaspoof.py fetch`.
