@@ -12,7 +12,7 @@ Câu hỏi của giai đoạn: fine-tune bằng GRPO trên tiếng Việt có gi
 | 1 | Lần 1: G1 s1, G2 s1; lần 2 (song song): R s4, R s5 | `orpheus-finetune` v6, `orpheus-finetune-b` v2; mục 6 | Đang đẩy (15/11) |
 | 2–3 | G1 s2–s5, G3 (từ 21/11) | Mục 6 | Chưa |
 | 1 | Phân tích không cần GPU: kiểm định qua seed, hiệu chuẩn, theo hệ thống sinh, mốc cơ chế | Mục 7 | Xong (15/11) |
-| 1 | **Bộ đầy đủ trên server vast.ai** (54 lần, cùng phần cứng, 3 seed mọi cấu hình): script, chọn thí nghiệm | Mục 9, `server/` | Script xong, thử trên máy (15/11); chờ người dùng thuê máy |
+| 1 | **Bộ đầy đủ trên server vast.ai** (54 lần, cùng phần cứng, 3 seed mọi cấu hình): script, chọn thí nghiệm | Mục 9, `server/` | Script xong, thử trên máy (15/11); người dùng thuê máy **sau khi** xem kết quả lần 1, 2 Kaggle (mục 9) |
 | 2 | Ít mẫu (N = 50, 200, 1000), hoặc cắt (L7) | | Chưa |
 | 3 | Hiệu chuẩn điểm, phân tích theo hệ thống sinh | | Chưa |
 
@@ -301,3 +301,5 @@ Công thức: đúng như Kaggle (đã đối chiếu từng tham số với b�
 **Ước tính:** ~245 giờ GPU tính theo T4 (SFT ~4,3 giờ, GRPO ~5,6 giờ mỗi lần, cả chấm). Tốc độ máy thuê so với T4 chỉ biết sau tầng 0; với 4 GPU nhanh hơn T4 2,5 lần: ~25 giờ.
 
 **Cần người dùng:** thuê máy theo `server/README.md` mục 2 (4 × GPU ≥ 24 GB cùng loại, không RTX 50xx; ≥ 8 nhân CPU và ≥ 16 GB RAM mỗi GPU; ≥ 250 GB ổ; on-demand), thêm khoá SSH vào vast.ai, gửi chuỗi kết nối SSH.
+
+**Quyết định (15/11, người dùng):** chờ kết quả Kaggle lần 1, 2 (G1 s1, G2 s1, R s4, R s5; dự kiến ~15:45) rồi mới thuê server. Tiêu chí xem G1 s1 trước khi chạy GRPO ở quy mô lớn: (1) chạy hết 4.563 bước, không hết bộ nhớ, loss không NaN; (2) đỉnh bộ nhớ và giây mỗi bước khớp lần thử đo (13,9 GB, 3,07 s); (3) trong miền (dev, `test_seen`) tốt hơn S0, tức GRPO có học; (4) RADAR VI, ItW, FRR ở ngưỡng 0 nằm trong khoảng hợp lý so với R (5 seed). Không đạt (1)–(3) thì sửa cấu hình GRPO trước khi chạy trên server.
