@@ -18,7 +18,7 @@ hướng "chẩn đoán và sửa" (chốt 15/11, chore/GD6-GRPO.md mục 11, 12
   0  thử đo: tốc độ, bộ nhớ, số worker đọc dữ liệu (chạy riêng, trước tất cả)
   1  lõi: S0 (dùng thẳng, 4 backbone), R, G1, A0 × 3 seed
   2  sửa GRPO và kiểm cơ chế × 3 seed: G1s (bỏ khuếch đại: std_floor 1.0), G1b (beta 1.0),
-     G1lr (lr 1e-7, đối chứng cường độ); G2, G3 (thành phần GRPO của plan)
+     G1lr (lr 1e-7, đối chứng cường độ); G2, G3 (thành phần GRPO của plan); G1s0 (G1s với beta 0)
   3  các yếu tố GĐ5: P0, B2, N0, B1 × 3 seed
   4  ghép bản sửa với công thức tốt nhất của GĐ5 (không RawBoost khi fine-tune): G1sA, G1bA × 3 seed.
      Chỉ cần bản ghép của cách sửa tốt hơn ở tầng 2; bỏ bản kia bằng `vast.sh skip <tên>...`
@@ -77,6 +77,10 @@ CONFIGS = {
     "G1s": dict(method="grpo_v1", extra_set=["rl_config={std_floor: 1.0}"]),
     "G1b": dict(method="grpo_v1", extra_set=["rl_config={beta: 1.0}"]),        # phạt KL mạnh (núm của bài báo)
     "G1lr": dict(method="grpo_v1", extra_set=["lr=1e-7"]),                    # đối chứng: chỉ giảm cường độ
+    # G1s còn làm phạt KL nặng lên tương đối khi bão hoà (biên độ lợi thế co về ~0,1, KL giữ nguyên;
+    # chore/GD6-GRPO.md mục 12.1). G1s0 = G1s với β = 0: cùng G1, G3, G1s thành bảng 2 × 2
+    # {chia σ_batch hay không} × {β 0,04 hay 0}, tách "bỏ khuếch đại" khỏi "KL nặng lên"
+    "G1s0": dict(method="grpo_v1", extra_set=["rl_config={std_floor: 1.0, beta: 0.0}"]),
     "G1sA": dict(method="grpo_v1", extra_set=["rl_config={std_floor: 1.0}", "use_da=False"]),
     "G1bA": dict(method="grpo_v1", extra_set=["rl_config={beta: 1.0}", "use_da=False"]),
     "P0": dict(init="fairseq"),
@@ -117,6 +121,8 @@ def build(workers=NUM_WORKERS):
     for s in (1, 2, 3):
         for code in ("G1lr", "G2", "G3"):
             J.append(cfg(code, s, 2))
+    for s in (1, 2, 3):                     # thêm 15/11 (người dùng đồng ý): cuối tầng 2
+        J.append(cfg("G1s0", s, 2))
     # Tầng 3: các yếu tố của GĐ5
     for s in (1, 2, 3):
         for code in ("P0", "B2", "N0", "B1"):

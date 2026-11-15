@@ -2,13 +2,13 @@
 
 Một bộ thí nghiệm **hoàn chỉnh** chạy trên một loại máy, để mọi phép so sánh trong báo cáo dùng kết quả cùng phần cứng. Bộ Kaggle (T4) vẫn chạy song song và giữ làm lần lặp độc lập trên phần cứng khác. Lý do và danh sách đầy đủ: `chore/GD6-GRPO.md` mục 9; danh sách lần chạy: `server/experiments.py`.
 
-## 1. Bộ thí nghiệm (73 lần, theo tầng ưu tiên; cập nhật 15/11 theo hướng "chẩn đoán và sửa")
+## 1. Bộ thí nghiệm (76 lần, theo tầng ưu tiên; cập nhật 15/11 theo hướng "chẩn đoán và sửa", thêm G1s0)
 
 | Tầng | Nội dung | Lần chạy |
 |---|---|---|
 | 0 | Thử đo: tốc độ, bộ nhớ, số worker đọc dữ liệu (2 hoặc 6) cho SFT và G1, 200 bước | 4 (ngắn) |
 | 1 | Lõi: S0 (dùng thẳng: MMS-300M, MMS-300M NDA, W2V-Large, W2V-Small), R, G1, A0 × 3 seed | 4 + 9 |
-| 2 | Sửa GRPO và kiểm cơ chế: G1s (bỏ khuếch đại, `std_floor` 1.0), G1b (β = 1), G1lr (lr 1e-7, đối chứng), G2, G3 × 3 seed | 15 |
+| 2 | Sửa GRPO và kiểm cơ chế: G1s (bỏ khuếch đại, `std_floor` 1.0), G1b (β = 1), G1lr (lr 1e-7, đối chứng), G2, G3, G1s0 (G1s với β = 0: tách "bỏ khuếch đại" khỏi "KL nặng lên") × 3 seed | 18 |
 | 3 | Các yếu tố GĐ5: P0, B2, N0, B1 × 3 seed | 12 |
 | 4 | Bản sửa ghép không RawBoost: G1sA, G1bA × 3 seed. Chỉ cần bản của cách sửa tốt hơn ở tầng 2: bỏ bản kia bằng `vast.sh skip <tên>...` | 6 (hoặc 3) |
 | 5 | Ít mẫu: SFT và G1 với N = 50 / 200 / 1000 mỗi lớp × 3 seed, cùng 4.563 bước như bản đủ | 18 |

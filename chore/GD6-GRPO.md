@@ -422,6 +422,8 @@ Phần ít mẫu (tầng 4) trong chế độ này chủ yếu đo "ít dữ li�
 | Q3 | Phạm vi bộ server | Lõi (S0, R, G1, A0) + sửa và cơ chế + các yếu tố GĐ5 (P0, B2, N0, B1), mọi cấu hình 3 seed; ít mẫu và seed 4, 5 xếp cuối. 73 lần, `server/experiments.py`, `server/README.md` mục 1 |
 | Q4 | Nơi chạy | **Thuê server vast.ai** (máy 2 × RTX 3090, 20 vCPU, 81 GB RAM, 775 GB đã xem là đủ; khuyến nghị máy verified nếu có). Bộ server là bộ chính; Kaggle (quota mới từ 7 giờ 21/11) chạy lặp độc lập hoặc bổ sung, chốt sau |
 | Q5 | Lối tắt tiếng thật một nguồn (VIVOS) | Ghi làm hạn chế và hướng phát triển (thêm tiếng thật đa nguồn, không dùng Common Voice, FOSD vì trùng RADAR); không làm trong đồ án |
+| Q6 | Tách hai tác dụng của G1s (mục 12.1, hệ quả 3) | **Thêm G1s0** (`rl_config={std_floor: 1.0, beta: 0.0}`, 3 seed, cuối tầng 2): cùng G1, G3, G1s thành bảng 2 × 2 {chia σ_batch hay không} × {β 0,04 hay 0}. Bộ server 76 lần |
+| Q7 | Quota Kaggle từ 21/11 (30 giờ) | Ưu tiên 1 seed mỗi bản sửa trên T4 (G1s, G1b, G1lr: 2 kernel, ~11,6 giờ) để xem kết luận có giữ trên phần cứng khác; còn quota thì G1 s2, s3 (~5,8 giờ). Chốt cụ thể sau khi có tầng 2 của server |
 
 **Phát hiện chính của GĐ6 đến 15/11** (chi tiết ở các mục được trỏ)
 
