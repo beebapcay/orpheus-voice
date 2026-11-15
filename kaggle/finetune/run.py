@@ -23,7 +23,7 @@ import time
 #   PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True (batch 50 hết bộ nhớ do phân mảnh nếu không
 #   bật; không đổi phép tính), --oom-retry 0 (không tự giảm batch), --probe-mem (ghi đỉnh bộ nhớ
 #   thật). Lần R giữ đúng như R seed 1–3 (không thêm gì).
-JOB = "grpo1"
+JOB = "r45"
 SFT = ["max_batch_length=50", "number_of_epochs=3", "optimizer_step_limit=4600", "warmup=460",
        "lr=1e-6", "valid_step=1000000000", "num_workers=2"]
 SCORE = ["seaspoof_vi_dev", "seaspoof_vi_test", "radar_vi", "ood_forget", "mlaad_vi_test"]
