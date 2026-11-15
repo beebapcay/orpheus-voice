@@ -11,6 +11,8 @@ Câu hỏi của giai đoạn: fine-tune bằng GRPO trên tiếng Việt có gi
 | 1 | Báo kết quả lần thử; người dùng chốt: Kaggle hay thuê server, dùng quota còn lại tuần này thế nào | Mục 3, 5 | **Đã chốt** (15/11, mục 5): Kaggle; batch 50 + `expandable_segments`; P1 làm, P2 không, P3 không cắt |
 | 1 | Lần 1: G1 s1, G2 s1; lần 2 (song song): R s4, R s5 | `orpheus-finetune` v6, `orpheus-finetune-b` v2; mục 6 | Đang đẩy (15/11) |
 | 2–3 | G1 s2–s5, G3 (từ 21/11) | Mục 6 | Chưa |
+| 1 | Phân tích không cần GPU: kiểm định qua seed, hiệu chuẩn, theo hệ thống sinh, mốc cơ chế | Mục 7 | Xong (15/11) |
+| 1 | **Bộ đầy đủ trên server vast.ai** (54 lần, cùng phần cứng, 3 seed mọi cấu hình): script, chọn thí nghiệm | Mục 9, `server/` | Script xong, thử trên máy (15/11); chờ người dùng thuê máy |
 | 2 | Ít mẫu (N = 50, 200, 1000), hoặc cắt (L7) | | Chưa |
 | 3 | Hiệu chuẩn điểm, phân tích theo hệ thống sinh | | Chưa |
 
@@ -238,7 +240,9 @@ R, A0 (và G1, G2, G3) cùng xuất phát từ S0 MMS-300M, nên so được t�
 
 Dự đoán cho G1 (giả thuyết, sẽ kiểm khi có điểm): (a) trên dev, Δz của nhóm "giả, sai chắc" nhỏ hơn R nhiều so với các nhóm khác (GRPO trọng số p(1 − p)/σ, gần 0 khi p → 0); (b) nếu GRPO quên ít hơn thì tỉ lệ lật "thật, đúng chắc" ngoài miền thấp hơn R.
 
-## 8. Ngày 2 (ít mẫu): phương án, chờ người dùng chốt
+## 8. Ngày 2 (ít mẫu): phương án
+
+**Đã chốt (15/11, người dùng: "hợp lý và cho kết quả tốt nhất, không ngại thời gian, thuê server được"):** phương án C (cùng 4.563 bước và lịch E1' như bản đủ, chỉ đổi lượng dữ liệu; điểm bản đủ chính là R và G1), **3 seed mỗi điểm, chạy trên server** trong bộ đầy đủ ở mục 9. Bảng dưới giữ để ghi lý do chọn.
 
 Plan: so SFT và G1 với N = 50, 200, 1000 câu mỗi lớp (P3 không cắt). Tập con có sẵn từ GĐ4, lồng nhau, giả chia đều 5 hệ thống train: `seaspoof_vi_train_n50` (0,10 giờ), `_n200` (0,42 giờ), `_n1000` (2,03 giờ). Số batch mỗi epoch ở batch 50 s (mô phỏng `DynamicBatchSampler`, khớp pilot GĐ4 với n50): **12 / 42 / 178**. Điểm N đủ (8.910 mỗi lớp) là R và G1 đã có.
 
@@ -259,3 +263,41 @@ Plan: so SFT và G1 với N = 50, 200, 1000 câu mỗi lớp (P3 không cắt). 
 | P1 | 3 seed có thể không đủ để kết luận G1 so với R | Ngưỡng chênh lệch có ý nghĩa (t-test hai mẫu, 3 seed mỗi bên, giả định độ lệch seed của G1 như R): RADAR VI ~3,4 điểm (s = 1,52), ItW ~3,9 điểm (s = 1,71). Phần SFT làm hỏng mà GRPO có thể gỡ lại: RADAR VI R − S0 = 3,9 điểm; ItW 5,63 − 2,60 = 3,0 điểm (bài GRPO, MMS-300M: 14,17 − 2,91 = 11,3 điểm). Trên ItW, kể cả GRPO gỡ lại hết vẫn dưới ngưỡng | Thêm 2 seed cho cả R và G1 (~10–11 giờ, tuần sau): ngưỡng còn ~2,2 điểm RADAR VI, ~2,5 điểm ItW |
 | P2 | G1 so với A0 lệch hai yếu tố (hàm loss và RawBoost) | A0 − R = −5,65 điểm RADAR VI (RawBoost khi fine-tune làm kém, GĐ5 phát hiện 4) | Thêm "G1 không RawBoost" (1 seed, `use_da=False`): bảng 2 × 2 {SFT, GRPO} × {có, không RawBoost} |
 | P3 | Ngày 2 (ít mẫu N = 50/200/1000) không đo được gì | SEA-Spoof bão hoà từ S0 (mọi hệ thống ≤ 2,1%) | Cắt (mục cắt thứ 4 của plan), dành quota cho P1, P2 |
+
+## 9. Bộ thí nghiệm đầy đủ trên server (quyết định 15/11)
+
+**Người dùng (15/11):** thuê server vast.ai, chạy song song với Kaggle; vì kết quả hai phần cứng không nên trộn trong một phép so sánh, chọn các bước cần làm lại để chạy **trọn một bộ** trên server.
+
+**Vì sao làm lại cả GĐ5, không chỉ GĐ6:** mọi bảng của báo cáo so các cấu hình với nhau (G1 với R, A0; R với P0, B2, B1, N0; đường cong ít mẫu với bản đủ). Nếu một phía chạy trên T4 và phía kia trên GPU khác thì chênh lệch lẫn cả yếu tố phần cứng: GPU Ampere/Ada mặc định dùng TF32 cho convolution (T4 không có), tốc độ đọc dữ liệu khác nên chuỗi ngẫu nhiên của RawBoost khác. Độ lệch giữa seed đã ~1,5 điểm RADAR VI (GĐ5 phát hiện 8), nên một độ lệch hệ thống nhỏ do phần cứng cũng đủ làm sai kết luận. Làm lại cả bộ cũng sửa điểm yếu 1 seed của GĐ5 (mục 7.1: A0 − R chỉ p = 0,08).
+
+**Bộ server (54 lần, `server/experiments.py`), mọi cấu hình 3 seed:**
+
+| Tầng | Nội dung | Số lần |
+|---|---|---|
+| 0 | Thử đo trên máy thuê: SFT và G1 × {2, 6} worker đọc dữ liệu, 200 bước (tốc độ, bộ nhớ, CPU) | 4 |
+| 1 | S0 (4 backbone dùng thẳng, chấm 5 tập); R, G1, A0 × 3 seed | 13 |
+| 2 | G2, G3 × 3 seed | 6 |
+| 3 | P0, B2, N0, B1 × 3 seed | 12 |
+| 4 | Ít mẫu (mục 8, phương án C): SFT, G1 × N = 50/200/1000 × 3 seed | 18 |
+| 5 | R, G1 seed 4, 5 (P1); mốc XLS-R-2B dùng thẳng trên RADAR VI | 5 |
+
+Công thức: đúng như Kaggle (đã đối chiếu từng tham số với bản đẩy `orpheus-finetune` v6 và `orpheus-finetune-b` v2: G1_s1, R_s4 khớp), thêm `NVIDIA_TF32_OVERRIDE=0` (fp32 như T4) và `--oom-retry 0` cho mọi lần. Ít mẫu: dừng bằng `optimizer_step_limit=4563`, số epoch = ⌈4.563 / batch mỗi epoch⌉ + 2 (383 / 111 / 28). Số worker đọc dữ liệu chốt sau tầng 0 và giữ nguyên cho cả bộ (chỉ ảnh hưởng tốc độ và chuỗi ngẫu nhiên của RawBoost, như một seed).
+
+**Vai trò hai bộ:** bộ server là bộ chính cho bảng kết quả (cùng phần cứng, 3 seed mọi cấu hình). Bộ Kaggle (T4: R × 5, G1 × 5, G2, G3; A0, P0, B2, B1, N0 × 1) là lần lặp độc lập: chỉ so ở mức "kết luận có giữ nguyên không" (cùng chiều, cùng cỡ), không trộn số. Kết quả server lưu riêng ở `results/server/` (không lẫn `results/finetune/`, `results/zeroshot/`).
+
+**Code (`server/`, hướng dẫn `server/README.md`):**
+
+| File | Chạy ở | Việc |
+|---|---|---|
+| `experiments.py` | server | Danh sách 54 lần theo tầng; nguồn duy nhất |
+| `run.py` | server | Điều phối: mỗi GPU một hàng đợi theo tầng, chạy tiếp được sau khi mất kết nối (lần xong thì bỏ qua), trạng thái `results/jobs/`, `results/status.txt` mỗi phút, `--dry-run` |
+| `bootstrap.sh` | server | Gói hệ thống, môi trường như Kaggle + toy example (6,11%), môi trường điều phối, tải RADAR/ItW bằng `src/prep_data.py`, kiểm dữ liệu, tải trước checkpoint |
+| `check_data.py` | server | Số câu và ID của mọi CSV khớp `protocols/ids/`, đủ file âm thanh |
+| `vast.sh` | máy | SSH/rsync: `init`, `check`, `code`, `data`, `bootstrap`, `start`, `status`, `log`, `fetch`, `collect`, `stop`, `cleanup` |
+| `collect.py` | máy | Gộp kết quả vào `results/server/`, bằng chứng vào `results/runs/server-<nhãn>/` (code, môi trường, log, `RUN.md`) |
+
+Đã thử trên máy (15/11): danh sách 54 lần và tham số khớp Kaggle; chạy khô bộ điều phối với 4 GPU (54 lần, không lần nào bị hai GPU nhận trùng); `check_data.py` trên SEA-Spoof và MLAAD ở máy (khớp danh sách câu, đủ file); `collect.py` và các script phân tích trên cây kết quả giả lập từ output Kaggle v4. **Chưa thử trên server thật.** Sửa kèm: `finetune.py` khoá file khi ghi `train_summary.csv` (nhiều tiến trình cùng ghi).
+
+**Ước tính:** ~245 giờ GPU tính theo T4 (SFT ~4,3 giờ, GRPO ~5,6 giờ mỗi lần, cả chấm). Tốc độ máy thuê so với T4 chỉ biết sau tầng 0; với 4 GPU nhanh hơn T4 2,5 lần: ~25 giờ.
+
+**Cần người dùng:** thuê máy theo `server/README.md` mục 2 (4 × GPU ≥ 24 GB cùng loại, không RTX 50xx; ≥ 8 nhân CPU và ≥ 16 GB RAM mỗi GPU; ≥ 250 GB ổ; on-demand), thêm khoá SSH vào vast.ai, gửi chuỗi kết nối SSH.

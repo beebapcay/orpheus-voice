@@ -285,15 +285,19 @@ def run_train(args, ckpt_init, overrides, allowed_warns=()):
 
 
 def append_summary(path, row):
-    rows = list(csv.DictReader(open(path))) if os.path.exists(path) else []
-    rows = [r for r in rows if r.get("run") != row["run"]] + [row]
-    keys = []
-    for r in rows:
-        keys += [k for k in r if k not in keys]
-    with open(path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=keys)
-        w.writeheader()
-        w.writerows(rows)
+    # Khoá file: nhiều tiến trình finetune.py (mỗi GPU một) cùng đọc-ghi một train_summary.csv
+    import fcntl
+    with open(path + ".lock", "w") as lk:
+        fcntl.flock(lk, fcntl.LOCK_EX)
+        rows = list(csv.DictReader(open(path))) if os.path.exists(path) else []
+        rows = [r for r in rows if r.get("run") != row["run"]] + [row]
+        keys = []
+        for r in rows:
+            keys += [k for k in r if k not in keys]
+        with open(path, "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=keys)
+            w.writeheader()
+            w.writerows(rows)
 
 
 def main():

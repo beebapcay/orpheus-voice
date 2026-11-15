@@ -34,3 +34,7 @@ build/
 results/kaggle-raw/
 results/**/shards/
 *.npy
+
+# Server thuê: địa chỉ SSH (không commit) và kết quả thô tải về
+server/host.env
+results/server/raw/
