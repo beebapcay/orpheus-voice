@@ -118,6 +118,8 @@ Kiểm tra dev cuối lần chạy (`seaspoof_vi_dev`, batch 10 câu, câu dài 
 | 2 | **`inner_step_size` đếm theo batch, không theo bước optimizer** như `README_grpo.md` viết | Chỉ khác khi tích luỹ gradient | Đặt 2000 nếu dùng batch 25 × 2 (đã kiểm, mục 3.1 kết quả 5) |
 | 3 | **G1 ở batch 50 hết bộ nhớ trên batch toàn câu dài do phân mảnh, không do thiếu dung lượng**; qua khi bật `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, đỉnh 13,9 / ~14,7 GB | Giữ được đúng batch, số bước, lịch learning rate của R (L1) mà không đổi phép tính. Biên còn mỏng (~400 MiB giữ). `finetune.py` mặc định sẽ tự giảm batch khi hết bộ nhớ: với GRPO phải đặt `--oom-retry 0` | Đề xuất: mọi lần GRPO dùng batch 50 + `expandable_segments` + `--oom-retry 0`; nếu một lần hết bộ nhớ giữa chừng thì báo, cân nhắc chuyển cả nhóm sang 25 × 2 |
 | 4 | **GRPO chậm 1,55 lần SFT** (G1 3,07 s/bước; G2 2,95) | Kernel GRPO hai lần ~5,8 giờ, gần một nửa quota còn lại tuần này | Mục 5 |
+| 5 | **Quy tắc "2 độ lệch chuẩn" của GĐ5 lạc quan so với kiểm định t khi R chỉ có 3 seed:** A0 − R RADAR VI −5,65 điểm, p = 0,08; chỉ P0 − R có ý nghĩa (ItW, RADAR EN, FRR) | Kết luận RawBoost (GĐ5 phát hiện 4) là khả dĩ, chưa có ý nghĩa thống kê. Mọi so sánh G1 phải báo KTC theo seed, không chỉ KTC bootstrap theo câu | R seed 4, 5 (lần 2) đưa bậc tự do lên 4; chạy lại mục 5 khi có |
+| 6 | **Hiệu chuẩn trên dev (chỉ tiếng thật VIVOS) làm actDCF ngoài miền tệ hơn**, ở mọi biến thể; chỉ giúp tập cùng nguồn tiếng thật | Trả lời ngày 3 của plan: lệch hiệu chuẩn sau fine-tune là do lệch nguồn tiếng thật, không sửa được bằng dev cùng nguồn | Báo cáo kết quả này; chấm lại với G1 khi có để xem GRPO có lệch ít hơn không |
 
 ## 5. Ngân sách quota
 
@@ -153,6 +155,47 @@ Quota tuần này mất lúc 7 giờ 21/11. Hai kernel chạy song song được
 | 5 | | G1 seed 5 | (trống: ngày 2 ít mẫu hoặc chốt sau) | ~5,8 giờ | từ 21/11 |
 
 Mỗi lần huấn luyện chấm sau fine-tune trên `seaspoof_vi_dev`, `seaspoof_vi_test`, `radar_vi`, `ood_forget`, `mlaad_vi_test` (như R seed 2, 3). Lần 3–5 tổng ~17,4 giờ trong 30 giờ tuần sau.
+
+## 7. Phân tích không cần GPU (làm trong lúc chờ lần 1, 2; 15/11)
+
+### 7.1. So sánh qua seed bằng kiểm định t (`src/analyze_ablation.py` mục 5, `results/finetune/analysis/seed_tests.csv`)
+
+GĐ5 đọc các cấu hình 1 seed bằng quy tắc "cách trung bình R ~2 độ lệch chuẩn" (GĐ5 mục 3.4). Kiểm định chính thức: một bên 1 seed thì so với khoảng dự đoán của bên kia, t = (A − B)/(s·√(1 + 1/n)), bậc tự do n − 1 (giả định cấu hình 1 seed có cùng độ lệch seed với R); hai bên ≥ 2 seed thì Welch. Chênh lệch điểm EER (%), KTC 95%, p hai phía; R có 3 seed (bậc tự do 2):
+
+| So sánh | RADAR VI | ItW | RADAR EN | FRR RADAR VI ở ngưỡng 0 |
+|---|---|---|---|---|
+| A0 − R | −5,65 [−13,18; 1,89], p = 0,08 | +0,47 [−8,03; 8,96], p = 0,84 | −2,63 [−6,65; 1,38], p = 0,11 | −5,61, p = 0,26 |
+| N0 − R | −3,52 [−11,05; 4,01], p = 0,18 | −0,23, p = 0,92 | −2,33, p = 0,13 | −1,41, p = 0,73 |
+| B2 − R | −2,99 [−10,53; 4,54], p = 0,23 | −4,23, p = 0,17 | **−4,23 [−8,25; −0,22], p = 0,045** | −7,06, p = 0,19 |
+| P0 − R | +7,43 [−0,10; 14,97], p = 0,051 | **+9,27 [0,77; 17,76], p = 0,043** | **+6,27 [2,25; 10,28], p = 0,021** | **+20,67, p = 0,028** |
+
+Đọc: với R chỉ 3 seed, hệ số t ở bậc tự do 2 là 4,30 (so với 1,96), nên khoảng tin cậy rất rộng. Chỉ P0 (bỏ post-training) kém R có ý nghĩa ở mức 5% (ItW, RADAR EN, FRR), và B2 tốt hơn R trên RADAR EN. A0 tốt hơn R 5,65 điểm RADAR VI vẫn chỉ ở p = 0,08: kết luận "RawBoost khi fine-tune làm kém" của GĐ5 là khả dĩ nhưng **chưa có ý nghĩa thống kê** theo kiểm định này (phát hiện 5). R seed 4, 5 (lần 2) đưa bậc tự do lên 4: với s = 1,52, nửa khoảng tin cậy cho cấu hình 1 seed từ 7,2 giảm còn ~4,6 điểm RADAR VI, đủ để A0 − R (−5,65) có ý nghĩa nếu độ lệch seed giữ nguyên.
+
+### 7.2. Hiệu chuẩn điểm trên dev (ngày 3 của plan; `src/calibrate.py`, `results/calibration/`)
+
+Cách làm: học s' = a·s + b trên `seaspoof_vi_dev` (1.035 thật VIVOS + 1.035 giả 5 hệ thống train) bằng hồi quy logistic có trọng số prior hiệu dụng của DCF ASVspoof 5 (β = 1,9 ⇒ P(thật) hiệu dụng = β/(1 + β) = 0,655; ngưỡng Bayes −ln β = −0,64). Ba biến thể: `affine` (học a, b); `shift` (a = 1, chỉ dời ngưỡng); `platt` (affine với nhãn làm mềm kiểu Platt, tránh hệ số phình khi dev tách được hoàn toàn). EER và minDCF không đổi (biến đổi đơn điệu); chỉ actDCF đổi. Kiểm chéo: actDCF − minDCF trước hiệu chuẩn trên RADAR VI khớp GĐ5 (S0 0,007; R s1 0,200; A0 0,192).
+
+**actDCF trước và sau hiệu chuẩn** (thấp hơn là tốt hơn; minDCF là mức tốt nhất đạt được bằng chọn ngưỡng):
+
+| Cấu hình | Tập | minDCF | actDCF gốc | affine | shift | platt |
+|---|---|---|---|---|---|---|
+| S0 MMS-300M | RADAR VI | 0,461 | **0,469** | 0,715 | 0,583 | 0,700 |
+| R s1 | RADAR VI | 0,510 | **0,710** | 0,755 | 0,771 | 0,781 |
+| R s2 | RADAR VI | 0,525 | **0,774** | 0,940 | 0,880 | 0,894 |
+| R s3 | RADAR VI | 0,583 | **0,835** | 0,957 | 0,927 | 0,937 |
+| A0 s1 | RADAR VI | 0,428 | **0,620** | 0,680 | 0,662 | 0,666 |
+| S0 MMS-300M | ItW | 0,069 | **0,077** | 0,360 | 0,208 | 0,336 |
+| R s1 | ItW | 0,211 | **0,777** | 0,827 | 0,858 | 0,867 |
+| S0 MMS-300M | MLAAD | 0,118 | 0,202 | **0,136** | 0,161 | 0,139 |
+| R s2 | MLAAD | 0,003 | 0,064 | **0,038** | 0,047 | 0,046 |
+
+Toàn bộ 12 cấu hình × 7 tập (kể cả FRR, FAR ở ngưỡng Bayes): `results/calibration/calibration_output.txt`.
+
+Mỗi kết quả, một câu giải thích:
+1. **Hiệu chuẩn học trên dev làm actDCF ngoài miền tệ hơn ở gần như mọi cấu hình và cả ba biến thể** (RADAR VI, ItW, RADAR EN, `test_cvreal`), kể cả biến thể ổn định nhất (`shift`). Vậy nguyên nhân không phải do phép khớp suy biến.
+2. **Nó chỉ giúp khi tiếng thật của tập kiểm tra cùng nguồn với dev** (VIVOS): MLAAD, `test_seen`, dev. Độ dời học được gần như luôn âm (b < 0, tức nâng ngưỡng): trên dev, tiếng thật VIVOS được chấm "thật" rất chắc, còn một phần câu giả lọt qua, nên dev đòi khắt khe hơn với tiếng thật; ngoài miền thì ngược lại, tiếng thật nguồn khác đã bị loại quá nhiều (FRR RADAR VI của R: 26–33% trước, 30–43% sau `affine`).
+3. **Sau fine-tune dev tách được hoàn toàn** (EER dev 0% ở R, A0, N0, P0, B1), nên `affine` cho hệ số dốc rất lớn (A0 a = 45,9; R s2 a = 33,9) và không xác định rõ; `shift` và `platt` cho a ≈ 1, b ≈ −1 đến −2.
+4. Hệ quả cho báo cáo: lệch hiệu chuẩn sau fine-tune (actDCF − minDCF ≈ 0,2 trên RADAR VI) **không sửa được bằng dev cùng nguồn với train**; cần dev có tiếng thật đa nguồn (không dùng Common Voice vì trùng nguồn RADAR). Khớp hạn chế đã dự báo ở GĐ5 L8 và phát hiện 9.
 
 **Đã chốt (15/11, người dùng):** chạy GĐ6 trên Kaggle như hiện tại, một tài khoản; không thuê server (nên không cần chạy lại R, A0). Không tạo tài khoản Kaggle thứ hai: điều khoản Kaggle cấm một người có hơn một tài khoản đang hoạt động (theo kết quả tìm kiếm trích kaggle.com/terms; trang render bằng JavaScript nên chưa đọc trực tiếp), rủi ro mất cả tài khoản chính (dataset riêng tư, output và checkpoint GĐ5). Theo ước tính trước lần thử, tổng quota đủ (GĐ6 ~17 giờ; ~31 giờ nếu thêm 2 seed cho R và G1 cùng G1 không RawBoost; có ~10,85 giờ tuần này + 30 giờ từ 21/11); chỉ là xong GPU muộn hơn (~22–23/11).
 

@@ -76,9 +76,12 @@ def main():
     p.add_argument("--finetune", default="results/finetune")
     p.add_argument("--protocols", default="protocols/ids")
     p.add_argument("--hard", default="results/zeroshot/analysis/hard_ids_default7.csv")
-    p.add_argument("--pairs", nargs="*",
-                   default=["R_s1:S0_mms_300m", "A0_s1:R_s1", "R_s1:ref_xlsr_2b"],
-                   help="A:B, chênh lệch EER(A) − EER(B)")
+    p.add_argument("--pairs", nargs="*", default=GD5_PAIRS + GD6_PAIRS,
+                   help="A:B, chênh lệch EER(A) − EER(B). Bootstrap rút ngẫu nhiên tuần tự theo thứ tự cặp, "
+                        "nên chỉ nối thêm cặp mới vào cuối để giữ nguyên số của các cặp cũ")
+    p.add_argument("--group-pairs", nargs="*",
+                   default=["G1:R", "G1:A0", "G2:G1", "G3:G1", "G2:R", "A0:R", "N0:R", "B2:R", "P0:R"],
+                   help="A:B theo mã cấu hình (<mã>_s<seed>), so qua các seed (mục 5)")
     p.add_argument("--n-boot", type=int, default=1000)
     p.add_argument("--seed", type=int, default=2026)
     p.add_argument("--out", default="results/finetune/analysis")
@@ -221,6 +224,65 @@ def main():
         boot.to_csv(os.path.join(a.out, "bootstrap_pairs.csv"), index=False)
         print(f"\n== 4. Chênh lệch EER A − B (điểm %), KTC 95% bootstrap ghép cặp ({a.n_boot} lượt)")
         print(boot.to_string(index=False, float_format=fmt))
+
+    # 5. So sánh hai cấu hình qua các seed (độ bất định do seed huấn luyện, GĐ5 phát hiện 8)
+    seed_t = group_compare(main_t, a.group_pairs)
+    if len(seed_t):
+        seed_t.to_csv(os.path.join(a.out, "seed_tests.csv"), index=False)
+        print("\n== 5. So sánh qua seed: chênh lệch trung bình A − B (điểm %), KTC 95% và p (t-test hai phía).\n"
+              "   Hai bên ≥ 2 seed: Welch. Một bên 1 seed: dùng độ lệch seed của bên kia (giả định cùng\n"
+              "   độ lệch), t = (A − B)/(s·√(1 + 1/n)), bậc tự do n − 1.")
+        print(seed_t.to_string(index=False, float_format=fmt))
+
+
+# Cặp bootstrap đã báo ở GĐ5 (đúng thứ tự trong results/finetune/analysis/bootstrap_pairs.csv commit ef4d943),
+# rồi cặp của GĐ6 (chỉ nối vào cuối). Cặp chưa có điểm thì bỏ qua.
+GD5_PAIRS = ["R_s1:S0_mms_300m", "R_s2:S0_mms_300m", "R_s3:S0_mms_300m", "A0_s1:S0_mms_300m", "A0_s1:R_s1",
+             "P0_s1:R_s1", "B2_s1:R_s1", "B2_s1:S0_w2v_large", "B1_s1:B2_s1", "B1_s1:S0_w2v_small",
+             "N0_s1:R_s1", "N0_s1:S0_mms_300m_nda", "N0_s1:A0_s1", "R_s2:R_s1", "R_s3:R_s1",
+             "R_s1:ref_xlsr_2b", "A0_s1:ref_xlsr_2b", "S0_mms_300m_nda:S0_mms_300m"]
+GD6_PAIRS = ["G1_s1:R_s1", "G1_s1:A0_s1", "G1_s1:S0_mms_300m", "G2_s1:G1_s1", "G2_s1:R_s1"]
+
+SEED_METRICS = ("radar_vi_eer", "itw_eer", "radar_en_eer", "radar_vi_frr0", "test_cvreal_eer", "mlaad_eer")
+
+
+def group_compare(main_t, pairs, metrics_=SEED_METRICS):
+    """main_t: bảng chính (cột config = <mã>_s<seed>). pairs: ["G1:R", ...] theo mã cấu hình."""
+    import re as _re
+    from scipy import stats
+
+    t = main_t[main_t.config.str.match(r".+_s\d+$")].copy()
+    t["base"] = t.config.map(lambda c: _re.sub(r"_s\d+$", "", c))
+    rows = []
+    for pair in pairs:
+        A, B = pair.split(":")
+        da, db = t[t.base == A], t[t.base == B]
+        if da.empty or db.empty:
+            continue
+        for m in metrics_:
+            if m not in t:
+                continue
+            xa, xb = da[m].dropna().values, db[m].dropna().values
+            na, nb = len(xa), len(xb)
+            if na == 0 or nb == 0 or (na < 2 and nb < 2):
+                continue
+            d = xa.mean() - xb.mean()
+            if na >= 2 and nb >= 2:
+                va, vb = xa.var(ddof=1) / na, xb.var(ddof=1) / nb
+                se = np.sqrt(va + vb)
+                df = (va + vb) ** 2 / (va ** 2 / (na - 1) + vb ** 2 / (nb - 1)) if va + vb > 0 else np.nan
+                kind = "Welch"
+            else:
+                x = xa if na >= 2 else xb
+                se = x.std(ddof=1) * np.sqrt(1 + 1 / len(x))
+                df, kind = len(x) - 1, f"1 seed, s của {A if na >= 2 else B}"
+            tq = stats.t.ppf(0.975, df) if df == df else np.nan
+            p = 2 * stats.t.sf(abs(d / se), df) if se > 0 else np.nan
+            rows.append({"A": A, "B": B, "metric": m, "n_A": na, "n_B": nb, "mean_A": xa.mean(),
+                         "sd_A": xa.std(ddof=1) if na >= 2 else np.nan, "mean_B": xb.mean(),
+                         "sd_B": xb.std(ddof=1) if nb >= 2 else np.nan, "diff_A_minus_B": d,
+                         "ci95_lo": d - tq * se, "ci95_hi": d + tq * se, "df": df, "p": p, "test": kind})
+    return pd.DataFrame(rows)
 
 
 if __name__ == "__main__":

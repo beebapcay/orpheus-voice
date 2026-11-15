@@ -181,3 +181,28 @@ S0_mms_300m_nda     S0_mms_300m test_minimax   0.04   0.00            0.04     0
 S0_mms_300m_nda     S0_mms_300m  test_cvreal   2.10   7.44           -5.34    -6.30    -4.74      0.00
 S0_mms_300m_nda     S0_mms_300m        mlaad   4.65   5.18           -0.52    -1.01    -0.04      0.01
 S0_mms_300m_nda     S0_mms_300m     radar_vi  18.07  20.08           -2.02    -2.51    -1.37      0.00
+
+== 5. So sánh qua seed: chênh lệch trung bình A − B (điểm %), KTC 95% và p (t-test hai phía).
+   Hai bên ≥ 2 seed: Welch. Một bên 1 seed: dùng độ lệch seed của bên kia (giả định cùng
+   độ lệch), t = (A − B)/(s·√(1 + 1/n)), bậc tự do n − 1.
+ A B          metric  n_A  n_B  mean_A  sd_A  mean_B  sd_B  diff_A_minus_B  ci95_lo  ci95_hi  df    p            test
+A0 R    radar_vi_eer    1    3   18.37   NaN   24.02  1.52           -5.65   -13.18     1.89   2 0.08 1 seed, s của R
+A0 R         itw_eer    1    3    6.10   NaN    5.63  1.71            0.47    -8.03     8.96   2 0.84 1 seed, s của R
+A0 R    radar_en_eer    1    3   25.00   NaN   27.63  0.81           -2.63    -6.65     1.38   2 0.11 1 seed, s của R
+A0 R   radar_vi_frr0    1    3   27.09   NaN   32.70  3.08           -5.61   -20.92     9.69   2 0.26 1 seed, s của R
+A0 R test_cvreal_eer    1    3    2.79   NaN    4.47  1.72           -1.68   -10.23     6.88   2 0.49 1 seed, s của R
+N0 R    radar_vi_eer    1    3   20.50   NaN   24.02  1.52           -3.52   -11.05     4.01   2 0.18 1 seed, s của R
+N0 R         itw_eer    1    3    5.40   NaN    5.63  1.71           -0.23    -8.73     8.26   2 0.92 1 seed, s của R
+N0 R    radar_en_eer    1    3   25.30   NaN   27.63  0.81           -2.33    -6.35     1.68   2 0.13 1 seed, s của R
+N0 R   radar_vi_frr0    1    3   31.29   NaN   32.70  3.08           -1.41   -16.72    13.89   2 0.73 1 seed, s của R
+N0 R test_cvreal_eer    1    3    3.60   NaN    4.47  1.72           -0.87    -9.43     7.69   2 0.70 1 seed, s của R
+B2 R    radar_vi_eer    1    3   21.03   NaN   24.02  1.52           -2.99   -10.53     4.54   2 0.23 1 seed, s của R
+B2 R         itw_eer    1    3    1.40   NaN    5.63  1.71           -4.23   -12.73     4.26   2 0.17 1 seed, s của R
+B2 R    radar_en_eer    1    3   23.40   NaN   27.63  0.81           -4.23    -8.25    -0.22   2 0.05 1 seed, s của R
+B2 R   radar_vi_frr0    1    3   25.64   NaN   32.70  3.08           -7.06   -22.36     8.25   2 0.19 1 seed, s của R
+B2 R test_cvreal_eer    1    3    2.59   NaN    4.47  1.72           -1.88   -10.44     6.68   2 0.45 1 seed, s của R
+P0 R    radar_vi_eer    1    3   31.46   NaN   24.02  1.52            7.43    -0.10    14.97   2 0.05 1 seed, s của R
+P0 R         itw_eer    1    3   14.90   NaN    5.63  1.71            9.27     0.77    17.76   2 0.04 1 seed, s của R
+P0 R    radar_en_eer    1    3   33.90   NaN   27.63  0.81            6.27     2.25    10.28   2 0.02 1 seed, s của R
+P0 R   radar_vi_frr0    1    3   53.37   NaN   32.70  3.08           20.67     5.37    35.98   2 0.03 1 seed, s của R
+P0 R test_cvreal_eer    1    3    3.26   NaN    4.47  1.72           -1.21    -9.77     7.35   2 0.61 1 seed, s của R
