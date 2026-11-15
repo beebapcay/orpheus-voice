@@ -14,6 +14,7 @@ Câu hỏi của giai đoạn: fine-tune bằng GRPO trên tiếng Việt có gi
 | 1 | Phân tích không cần GPU: kiểm định qua seed, hiệu chuẩn, theo hệ thống sinh, mốc cơ chế | Mục 7 | Xong (15/11) |
 | 1 | **Bộ đầy đủ trên server vast.ai** (76 lần, cùng phần cứng, 3 seed mọi cấu hình): script, chọn thí nghiệm | Mục 9, 12, `server/` | Script xong, thử trên máy (15/11); người dùng thuê máy **sau khi** xem kết quả lần 1, 2 Kaggle (mục 9) |
 | 1 | Đánh giá toàn diện hướng thực nghiệm (người dùng yêu cầu): đối chiếu chế độ của bài, độ mạnh thống kê, nguồn ngẫu nhiên của seed, lực của phạt KL; sửa lỗi xoá checkpoint của bộ server; dấu vân tay batch ở tầng 0 | Mục 13 | Xong (15/11); chờ người dùng chốt các đề xuất ở 13.5 |
+| 1 | Phân hạng (bắt buộc, nên, có điều kiện, tuỳ chọn) và kế hoạch theo giai đoạn A–E có điểm kiểm (người dùng yêu cầu) | Mục 14 | Đề xuất (15/11); chờ người dùng chốt |
 | 2 | Ít mẫu (N = 50, 200, 1000), hoặc cắt (L7) | | Chưa |
 | 3 | Hiệu chuẩn điểm, phân tích theo hệ thống sinh | | Chưa |
 
@@ -609,3 +610,93 @@ Dự đoán nào sai thì phân tích lực (mục 12.1, 13.3) thiếu một y�
 vast.ai tính tiền theo giờ GPU, nên 4 GPU tốn gần bằng 2 GPU nhưng xong sớm gấp đôi. Thí nghiệm nên xong trước ~25/11 để còn GĐ7.
 
 **Cần người dùng chốt:** B1, B2, C1, C2 (đề xuất làm); D1 (làm, hay để hướng phát triển); 2 hay 4 GPU. A1, A2 không đổi thí nghiệm (A1 đổi phép thử chính, Welch vẫn báo kèm). D2, D3 chốt sau tầng 1–2.
+
+## 14. Có bắt buộc làm hết không: kế hoạch theo giai đoạn (đề xuất 15/11 tối, chờ người dùng chốt)
+
+**Trả lời ngắn: không.** Mỗi hạng mục được xếp hạng theo câu hỏi nó phục vụ và cái mất đi nếu cắt. Giờ GPU tính theo T4 (SFT 4,3; GRPO 5,6; G2 và SFT + KL 5,4; chấm 5 tập 1,7 mỗi lần, mục 3.2); giờ thực ước cho 2 × 3090 với tốc độ k = 2,5–3,5 lần T4 (đo ở tầng 0), cộng ~1,5 giờ dựng máy:
+
+| Bộ | Giờ T4 | 2 × 3090 | 4 GPU | Được gì |
+|---|---|---|---|---|
+| Tối thiểu (bắt buộc) | ~117 | 18–25 giờ | 10–13 giờ | Trả lời đủ 3 câu hỏi, có phần cải tiến |
+| Khuyến nghị (bắt buộc + nên) | ~211 | 32–44 giờ | 17–23 giờ | Kết luận vững: tách cường độ, vai trò KL, câu hỏi 1 có 3 seed trên một phần cứng |
+| Khuyến nghị + mọi việc có điều kiện xảy ra | ~292 | 43–60 giờ | 22–31 giờ | Thêm đối chứng quy kết, bản ghép, seed 4–5 khi cần |
+| Tất cả (thêm tuỳ chọn) | ~480 | 70–97 giờ | 36–49 giờ | Thêm ít mẫu, kiểm chế độ, G2, mốc XLS-R-2B |
+
+### 14.1. Phân hạng
+
+| Hạng | Hạng mục | Phục vụ | Nếu cắt thì mất gì, thay bằng gì | Giờ T4 |
+|---|---|---|---|---|
+| **Bắt buộc** | Dựng máy, tầng 0 (tốc độ, bộ nhớ, worker, dấu vân tay batch, kiểm TF32) | Mọi thứ | Không chạy được, không biết lịch | ~1 |
+| **Bắt buộc** | Tầng 1: S0 × 4, R, G1, A0 × 3 | Câu hỏi 2; câu hỏi 3 gốc; RawBoost (câu hỏi 1); mốc của mọi bảng | Không có bảng nào | 49 |
+| **Bắt buộc** | G1s, G1b × 3 | Câu hỏi 3 đã đặt lại (phần "sửa") | Không trả lời được "bản sửa có giúp không" | 34 |
+| **Bắt buộc** | WiSE-FT (C1) cho R, A0, G1 và bản sửa tốt nhất | Phần đề xuất cải tiến, khả năng thành công cao | Phần cải tiến phụ thuộc hoàn toàn vào việc bản sửa GRPO có giúp không | 34 |
+| **Bắt buộc**, không tốn GPU | A1 (phép thử có khối seed, ghi trước so sánh chính, Holm), thước đo cơ chế (13.4) | Độ tin cậy của mọi kết luận | Kết luận "không khác biệt" không đọc được | 0 |
+| Nên | G1lr + Rlr × 3 | Tách "đổi cơ chế" khỏi "giảm cường độ"; Rlr còn trả lời hạn chế của GĐ5 (mục 4.1: mức quên gắn với cường độ fine-tune) | Bản sửa tốt lên vẫn có thể chỉ do học nhẹ tay hơn | 30 |
+| Nên | G3 × 3 | Mục của plan (vai trò phạt KL) | Vai trò KL chỉ còn nhìn qua G1b (β = 1) | 17 |
+| Nên | Tầng 3: P0, B2, N0, B1 × 3 | Câu hỏi 1 có 3 seed cùng phần cứng | Câu hỏi 1 dùng bộ Kaggle (T4: R × 5, các yếu tố 1 seed): P0 vẫn có ý nghĩa, B2, N0 chưa | 48 |
+| Nên, không tốn GPU | A2 độ trôi trọng số (CPU, trước `cleanup`) | Phân tích sâu: quên theo độ trôi | Mất một lớp giải thích rẻ | 0 |
+| Có điều kiện | SFT + KL × 3 | Quy kết "KL hay RL" | Chỉ cần khi một bản sửa tốt hơn R | 16 |
+| Có điều kiện | G1s0 × 3 | Tách hai tác dụng của G1s | Chỉ cần khi G1s khác G1 | 17 |
+| Có điều kiện | Bản sửa tốt nhất ghép không RawBoost × 3 (tầng 4 cũ) | Ghép hai công thức tốt | Chỉ cần khi có bản sửa tốt | 17 |
+| Có điều kiện | Seed 4, 5 cho R, G1, bản sửa tốt nhất (C2) | Độ mạnh | Chỉ cần khi ngưỡng phát hiện theo A1 còn > ~4 điểm | 31 |
+| Có điều kiện | D3: G1A (G1 không RawBoost) | Bảng 2 × 2 ở nhóm ít nhiễu | Chỉ cần khi độ lệch seed của A0 < ½ của R | 17 |
+| Tuỳ chọn | Ít mẫu (tầng 5 cũ): SFT, G1 × N 50/200/1000 × 3 seed; bản rút gọn 1 seed | Câu hỏi 1 phần "lượng dữ liệu", ngày 2 của plan | Phần "lượng dữ liệu" thành hạn chế; bản 1 seed vẫn cho dạng đường cong | 89 (1 seed: 30) |
+| Tuỳ chọn | D2: bản sửa ở ít mẫu | Kiểm chẩn đoán ở bão hoà nặng nhất | | 50 |
+| Tuỳ chọn | D1: kiểm chế độ trên nửa RADAR VI | Kiểm trực tiếp "vì sao" | "Vì sao" chỉ dựa trên phân tích lực và kiểm cơ chế | 30 |
+| Tuỳ chọn | G2 × 3 | Mục của plan (clip, mô hình cũ) | Đã có bài (GRPO_s ≈ GRPO) và Kaggle seed 1 (G2 ≈ G1) | 16 |
+| Tuỳ chọn | Mốc XLS-R-2B dùng thẳng | Tham chiếu mô hình lớn | | 2 |
+
+### 14.2. Các giai đoạn và điểm kiểm
+
+Nguyên tắc: hàng đợi GPU luôn có việc đã duyệt và không phụ thuộc điểm kiểm (tầng 3 làm việc lấp chỗ trống), nên GPU không phải chờ phân tích. Ở mỗi điểm kiểm, Claude ghi một mục mới trong file này theo mẫu: kết quả; giả định nào còn đúng; quyết định cho giai đoạn sau; thời gian còn lại so với mốc.
+
+| Giai đoạn | Việc (hạng) | Điểm kiểm: tiêu chí | Giả định được kiểm lại | Quyết định ở điểm kiểm |
+|---|---|---|---|---|
+| **A. Dựng máy, thử đo** (~1,5–3 giờ) | init, check, code, data, bootstrap; kiểm TF32 bằng số; tầng 0 | Toy 6,11%; DỮ LIỆU OK; sai số matmul fp32 so với fp64 ~1e-7 tương đối (TF32 thì ~1e-3); G1 batch 50 không hết bộ nhớ | Server tính như T4; cùng seed thì SFT và GRPO nhận cùng batch, cùng RawBoost | Số worker; dạng phép thử A1 (dấu vân tay trùng thì khối seed, không thì Welch kèm phương sai gộp); ước lịch theo k đo được. **Hỏi người dùng** nếu bộ khuyến nghị không xong trước 22/11 (thêm GPU hay cắt) |
+| **B. Lõi** (~8 giờ) | Tầng 1 (bắt buộc) | Kiểm sớm sau seed 1 của R, G1, A0: so với Kaggle seed 1 (cùng code, cùng seed; nếu cùng 2 worker thì chỉ khác phần cứng). Sau cả tầng: R − S0 > 0 (RADAR VI, ItW), A0 < R, G1 nằm trong khoảng của R, MLAAD tốt lên, G1 làm sắc hơn R trên dev | Bộ server lặp lại kết luận Kaggle; độ lệch seed cỡ Kaggle; hiệu ứng seed dùng chung giữa cấu hình (ρ) | Ngưỡng phát hiện thực tế theo A1, nên có cần seed 4, 5 (C2) không; D3. **Dừng hàng đợi, hỏi người dùng** nếu một kết luận Kaggle bị đảo |
+| **C. Chẩn đoán và sửa** (~13 giờ) | G1s, G1b (bắt buộc); G1lr, Rlr, G3 (nên); G2 (tuỳ chọn, chạy cuối) | Kiểm cơ chế theo dự đoán 13.4 (Δz tiếng thật dev, % câu dev p > 0,999); bản sửa so với G1 và R (A1) | Phân tích lực đúng; bản sửa đổi được việc làm sắc; chênh lệch ngoài miền đủ lớn để thấy | Chọn bản sửa tốt nhất (RADAR VI thấp nhất, rồi ItW, FRR; trong miền không kém R quá 0,5 điểm); bật việc có điều kiện; dùng quota Kaggle tuần sau cho bản sửa nào (Q7). **Hỏi người dùng**: D1; và nếu dự đoán cơ chế sai |
+| **D. Cải tiến** (~6–14 giờ) | WiSE-FT R, A0, G1 (chạy ngay khi có checkpoint, không chờ C); WiSE-FT bản sửa tốt nhất; việc có điều kiện | Có α nào cho ngoài miền tốt hơn R mà giữ phần lớn lợi ích trong miền (MLAAD, `test_cvreal`) không. α = 0,5 ghi trước là điểm chính (chọn α theo tập kiểm tra là dò trên tập kiểm tra); cả đường cong chỉ để mô tả. Mức quên có theo độ trôi trọng số không (A2) | Nội suy trơn (không có "đồi lỗi" giữa S0 và bản fine-tune); S0 là đầu tốt ngoài miền | Phạm vi giai đoạn E theo thời gian còn lại đến mốc |
+| **E. Mở rộng** (tuỳ thời gian) | Tầng 3 (nên, lấp chỗ trống từ giai đoạn B); ít mẫu (3 seed, 1 seed hoặc bỏ), D2, D1, G2, XLS-R-2B (tuỳ chọn) | Thời gian còn lại | | Cắt theo thứ tự ở 14.3 |
+| **Kết thúc** | `fetch`, `collect`, đo độ trôi trên mọi checkpoint, `cleanup` | Mọi kết quả đã về máy, đã lưu bằng chứng | | Báo người dùng huỷ máy |
+
+Ba kịch bản ở điểm kiểm C (quyết định lớn nhất):
+
+| Kịch bản | Câu chuyện của câu hỏi 3 | Làm tiếp |
+|---|---|---|
+| (a) Có bản sửa tốt hơn R ngoài miền | Chẩn đoán đúng, sửa được | SFT + KL, G1s0 (nếu là G1s), bản ghép không RawBoost, WiSE-FT trên bản sửa, seed 4–5 nếu cần |
+| (b) Bản sửa tốt hơn G1 nhưng ≈ R | GRPO sửa xong chỉ bằng SFT; nút thắt là dữ liệu (tiếng thật một nguồn) | Bỏ bản ghép và D2; cải tiến dựa vào WiSE-FT và A0; D1 đáng làm hơn |
+| (c) Dự đoán cơ chế sai (bản sửa không giảm việc làm sắc) | Phân tích lực thiếu một yếu tố | Dừng mở rộng phía GRPO; xem lại phân tích; hỏi người dùng |
+
+### 14.3. Quy tắc tự quyết
+
+- Việc có điều kiện: Claude tự bật khi đạt điều kiện ở 14.1, rồi báo. Người dùng chỉ được hỏi trong 4 trường hợp: kết luận Kaggle bị đảo; dự đoán cơ chế sai; cần thêm GPU; D1.
+- **Mốc cứng:** thí nghiệm GPU trên server xong trước hết ngày **22/11**; Kaggle (từ 21/11) xong trước **24/11**; GĐ7 từ ~24/11. Vượt mốc thì cắt theo thứ tự (cắt trước: giá trị thấp, chi phí cao): D2 → ít mẫu 3 seed xuống 1 seed → bỏ ít mẫu → D1 → G2 → mốc XLS-R-2B → seed 2–3 của tầng 3 (câu hỏi 1 khi đó dùng bộ Kaggle). Không bao giờ cắt hạng bắt buộc.
+
+### 14.4. Lịch dự kiến (2 × 3090, k ≈ 3, bộ khuyến nghị cộng việc có điều kiện thường xảy ra; bắt đầu sáng 16/11)
+
+| Giai đoạn | Giờ thực | Xong khoảng |
+|---|---|---|
+| A | 1,5–3 | Trưa 16/11 |
+| B | ~8 | Tối 16/11 |
+| C | ~13 | Sáng 17/11 |
+| D | ~6–14 | Tối 17/11 |
+| E (tầng 3 và tuỳ chọn) | 8–33 | 18–19/11 |
+| Kaggle (T4, lặp bản sửa) | 2 kernel song song | 21–22/11 |
+
+Dư ~3 ngày trước mốc 22/11 cho lỗi và chạy lại. Với 4 GPU, A–E xong khoảng 17–18/11.
+
+### 14.5. Việc kỹ thuật cần làm trước tầng 1 (sau khi chốt)
+
+1. `server/run.py`: đọc lại `experiments.py` mỗi lần GPU nhận việc, và tệp `results/hold` để tạm dừng nhận việc mới. Thêm, bớt lần chạy ở điểm kiểm mà không dừng lần đang chạy (`stop --yes` hiện giết cả lần đang chạy).
+2. `server/experiments.py`: sắp tầng theo giai đoạn; việc có điều kiện và tuỳ chọn chưa vào danh sách cho đến khi được bật.
+3. Trong lúc giai đoạn B chạy: A1 trong `src/analyze_ablation.py` (mô hình hai yếu tố, trước điểm kiểm B); WiSE-FT (nội suy + chấm) và đo độ trôi (trước giai đoạn D); lớp bọc SFT + KL (trước điểm kiểm C, chạy thử ngắn khi có GPU rảnh).
+
+### 14.6. Thay đổi so với các quyết định trước (cần người dùng chốt)
+
+| Trước | Đề xuất | Lý do |
+|---|---|---|
+| G1s0 chạy chắc (Q6) | Có điều kiện: khi G1s khác G1 | Chỉ tách tác dụng của G1s; vô nghĩa nếu G1s ≈ G1 |
+| SFT + KL, seed 4–5 "làm" (13.5) | Có điều kiện | Quy kết chỉ cần khi có hiệu ứng; seed chỉ cần khi A1 chưa đủ mạnh |
+| Ít mẫu 3 seed (mục 8, phương án C) | Tuỳ chọn, chốt phạm vi ở điểm kiểm D (3 seed, 1 seed, hoặc bỏ) | Đắt nhất (89 giờ T4, ~30% bộ); ở miền bão hoà kết quả khó đọc |
+| Giữ G2 (Q2) | Tuỳ chọn, chạy cuối giai đoạn C | Bài và Kaggle seed 1 đã cho G2 ≈ G1 |
+| Mọi cấu hình 3 seed (bộ chính) | Giữ, nhưng tầng 3 thành việc lấp chỗ trống, có thể cắt khi vượt mốc | Câu hỏi 1 có đường lùi là bộ Kaggle |
