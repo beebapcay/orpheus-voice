@@ -197,6 +197,26 @@ Mỗi kết quả, một câu giải thích:
 3. **Sau fine-tune dev tách được hoàn toàn** (EER dev 0% ở R, A0, N0, P0, B1), nên `affine` cho hệ số dốc rất lớn (A0 a = 45,9; R s2 a = 33,9) và không xác định rõ; `shift` và `platt` cho a ≈ 1, b ≈ −1 đến −2.
 4. Hệ quả cho báo cáo: lệch hiệu chuẩn sau fine-tune (actDCF − minDCF ≈ 0,2 trên RADAR VI) **không sửa được bằng dev cùng nguồn với train**; cần dev có tiếng thật đa nguồn (không dùng Common Voice vì trùng nguồn RADAR). Khớp hạn chế đã dự báo ở GĐ5 L8 và phát hiện 9.
 
+### 7.3. EER cực đoan theo hệ thống sinh (ngày 3 của plan; `results/finetune/analysis/table_by_system_mlaad.csv`)
+
+RADAR VI không có nhãn hệ thống theo câu, nên chỉ phân tích được trên SEA-Spoof (mọi hệ thống ≤ 2,1% với S0, ≤ 0,2% sau fine-tune: bão hoà, GĐ5 mục 3.1) và MLAAD `fake/vi` (5 TTS tiếng Việt chưa gặp, tiếng thật VIVOS). EER (%) theo hệ thống; trong ngoặc: % câu giả bị nhận là thật ở ngưỡng log-odds 0:
+
+| Cấu hình | LEMAS-TTS | OmniVoice | VieNeu-TTS | **VoxCPM2** | vixTTS |
+|---|---|---|---|---|---|
+| S0 MMS-300M | 0,02 (0,4) | 0,09 (2,7) | 0,09 (0,1) | **15,78 (95,6)** | 0,00 (0,0) |
+| S0 MMS-300M NDA | 0,00 (0,0) | 0,11 (0,9) | 0,00 (0,0) | **12,71 (79,7)** | 0,00 (0,0) |
+| S0 W2V-Large | 0,02 (0,1) | 0,00 (0,0) | 0,00 (0,0) | **6,90 (36,5)** | 0,00 (0,0) |
+| S0 W2V-Small | 0,29 (1,2) | 0,60 (1,9) | 0,02 (0,0) | **6,61 (35,3)** | 0,00 (0,0) |
+| R s2 | 0,00 (0,0) | 0,00 (0,0) | 0,00 (0,0) | **0,29 (28,7)** | 0,00 (0,0) |
+| R s3 | 0,00 (0,0) | 0,00 (0,0) | 0,00 (0,0) | **0,40 (31,7)** | 0,00 (0,0) |
+
+Mỗi kết quả, một câu giải thích:
+1. **Một hệ thống chiếm gần hết lỗi:** với mọi mô hình dùng thẳng, VoxCPM2 có EER 6,6–15,8% trong khi bốn hệ thống còn lại ≤ 0,6%; MMS-300M Default nhận 95,6% câu VoxCPM2 là thật. Cùng kiểu "EER phân tán cực đoan theo hệ thống sinh" mà VietPrism ghi nhận (0,00% đến 99,99%).
+2. **Fine-tune sửa thứ hạng nhưng không sửa ngưỡng cho VoxCPM2:** EER còn 0,29–0,40%, nhưng 29–32% câu VoxCPM2 vẫn lọt qua ở ngưỡng 0 (bốn hệ thống khác 0%). Điểm của VoxCPM2 nằm giữa tiếng thật VIVOS và các hệ thống khác: tách được nếu chọn lại ngưỡng, nhưng ngưỡng mặc định thì không.
+3. Hai bản 317M tiếng Anh (W2V-Large, W2V-Small) dùng thẳng chỉ kém trên VoxCPM2 bằng nửa hai bản MMS-300M (6,6–6,9% so với 12,7–15,8%), cùng chiều với W2V-Large ≤ MMS-300M ở RADAR VI (GĐ3, GĐ5 B2).
+
+Khi có G1: so cột VoxCPM2 (cả EER và % lọt ở ngưỡng 0) của G1 với R. Giả thuyết cơ chế (GĐ5 mục 6.3) dự đoán GRPO ít kéo các câu mô hình đang sai chắc chắn, nên nếu VoxCPM2 giống câu "sai chắc chắn" của train thì G1 có thể để lọt nhiều hơn R.
+
 **Đã chốt (15/11, người dùng):** chạy GĐ6 trên Kaggle như hiện tại, một tài khoản; không thuê server (nên không cần chạy lại R, A0). Không tạo tài khoản Kaggle thứ hai: điều khoản Kaggle cấm một người có hơn một tài khoản đang hoạt động (theo kết quả tìm kiếm trích kaggle.com/terms; trang render bằng JavaScript nên chưa đọc trực tiếp), rủi ro mất cả tài khoản chính (dataset riêng tư, output và checkpoint GĐ5). Theo ước tính trước lần thử, tổng quota đủ (GĐ6 ~17 giờ; ~31 giờ nếu thêm 2 seed cho R và G1 cùng G1 không RawBoost; có ~10,85 giờ tuần này + 30 giờ từ 21/11); chỉ là xong GPU muộn hơn (~22–23/11).
 
 **Đánh giá plan theo số liệu GĐ5 (15/11, đề xuất, chờ người dùng chốt sau lần thử):**

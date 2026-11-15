@@ -50,6 +50,15 @@ S0_mms_300m_nda     0.04      0.40        1.62    0.76    0.99     0.04  1.01
            R_s2     0.00      0.00        0.16    0.04    0.00     0.00  0.00
            R_s3     0.00      0.00        0.20    0.04    0.00     0.00  0.00
 
+== 2b. EER (%) theo hệ thống sinh, MLAAD fake/vi; _far0: % câu giả bị nhận là thật ở ngưỡng 0
+         config  LEMAS-TTS  LEMAS-TTS_far0  OmniVoice  OmniVoice_far0  VieNeu-TTS  VieNeu-TTS_far0  VoxCPM2  VoxCPM2_far0  vixTTS  vixTTS_far0
+    S0_mms_300m       0.02            0.40       0.09            2.70        0.09             0.10    15.78         95.60    0.00         0.00
+S0_mms_300m_nda       0.00            0.00       0.11            0.90        0.00             0.00    12.71         79.70    0.00         0.00
+   S0_w2v_large       0.02            0.10       0.00            0.00        0.00             0.00     6.90         36.50    0.00         0.00
+   S0_w2v_small       0.29            1.20       0.60            1.90        0.02             0.00     6.61         35.30    0.00         0.00
+           R_s2       0.00            0.00       0.00            0.00        0.00             0.00     0.29         28.70    0.00         0.00
+           R_s3       0.00            0.00       0.00            0.00        0.00             0.00     0.40         31.70    0.00         0.00
+
 == 3. Tập 493 câu khó chung của GĐ3 (RADAR tiếng Việt): % còn sai (thấp hơn là tốt hơn)
          config  n_fake  n_real  fake_wrong_at_eer_thr_%  real_wrong_at_eer_thr_%  fake_wrong_at0_%  real_wrong_at0_%
     S0_mms_300m     238     255                   100.00                   100.00            100.00             52.55

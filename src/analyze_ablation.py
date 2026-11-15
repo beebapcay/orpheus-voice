@@ -92,6 +92,7 @@ def main():
     fmt = lambda v: f"{v:.2f}"  # noqa: E731
 
     proto = pd.read_csv(os.path.join(a.protocols, "seaspoof_vi_test.tsv"), sep="\t").set_index("ID")
+    mproto = pd.read_csv(os.path.join(a.protocols, "mlaad_vi_test.tsv"), sep="\t").set_index("ID")
     hard = pd.read_csv(a.hard).set_index("ID")
     S = sources(a)
 
@@ -112,6 +113,9 @@ def main():
         m = S[cfg].get("mlaad_vi_test")
         if m is not None:
             v["mlaad"] = (m.score[m.label == 1], m.score[m.label == 0])
+            m = m.join(mproto[["sys"]])
+            for s_ in sorted(m.sys[m.label == 0].dropna().unique()):
+                v[f"mlaad_sys:{s_}"] = (m.score[m.label == 1], m.score[(m.sys == s_) & (m.label == 0)])
         o = S[cfg].get("ood_forget")
         if o is not None:
             for pre, name in (("ItW-", "itw"), ("RADAR2026-", "radar_en")):
@@ -176,6 +180,21 @@ def main():
         sys_t.to_csv(os.path.join(a.out, "table_by_system.csv"), index=False)
         print("\n== 2. EER (%) theo hệ thống sinh, SEA-Spoof test (f5_tts, minimax: để riêng)")
         print(sys_t.to_string(index=False, float_format=fmt))
+
+    # 2b. Theo hệ thống sinh, MLAAD fake/vi (5 TTS tiếng Việt chưa gặp; tiếng thật VIVOS của test)
+    rows = []
+    for cfg, v in V.items():
+        row = {"config": cfg}
+        for k in sorted(x for x in v if x.startswith("mlaad_sys:")):
+            row[k[10:]] = eer(*v[k])
+            row[k[10:] + "_far0"] = 100 * float(np.mean(np.asarray(v[k][1]) > 0))
+        if len(row) > 1:
+            rows.append(row)
+    if rows:
+        msys_t = pd.DataFrame(rows)
+        msys_t.to_csv(os.path.join(a.out, "table_by_system_mlaad.csv"), index=False)
+        print("\n== 2b. EER (%) theo hệ thống sinh, MLAAD fake/vi; _far0: % câu giả bị nhận là thật ở ngưỡng 0")
+        print(msys_t.to_string(index=False, float_format=fmt))
 
     # 3. Tập câu khó chung (GĐ3): còn sai bao nhiêu
     rows = []
