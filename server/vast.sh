@@ -44,7 +44,8 @@ case "$CMD" in
     ;;
   check)
     load
-    remote "echo SSH OK; hostname; nvidia-smi --query-gpu=index,name,memory.total,driver_version --format=csv; \
+    # ~/.no_auto_tmux: tắt tmux tự mở khi đăng nhập SSH của ảnh máy vast.ai (không ảnh hưởng nếu không có)
+    remote "touch ~/.no_auto_tmux; echo SSH OK; hostname; nvidia-smi --query-gpu=index,name,memory.total,driver_version --format=csv; \
             nproc; free -g | head -2; df -h /workspace 2>/dev/null || df -h ~"
     ;;
   code)
