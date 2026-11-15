@@ -50,7 +50,7 @@ Thời gian (tính theo T4; SFT ~4,3 giờ, GRPO ~5,6 giờ mỗi lần, cả ch
 | 5 | `start --tiers 1 2 3 4 5 6 [--workers N]` | Chạy nền (`setsid nohup`), không phụ thuộc SSH; chạy lại lệnh là chạy tiếp các lần chưa xong |
 | 6 | `status`, `log <tên>`, `skip <tên>...` | Theo dõi: `results/status.txt` cập nhật mỗi phút; `skip` bỏ qua lần đang chờ (ví dụ bản ghép tầng 4 của cách sửa kém hơn) |
 | 7 | `fetch`, `collect <nhãn>` | Tải kết quả (không checkpoint) về `results/server/raw/`, gộp vào `results/server/`, bằng chứng vào `results/runs/server-<nhãn>/` |
-| 8 | Phân tích | `src/analyze_ablation.py --finetune results/server/finetune --zeroshot results/server/zeroshot --out results/server/analysis` (tương tự `calibrate.py`, `analyze_mechanism.py`) |
+| 8 | Phân tích | `bash server/analyze.sh` (trên máy, cần `.venv` có pandas, numpy, scipy): chạy `analyze_ablation.py` (kèm các cặp so qua seed của bản sửa), `calibrate.py`, `analyze_mechanism.py` trên `results/server/`, ghi `results/server/analysis/`, `results/server/calibration/` |
 | 9 | `cleanup --yes` | Trước khi trả máy |
 
 ## 5. Trên server
