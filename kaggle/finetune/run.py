@@ -38,6 +38,20 @@ JOBS = {
         0: [dict(_r, run="R_s4", set=SFT + ["seed=4"])],
         1: [dict(_r, run="R_s5", set=SFT + ["seed=5"])],
     },
+    # Tuần quota từ 21/11 (mục 6, lần 3–5). G3 = G1 với beta = 0 (ghi đè lồng rl_config, đã kiểm
+    # HyperPyYAML gộp đúng: mục 2; trên Kaggle: v5 probe_G1_b25x2 với inner_step_size)
+    "grpo2": {
+        0: [dict(_r, run="G1_s2", method="grpo_v1", set=SFT + ["seed=2"], args=GARGS)],
+        1: [dict(_r, run="G1_s3", method="grpo_v1", set=SFT + ["seed=3"], args=GARGS)],
+    },
+    "grpo3": {
+        0: [dict(_r, run="G3_s1", method="grpo_v1", set=SFT + ["seed=1", "rl_config={beta: 0.0}"], args=GARGS)],
+        1: [dict(_r, run="G1_s4", method="grpo_v1", set=SFT + ["seed=4"], args=GARGS)],
+    },
+    "grpo4": {
+        0: [dict(_r, run="G1_s5", method="grpo_v1", set=SFT + ["seed=5"], args=GARGS)],
+        1: [],   # trống: ngày 2 (ít mẫu) hoặc chốt sau
+    },
 }
 RUNS = JOBS[JOB]
 print(f"JOB = {JOB}", flush=True)
