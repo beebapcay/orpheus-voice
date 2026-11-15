@@ -215,7 +215,28 @@ Mỗi kết quả, một câu giải thích:
 2. **Fine-tune sửa thứ hạng nhưng không sửa ngưỡng cho VoxCPM2:** EER còn 0,29–0,40%, nhưng 29–32% câu VoxCPM2 vẫn lọt qua ở ngưỡng 0 (bốn hệ thống khác 0%). Điểm của VoxCPM2 nằm giữa tiếng thật VIVOS và các hệ thống khác: tách được nếu chọn lại ngưỡng, nhưng ngưỡng mặc định thì không.
 3. Hai bản 317M tiếng Anh (W2V-Large, W2V-Small) dùng thẳng chỉ kém trên VoxCPM2 bằng nửa hai bản MMS-300M (6,6–6,9% so với 12,7–15,8%), cùng chiều với W2V-Large ≤ MMS-300M ở RADAR VI (GĐ3, GĐ5 B2).
 
-Khi có G1: so cột VoxCPM2 (cả EER và % lọt ở ngưỡng 0) của G1 với R. Giả thuyết cơ chế (GĐ5 mục 6.3) dự đoán GRPO ít kéo các câu mô hình đang sai chắc chắn, nên nếu VoxCPM2 giống câu "sai chắc chắn" của train thì G1 có thể để lọt nhiều hơn R.
+Khi có G1: so cột VoxCPM2 (cả EER và % lọt ở ngưỡng 0) của G1 với R.
+
+### 7.4. Mốc SFT cho kiểm giả thuyết cơ chế (L9; `src/analyze_mechanism.py`, `results/finetune/analysis/mechanism_output.txt`)
+
+R, A0 (và G1, G2, G3) cùng xuất phát từ S0 MMS-300M, nên so được từng câu: z0 = log-odds của nhãn đúng theo S0 (dương: S0 đúng), Δz = z sau fine-tune − z0 (dương: tiến về đúng). Chia câu theo z0: "sai chắc" (z0 < −3, tức p < 0,05), "sai", "đúng", "đúng chắc" (z0 ≥ 3). Mốc SFT (R 3 seed, A0):
+
+| Tập | Lớp, nhóm theo S0 | Số câu | Δz trung vị (R s1–s3; A0) | % lật nhãn ở ngưỡng 0 (R s1–s3; A0) |
+|---|---|---|---|---|
+| dev | giả, **sai chắc** | 56 | **10,8–11,2; 11,6** | 93–100 thành đúng; 95 |
+| dev | giả, sai | 110 | 8,5; 8,9 | 100; 100 |
+| dev | giả, đúng chắc | 646 | 1,3; 1,6 | 0 |
+| RADAR VI | giả, sai chắc | 1.501 | 3,1–3,8; 4,5 | 39–43 thành đúng; 47 |
+| RADAR VI | thật, đúng | 756 | −6,2 đến −7,2; −6,7 | **86–93 thành sai**; 87 |
+| RADAR VI | thật, đúng chắc | 5.907 | −0,6 đến −1,2; −0,3 | **19–24 thành sai**; 16 |
+| ItW | thật, đúng chắc | 915 | −1,8 đến −4,1; −2,6 | 25–38 thành sai; 31 |
+| RADAR EN | thật, đúng chắc | 809 | −5,9 đến −6,8; −3,7 | 49–51 thành sai; 38 |
+
+Đọc:
+1. **Trên dev, SFT kéo mạnh nhất đúng những câu S0 sai chắc** (Δz ~11, gấp ~8 lần câu S0 đã đúng chắc), khớp trọng số 1 − p của SFT (GĐ5 mục 6.3).
+2. **Ngoài miền, SFT đẩy tiếng thật về phía "giả" ở mọi nhóm**, kể cả câu S0 đúng chắc (RADAR VI 19–24%, RADAR EN ~50% bị lật). Đây là cơ chế của FRR tăng (GĐ5 phát hiện 3, 9). A0 (không RawBoost) đẩy ít hơn R ở nhóm đúng chắc (RADAR VI 16% so với 19–24%; RADAR EN 38% so với 49–51%).
+
+Dự đoán cho G1 (giả thuyết, sẽ kiểm khi có điểm): (a) trên dev, Δz của nhóm "giả, sai chắc" nhỏ hơn R nhiều so với các nhóm khác (GRPO trọng số p(1 − p)/σ, gần 0 khi p → 0); (b) nếu GRPO quên ít hơn thì tỉ lệ lật "thật, đúng chắc" ngoài miền thấp hơn R. Giả thuyết cơ chế (GĐ5 mục 6.3) dự đoán GRPO ít kéo các câu mô hình đang sai chắc chắn, nên nếu VoxCPM2 giống câu "sai chắc chắn" của train thì G1 có thể để lọt nhiều hơn R.
 
 **Đã chốt (15/11, người dùng):** chạy GĐ6 trên Kaggle như hiện tại, một tài khoản; không thuê server (nên không cần chạy lại R, A0). Không tạo tài khoản Kaggle thứ hai: điều khoản Kaggle cấm một người có hơn một tài khoản đang hoạt động (theo kết quả tìm kiếm trích kaggle.com/terms; trang render bằng JavaScript nên chưa đọc trực tiếp), rủi ro mất cả tài khoản chính (dataset riêng tư, output và checkpoint GĐ5). Theo ước tính trước lần thử, tổng quota đủ (GĐ6 ~17 giờ; ~31 giờ nếu thêm 2 seed cho R và G1 cùng G1 không RawBoost; có ~10,85 giờ tuần này + 30 giờ từ 21/11); chỉ là xong GPU muộn hơn (~22–23/11).
 
