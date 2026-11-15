@@ -46,7 +46,7 @@ Thời gian (tính theo T4; SFT ~4,3 giờ, GRPO ~5,6 giờ mỗi lần, cả ch
 | 1 | `init <host> <port>`, `check` | Ghi `server/host.env` (không commit), kiểm GPU, CPU, RAM, ổ |
 | 2 | `code`, `data` | Chép `src/`, `protocols/ids/`, `server/`; SEA-Spoof vi (2,5 GB) và MLAAD vi (1,5 GB). SEA-Spoof không được phân phối lại: chỉ chép lên máy riêng đã thuê, xoá khi trả máy |
 | 3 | `bootstrap`, `bootlog` | Dựng môi trường như Kaggle, toy example (EER phải 6,11%), tải RADAR/ItW đúng danh sách câu, kiểm dữ liệu, tải trước checkpoint |
-| 4 | `start --tiers 0`, `status` | Thử đo; chốt số worker (`experiments.NUM_WORKERS`) và ước thời gian, báo người dùng |
+| 4 | `start --tiers 0`, `status`; sau đó `fetch` và `python3 server/probe_report.py --train results/server/raw/train --summary results/server/raw/train_summary.csv` | Thử đo; chốt số worker (`experiments.NUM_WORKERS`) và ước thời gian, báo người dùng. `probe_report.py` tính GPU, CPU dùng chỉ trong khoảng huấn luyện (`gpu_util_mean` của `train_summary.csv` gồm cả lúc nạp mô hình, thấp hơn thực tế 5–10 điểm ở lần đo ngắn) |
 | 5 | `start --tiers 1 2 3 4 5 6 [--workers N]` | Chạy nền (`setsid nohup`), không phụ thuộc SSH; chạy lại lệnh là chạy tiếp các lần chưa xong |
 | 6 | `status`, `log <tên>`, `skip <tên>...` | Theo dõi: `results/status.txt` cập nhật mỗi phút; `skip` bỏ qua lần đang chờ (ví dụ bản ghép tầng 4 của cách sửa kém hơn) |
 | 7 | `fetch`, `collect <nhãn>` | Tải kết quả (không checkpoint) về `results/server/raw/`, gộp vào `results/server/`, bằng chứng vào `results/runs/server-<nhãn>/` |
