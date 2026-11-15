@@ -12,7 +12,8 @@ Câu hỏi của giai đoạn: fine-tune bằng GRPO trên tiếng Việt có gi
 | 1 | Lần 1: G1 s1, G2 s1; lần 2 (song song): R s4, R s5 | `orpheus-finetune` v6, `orpheus-finetune-b` v2; mục 6, 10 | **Xong**: lần 2 (14:39, 4,66 giờ, mục 10.1), lần 1 (15:31, 5,53 giờ, mục 10.2) |
 | 2–3 | G1 s2–s5, G3 (từ 21/11) | Mục 6 | Chưa |
 | 1 | Phân tích không cần GPU: kiểm định qua seed, hiệu chuẩn, theo hệ thống sinh, mốc cơ chế | Mục 7 | Xong (15/11) |
-| 1 | **Bộ đầy đủ trên server vast.ai** (54 lần, cùng phần cứng, 3 seed mọi cấu hình): script, chọn thí nghiệm | Mục 9, `server/` | Script xong, thử trên máy (15/11); người dùng thuê máy **sau khi** xem kết quả lần 1, 2 Kaggle (mục 9) |
+| 1 | **Bộ đầy đủ trên server vast.ai** (76 lần, cùng phần cứng, 3 seed mọi cấu hình): script, chọn thí nghiệm | Mục 9, 12, `server/` | Script xong, thử trên máy (15/11); người dùng thuê máy **sau khi** xem kết quả lần 1, 2 Kaggle (mục 9) |
+| 1 | Đánh giá toàn diện hướng thực nghiệm (người dùng yêu cầu): đối chiếu chế độ của bài, độ mạnh thống kê, nguồn ngẫu nhiên của seed, lực của phạt KL; sửa lỗi xoá checkpoint của bộ server; dấu vân tay batch ở tầng 0 | Mục 13 | Xong (15/11); chờ người dùng chốt các đề xuất ở 13.5 |
 | 2 | Ít mẫu (N = 50, 200, 1000), hoặc cắt (L7) | | Chưa |
 | 3 | Hiệu chuẩn điểm, phân tích theo hệ thống sinh | | Chưa |
 
@@ -469,3 +470,142 @@ Ba hệ quả cho việc diễn giải tầng 2:
 1. Ở batch bão hoà, G1s kéo câu đúng chắc gần bằng SFT (0,9 lần), G1 kéo gấp ~9 lần: G1s bỏ được đúng hiệu ứng "tiếp tục làm sắc câu đã đúng" (mục 11, vấn đề 1).
 2. G1s kéo nhẹ hơn SFT ở mọi câu (0,34 lần ở câu phân vân), nên một phần khác biệt có thể chỉ do bước cập nhật nhỏ hơn: so thêm với G1lr (lr 1e-7).
 3. Biên độ lợi thế (căn trung bình bình phương) của G1 luôn ≈ 1; của G1s là 0,32 (batch hỗn hợp) và 0,10 (batch bão hoà), còn số hạng KL không đổi. Vậy khi bão hoà, phạt KL β = 0,04 của G1s nặng tương đối gấp ~10 lần so với G1 (tương đương β ≈ 0,4 nếu giữ biên độ lợi thế của G1): **G1s cũng mạnh lên về phía "kéo về mô hình tham chiếu", giống G1b**. Khác G1b ở chỗ G1s không phóng đại bước cập nhật. Đây là phân tích, chưa có số đo.
+
+## 13. Đánh giá toàn diện hướng thực nghiệm (15/11 tối, người dùng yêu cầu)
+
+Căn cứ: plan (câu hỏi 1–3); bài GRPO (Bảng 1, mục 3.1, 3.5, phụ lục A.1); code AntiDeepfake `86098091` (`main.py`, `algo/rl.py`, `models/W2V.py`, `dataio/dataio.py`, `utils.py`, `hparams/ft_grpo/mms_300m_pre-post-sft.yaml`); SpeechBrain 1.0.2 (`dataio/sampler.py`, `dataio/dataloader.py`, `core.py`); số liệu mục 7, 10, 11; mô phỏng Monte Carlo (mục 12.1 và dưới đây).
+
+**Kết luận**
+1. Câu hỏi 1 và 2: hướng đúng, số liệu vững; bộ server 3 seed sẽ củng cố. Giữ nguyên.
+2. Câu hỏi 3 ("chẩn đoán và sửa"): đúng hướng, nhưng thiết kế hiện tại có ba lỗ hổng khiến kết luận dễ rơi vào "không phân biệt được": (a) độ mạnh thống kê thấp hơn cỡ hiệu ứng có thể có; (b) thiếu đối chứng để quy một cải thiện (nếu có) cho GRPO, thay vì cho "fine-tune nhẹ tay hơn" hay "có phạt KL" (chính bài GRPO ghi chưa làm phần này); (c) chưa có phương án cải tiến nào có khả năng cao thật sự giảm mức quên, nên phần "đề xuất cải tiến" sẽ trống nếu mọi bản sửa GRPO ≈ R.
+3. Cả ba sửa được mà không đổi công thức chính: một cách phân tích qua seed khác (không tốn GPU), hai đối chứng (6 lần chạy), một thành phần không cần huấn luyện (WiSE-FT), một phép đo (độ trôi trọng số). Một thí nghiệm lớn hơn (kiểm chế độ trên RADAR VI) để người dùng cân nhắc. Mục 13.5.
+4. Trong lúc kiểm đã thấy và sửa một lỗi của bộ server (`bc94828`), và thêm một phép kiểm vào tầng 0 (`c62b211`). Mục 13.3.
+
+### 13.1. Phần vững, giữ nguyên
+
+| Thứ | Căn cứ |
+|---|---|
+| Pipeline, công thức (lịch E1', batch 50, GRPO với `expandable_segments`) | Toy 6,11%; 12 lần Kaggle ổn định; G1 đạt 4 tiêu chí (mục 10.2) |
+| Câu hỏi 2: SFT làm kém ngoài miền | R − S0 (5 seed): RADAR VI +4,12 (p = 0,008), ItW +3,84 (p = 0,011), FRR +28,1 (p < 0,001) |
+| Cơ chế câu hỏi 2: tiếng thật một nguồn | MLAAD (tiếng thật VIVOS) 5,18 → ~0,2%; FRR RADAR VI 4,8 → ~33%; Δz tiếng thật "S0 đúng chắc" âm ở mọi tập ngoài miền (mục 7.4) |
+| Câu hỏi 1: post-training, RawBoost, kích thước | P0 − R p ≤ 0,024; A0 − R −5,83 (p = 0,047, A0 1 seed); B1 kém B2 13,6 điểm (1 seed) |
+| Lịch E1' cho cả bộ | Tổng lr cộng dồn 3,64 × 10⁻³, cùng cỡ bài (2,0–3,6 × 10⁻³); đổi lịch thì mất so sánh với 12 lần Kaggle. Điểm "nhẹ tay" có G1lr (và Rlr đề xuất) |
+| Hướng "chẩn đoán và sửa" | Chẩn đoán bão hoà có cơ sở định lượng (mục 11, 12.1) và tiền lệ trong bài: hàng 9 ("GRPO w/o neg.", XLS-R-2B), về kỳ vọng gradient là dạng p(1 − p) cộng KL như G1s, đã gỡ lại phần lớn mức quên ở chế độ khó (ngoài miền 3,44% so với SFT 6,28%, GRPO 2,69%) |
+
+### 13.2. Chế độ của bài GRPO so với của ta
+
+| | Bài (DFE24, MMS-300M) | Ta (SEA-Spoof vi, MMS-300M) | Hệ quả |
+|---|---|---|---|
+| Độ khó dữ liệu fine-tune với S0 | EER trong miền 29,23% | dev 1,16% | Ta ở chế độ bão hoà (mục 11) |
+| Tiếng thật | Mạng xã hội, đa dạng | Chỉ VIVOS | Lối tắt nguồn tiếng thật (Q5) |
+| lr mỗi bước | ≤ ~2–3 × 10⁻⁷ (warmup 80.000 không tới đỉnh, GĐ4 phát hiện 9) | ~1e-6 (warmup 460) | Mỗi bước mạnh hơn 3–5 lần |
+| lr cộng dồn | 2,0–3,6 × 10⁻³ (ước) | 3,64 × 10⁻³ | Tương đương |
+| Mức quên của SFT trên ItW | +11,3 điểm | +3,8 điểm | Khoảng để GRPO gỡ lại nhỏ |
+| β = 1 (hàng 8, XLS-R-2B) | Ngoài miền tốt nhất (2,04) nhưng trong miền kém (15,83 so với 10,26: thiếu khớp) | Trong miền đã bão hoà, nên cái giá "thiếu khớp" nhỏ | G1b có thể là cách sửa rẻ nhất |
+| Phần bài tự ghi chưa làm | "SFT may also be enhanced with proper regularization, but it is not the focus of our current work" (mục 3.5) | | Đối chứng SFT + phạt KL còn thiếu ở cả bài lẫn bộ của ta |
+
+### 13.3. Vấn đề thiết kế và điều kiểm được trong code
+
+**1. Độ mạnh thống kê không đủ cho cỡ hiệu ứng có thể có.** Độ lệch seed của R (5 seed): RADAR VI 1,88; ItW 1,93; RADAR EN 1,88; FRR 7,10. Chênh lệch nhỏ nhất phát hiện được với độ mạnh 80% (t-test hai mẫu, α = 0,05), điểm %:
+
+| Thước đo | 3 v 3 | 3 v 5 | 5 v 5 |
+|---|---|---|---|
+| RADAR VI, ItW, RADAR EN (EER) | 5,8–5,9 | 4,6–4,7 | 3,8–3,9 |
+| FRR RADAR VI ở ngưỡng 0 | 21,8 | 17,5 | 14,4 |
+
+Toàn bộ phần SFT làm hỏng chỉ ~4 điểm (R − S0). Nếu một bản sửa gỡ lại đủ 4 điểm, so 3 seed với 3 seed chỉ phát hiện được 51% số lần (5 v 5: 84%). FRR không dùng làm phép thử được, chỉ để mô tả.
+
+**2. "Seed" đổi những gì (đọc code).**
+- `dynamic_batch_sampler_train` trong YAML không truyền `seed`, nên `DynamicBatchSampler` dùng mặc định 42 (xáo theo `seed + epoch`). Mọi lần chạy, kể cả 12 lần Kaggle, cùng một thứ tự batch.
+- `main.py` gọi `load_hyperpyyaml` (dựng `detector`, `ref_detector`, `old_detector`) **trước** `set_random_seed`; SpeechBrain không đặt `worker_init_fn`, nên worker đọc dữ liệu lấy seed từ RNG CPU lúc tạo iterator. Vậy cùng seed và cùng số worker thì SFT và mọi biến thể GRPO có RawBoost nhiều khả năng nhận **cùng phép tăng cường cho từng câu**; chỉ khác dropout và phép lấy mẫu nhãn của GRPO (RNG GPU). Thử với SpeechBrain 1.0.2 (DataLoader 2 worker, kiểu fork như Linux): dựng thêm 2 mô hình trước khi đặt seed không đổi dấu vân tay batch.
+- Số liệu Kaggle khớp (một quan sát): RADAR VI seed 1 của R, G1, G2 là 23,07 / 23,53 / 23,13, trong khi R qua 5 seed trải 22,32–26,63.
+- Hệ quả: (a) phần lớn độ lệch seed có thể **chung** giữa các cấu hình cùng đường dữ liệu, nên phân tích có khối seed tăng độ mạnh nhiều (bảng dưới); (b) tầng 0 kiểm trực tiếp: `probe_R_w2` và `probe_G1_w2` (cùng seed 1, 2 worker) phải trùng dấu vân tay batch (`BATCH_HASH_N`, `server/probe_report.py`; `c62b211`); (c) kết luận chỉ đúng với một thứ tự batch: ghi làm hạn chế.
+
+Chênh lệch nhỏ nhất phát hiện được (80%), RADAR VI, khi phân tích bằng mô hình hai yếu tố (cấu hình + khối seed), gộp phương sai dư của các cấu hình cùng đường dữ liệu; ρ = tương quan của hiệu ứng seed giữa hai cấu hình (chưa biết, đo được sau tầng 1):
+
+| Thiết kế | ρ = 0 | ρ = 0,5 | ρ = 0,75 | ρ = 0,9 |
+|---|---|---|---|---|
+| Welch từng cặp, 3 v 3 (cách hiện tại) | 5,8 | | | |
+| Khối seed, 8–12 cấu hình × 3 seed | 4,5–4,6 | 3,2–3,3 | 2,3 | 1,4–1,5 |
+| Khối seed, 8–12 cấu hình × 5 seed | 3,4–3,5 | 2,4 | 1,7 | 1,1 |
+| Ghép cặp từng đôi, 3 seed (bậc tự do 2) | | 6,1 | 4,3 | 2,7 |
+
+Kể cả khi ρ = 0, gộp phương sai vẫn giảm 5,8 → 4,5 nhờ thêm bậc tự do (giả định độ lệch seed như nhau giữa các cấu hình; kiểm được và báo kèm). Ghép cặp từng đôi với 3 seed thì không đáng (bậc tự do 2).
+
+**3. Phạt KL trong code kéo về đâu.** Số hạng KL của `grpo3_loss`, `grpo2_loss` là ước lượng k3 trên nhãn lấy mẫu từ mô hình hiện tại: `exp(r) − r − 1`, r = log π_ref(ỹ) − log π_θ(ỹ). Kỳ vọng gradient của nó theo log-odds nhãn đúng là **β(p − p_ref)**, tức gradient của KL(π_ref ‖ π_θ) (kiểm Monte Carlo 2 triệu mẫu, khớp trong 2%). Lực này không tắt khi mô hình bão hoà (khác KL(π_θ ‖ π_ref), có gradient p(1 − p)(z − z_ref) → 0). Mọi biến thể có KL vì vậy có một điểm cân bằng cho câu đúng chắc: lực lợi thế (1 − p)/s cân với β(1 − p_ref), cho Δz* ≈ ln(1/(β·s)), với s = σ_batch (G1, G1b), σ_batch + 1 (G1s), 1 (SFT + KL):
+
+| Cấu hình | β | s (batch bão hoà, σ_batch ≈ 0,11) | Δz* |
+|---|---|---|---|
+| G1 | 0,04 | 0,11 | 5,4 |
+| G1b | 1 | 0,11 | 2,2 |
+| G1s | 0,04 | 1,11 | 3,1 |
+| SFT + KL (đề xuất, mục 13.5) | 0,04 | 1 | 3,2 |
+| R, G3, G1s0 | 0 | | Không có: tiếp tục làm sắc, chậm dần |
+
+G1s và SFT + KL có cùng điểm cân bằng nhưng khác lực ở câu phân vân: SFT kéo 0,5, còn G1s ≤ 0,25. So hai cấu hình này tách được "trọng số kiểu RL" khỏi "phạt KL". Quan sát sau 4.563 bước: Δz trung vị nhóm giả "S0 đúng chắc" trên dev là R 1,3 / G1 1,7 / G2 2,0, chưa tới điểm cân bằng, nên tốc độ (G1 kéo ~9 lần SFT ở batch bão hoà) quan trọng không kém điểm cân bằng.
+
+**4. Đối chứng còn thiếu.** (a) G1lr không có SFT cùng lr, nên nếu G1lr tốt hơn G1 thì chưa biết đó là tính chất riêng của GRPO hay chỉ do fine-tune nhẹ tay. (b) Không có SFT + phạt KL (khoảng trống bài tự nêu, mục 13.2): nếu G1b tốt hơn R, chưa biết do GRPO hay do KL.
+
+**5. Chưa có phương án cải tiến chắc có tác dụng.** WiSE-FT (Wortsman và cộng sự, "Robust fine-tuning of zero-shot models", CVPR 2022, arXiv 2109.01903; `resource/paper/WiSE-FT-2109.01903.pdf`): θ_α = (1 − α)·θ_zero-shot + α·θ_fine-tuned. Trên ImageNet và 5 dịch chuyển phân bố, cách này tăng độ chính xác dưới dịch chuyển 4–6 điểm phần trăm so với các cách trước, đồng thời tăng 1,6 điểm trên ImageNet, không tốn thêm tính toán (tóm tắt của bài). Vì sao hợp với ta: nhắm đúng cơ chế đo được (điểm của tiếng thật nguồn khác bị trôi); S0 hiệu chuẩn tốt ngoài miền (actDCF − minDCF 0,007 trên RADAR VI); mọi checkpoint fine-tune cùng gốc S0 nên nội suy hợp lệ; áp được cho cả SFT và GRPO. Bài chỉ đo trên ảnh (CLIP): kiểm trên phát hiện giọng giả là phần đóng góp. Rủi ro: có thể chỉ cho các điểm nằm giữa S0 và R (một đường đánh đổi), không trội cả hai; vẫn là kết quả báo được.
+
+**6. Kỹ thuật.**
+- **Lỗi đã sửa (`bc94828`):** lần chấm S0 (tầng 1) xoá `cache/<mô hình>.ckpt` sau tập cuối, trong khi R, G1, A0 ở GPU kia khởi tạo từ chính file đó: `main.py` báo "Not find" rồi dừng, hoặc hai tiến trình cùng tải lại một file. Sửa: `score_zeroshot.py --keep-ckpt` (server dùng; Kaggle giữ hành vi cũ), khoá file giữa các tiến trình khi tải (thử: 3 tiến trình cùng xin, chỉ tải 1 lần).
+- **TF32:** SpeechBrain 1.0.2 tự bật quirk `allow_tf32` khi import (thấy khi import trên máy), tức bật TF32 cho cả matmul lẫn convolution trên GPU Ampere. `NVIDIA_TF32_OVERRIDE=0` của bộ server ghi đè ở mức cuBLAS/cuDNN, nên `NVIDIA_TF32_OVERRIDE=0` là bắt buộc, không chỉ phòng xa. Kiểm bằng số trên server sau bootstrap (sai số matmul fp32 so với fp64).
+- **Thứ tự dọn máy:** checkpoint chỉ có trên server; mọi phép đo cần checkpoint (WiSE-FT, độ trôi trọng số) phải xong trước `cleanup`.
+
+### 13.4. Dự đoán ghi trước (kiểm khi có tầng 2)
+
+Hai thước đo kiểm cơ chế, độ lệch seed rất nhỏ: (i) Δz trung bình của tiếng thật dev nhóm "S0 đúng chắc": R 0,54 ± 0,02 (5 seed), G1 0,90, G2 1,07 (1 seed), tức G1 cách R ~18 độ lệch chuẩn, 1 seed đủ phân biệt; (ii) % câu dev đúng với p > 0,999: R 91–97, G1 99,4, G2 99,7.
+
+| Cấu hình | (i), (ii) so với R | Ngoài miền (RADAR VI, ItW, FRR) | Căn cứ |
+|---|---|---|---|
+| G3 (β = 0) | ≥ G1 | ≈ G1 | Ở β = 0,04 lực KL đã nhỏ so với lợi thế phóng đại |
+| G2 | ≈ G1 | ≈ G1 | Đã thấy ở seed 1 |
+| G1b (β = 1) | < G1, có thể < R | Tốt hơn G1 | Δz* 2,2 |
+| G1s | ≤ R | Tốt hơn G1; so với R chưa chắc | Không phóng đại; Δz* 3,1; kéo câu phân vân yếu hơn SFT |
+| G1s0 | ≈ R | ≈ G1s hoặc kém hơn chút | ≈ SFT có trọng số p, không KL |
+| G1lr | < R | Tốt hơn G1, gần S0 hơn | Bước nhỏ 10 lần (vẫn phóng đại 3,6–10 lần) |
+| Rlr (đề xuất) | < R | Tốt hơn R | Bước nhỏ 10 lần |
+| SFT + KL (đề xuất) | < R, ≈ G1s | ≈ G1s | Cùng Δz* |
+
+Dự đoán nào sai thì phân tích lực (mục 12.1, 13.3) thiếu một yếu tố; báo đúng như vậy.
+
+### 13.5. Đề xuất (xếp theo giá trị trên chi phí)
+
+| # | Đề xuất | Loại | Trả lời gì | Chi phí | Khuyến nghị |
+|---|---|---|---|---|---|
+| A1 | Phép thử chính qua seed: mô hình hai yếu tố (cấu hình + khối seed, gộp phương sai dư của các cấu hình cùng đường dữ liệu); Welch từng cặp làm kiểm tra độ vững. Ghi trước 3 so sánh chính (G1 − R; bản sửa tốt nhất − R; bản sửa tốt nhất − G1) trên RADAR VI và ItW, hiệu chỉnh Holm; thước đo cơ chế (13.4); FRR chỉ mô tả; báo ngưỡng phát hiện cạnh mọi kết luận "không khác biệt" | Phân tích | Ngưỡng phát hiện RADAR VI từ 5,8 xuống 4,5 (ρ = 0) đến 2,3 (ρ = 0,75) | Không tốn GPU | Làm; dạng cuối theo kết quả dấu vân tay ở tầng 0 |
+| A2 | Độ trôi trọng số ‖θ − θ_S0‖ theo nhóm lớp (CNN, 24 lớp transformer, lớp FC) cho mọi checkpoint; đặt cạnh mức quên qua mọi lần chạy và qua α của WiSE-FT | Phân tích | Quên do đi xa bao nhiêu hay do đi theo cách nào. Nếu mức quên chỉ theo độ trôi, bất kể SFT hay GRPO, thì GRPO chỉ là một núm cường độ | CPU, ~1 phút mỗi checkpoint, chạy trước `cleanup` | Làm |
+| B1 | Rlr: SFT với lr 1e-7 × 3 seed | Tham số | Cặp cùng cường độ với G1lr | 3 lần SFT | Làm, tầng 2 |
+| B2 | SFT + KL: cross-entropy như R cộng đúng số hạng KL k3 của GRPO, β = 0,04, × 3 seed | Công thức | Khoảng trống bài tự nêu; so với G1s tách "trọng số kiểu RL" khỏi KL; so với R cho tác dụng của KL lên SFT | 3 lần (tốc độ như G2); một lớp bọc loss nhỏ (runpy như `mem_probe.py`, không sửa code gốc) | Làm, tầng 2 |
+| C1 | WiSE-FT: α ∈ {0,25; 0,5; 0,75} cho R, A0, G1 và bản sửa tốt nhất (α = 0,5 cả 3 seed; 0,25 và 0,75 ở seed 1) | Thành phần | Phương án cải tiến không cần huấn luyện; đường đánh đổi giữa trong miền (MLAAD, `test_cvreal`) và ngoài miền | ~20 lần chấm | Làm, sau tầng 2 |
+| C2 | Seed 4, 5 cho bản sửa tốt nhất; đưa R, G1 seed 4, 5 lên ngay sau tầng 2 | Thiết kế | 5 v 5 cho các so sánh chính | +2 lần GRPO; phần còn lại chỉ đổi thứ tự | Làm |
+| D1 | Kiểm chế độ: fine-tune trên nửa RADAR VI (chia ngẫu nhiên theo nhãn: không có nhãn người nói; S0 EER 20%; tiếng thật đa nguồn), R và G1 × 3 seed; chấm nửa còn lại (trong miền), ItW, RADAR EN, SEA-Spoof, MLAAD | Thiết kế | Trả lời trực tiếp "vì sao": bỏ bão hoà mà giữ ngôn ngữ, mô hình, code. G1 hơn R ở đây mà không hơn trên SEA-Spoof thì chẩn đoán được ủng hộ | 6 lần; chuẩn bị danh sách câu, CSV, kiểm dữ liệu | Cân nhắc: làm nếu tầng 0 cho thấy còn dư ≥ 1 ngày |
+| D2 | Ít mẫu: thêm bản sửa tốt nhất cạnh SFT và G1 | Thiết kế | Ít mẫu là bão hoà nặng nhất: chẩn đoán dự đoán G1 hỏng nhiều hơn SFT khi N nhỏ, bản sửa thì không | +9 lần GRPO | Chốt sau tầng 2 |
+| D3 | Nếu độ lệch seed của A0 nhỏ hơn hẳn R: thêm G1A (G1 không RawBoost), giữ cả G1sA và G1bA | Thiết kế | Bảng 2 × 2 {SFT, GRPO} × {có, không RawBoost} ở nhóm ít nhiễu hơn | +3 đến +6 lần | Chốt sau tầng 1 |
+
+### 13.6. Đã xét, không đề xuất
+
+| Ý | Vì sao không |
+|---|---|
+| Đổi lịch lr cho cả bộ server (giảm về ~0 ở cuối, E1 đúng nghĩa) | Mất so sánh với 12 lần Kaggle; có thể giảm độ lệch seed nhưng cũng đổi cỡ hiệu ứng. Rlr, G1lr đã cho điểm "nhẹ tay" |
+| Chuẩn hoá phần thưởng theo từng câu như công thức (4) của bài | Suy ra được: ở chế độ bão hoà còn phóng đại hơn chuẩn hoá theo batch (√(p(1 − p)): ~30 lần SFT ở p = 0,999); thêm thí nghiệm ít thông tin |
+| Đổi seed của sampler theo seed huấn luyện | Mất thứ tự batch chung giữa các cấu hình (đang có lợi cho so sánh), tăng phương sai |
+| FRR theo nguồn tiếng thật của RADAR VI | Danh sách câu không có nhãn nguồn hay người nói (`Speaker` toàn "-") |
+| Độ trôi embedding như hình 2 của bài | Cần ASVspoof 2019 dev và embedding; A2 và Δz đo trực tiếp hơn |
+| Thêm tiếng thật đa nguồn vào dữ liệu fine-tune | Đã chốt Q5 (hạn chế, hướng phát triển); D1 có tiếng thật đa nguồn nhưng chỉ là phép kiểm chế độ |
+| Label smoothing, LoRA, đóng băng lớp | Ngoài câu hỏi SFT so với GRPO; ghi hướng phát triển. A2 cho biết lớp nào trôi nhiều nhất, làm căn cứ |
+
+### 13.7. Chi phí và lịch
+
+| Gói | Giờ GPU tính theo T4 | 2 × 3090 (nhanh 2,5–3,5 lần T4) |
+|---|---|---|
+| Bộ hiện tại (76 lần, bỏ một bản ghép tầng 4) | ~330 | 47–66 giờ |
+| B1, B2, C1, C2 | ~70 | +10–14 giờ |
+| D1 | ~30 | +4–6 giờ |
+| D2 | ~50 | +7–10 giờ |
+| Tất cả (trừ D3) | ~480 | 2,8–4 ngày; 4 GPU: 1,4–2 ngày |
+
+vast.ai tính tiền theo giờ GPU, nên 4 GPU tốn gần bằng 2 GPU nhưng xong sớm gấp đôi. Thí nghiệm nên xong trước ~25/11 để còn GĐ7.
+
+**Cần người dùng chốt:** B1, B2, C1, C2 (đề xuất làm); D1 (làm, hay để hướng phát triển); 2 hay 4 GPU. A1, A2 không đổi thí nghiệm (A1 đổi phép thử chính, Welch vẫn báo kèm). D2, D3 chốt sau tầng 1–2.

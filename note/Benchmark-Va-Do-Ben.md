@@ -144,3 +144,25 @@ Quan sát (một cấu hình fine-tune 300M, 3 seed): EER trên một tập ngo�
 | Chênh lệch của cấu hình 1 seed dưới ~2 độ lệch chuẩn của mốc thì chưa kết luận | Khoảng tin cậy theo câu đánh giá thấp độ bất định |
 | Không dùng khoảng tin cậy theo câu làm bằng chứng duy nhất khi so các lần huấn luyện | Chỉ phù hợp khi so các mô hình cố định (ví dụ checkpoint công bố) |
 
+
+### Bao nhiêu seed thì đủ
+
+Với σ là độ lệch chuẩn qua seed của một cấu hình, chênh lệch nhỏ nhất mà t-test hai mẫu phát hiện được với độ mạnh 80% (α = 0,05) là khoảng:
+
+| Số seed mỗi bên | 3 v 3 | 3 v 5 | 5 v 5 |
+|---|---|---|---|
+| Chênh lệch nhỏ nhất phát hiện được | ~3,1σ | ~2,5σ | ~2,0σ |
+
+Ví dụ: σ ≈ 1,9 điểm EER thì 3 seed mỗi bên chỉ phát hiện chắc chênh lệch ≥ ~5,8 điểm. Nếu cả hiệu ứng muốn đo chỉ cỡ 4 điểm, 3 v 3 bắt được khoảng một nửa số lần. Trước khi chạy, so cỡ hiệu ứng mong đợi với bảng này. Một tỉ lệ lỗi ở ngưỡng cố định (FRR, FAR) thường dao động theo seed mạnh hơn EER nhiều (ví dụ độ lệch chuẩn 7 điểm so với 1,9), nên chỉ dùng để mô tả, không làm phép thử.
+
+### "Seed" thật ra đổi những gì
+
+Đừng giả định seed đổi mọi nguồn ngẫu nhiên. Đọc code để biết:
+
+| Nguồn ngẫu nhiên | Có thể không theo seed khi | Cách kiểm |
+|---|---|---|
+| Thứ tự batch | Bộ chia batch có seed riêng với giá trị mặc định, file cấu hình không truyền seed huấn luyện vào | Tìm tham số `seed` của sampler trong file cấu hình đã giải |
+| Tăng cường dữ liệu trong worker | Worker lấy seed từ bộ sinh số của tiến trình chính lúc tạo iterator; nếu seed được đặt sau khi dựng mô hình thì hai phương pháp khác nhau (dựng 1 hay 3 bản mô hình) vẫn cùng chuỗi tăng cường | In mã băm danh sách câu và sóng âm sau tăng cường của vài batch đầu, so giữa hai lần chạy |
+| Dropout, lấy mẫu trên GPU | Luôn theo seed, nhưng chuỗi lệch nhau ngay khi một phương pháp dùng thêm số ngẫu nhiên trên GPU | |
+
+Nếu các cấu hình cùng seed dùng chung thứ tự batch và chuỗi tăng cường thì đó là thiết kế "số ngẫu nhiên chung": phần nhiễu dùng chung bị khử khi so sánh. Khi đó phân tích bằng mô hình hai yếu tố (cấu hình + khối seed), gộp phương sai dư của nhiều cấu hình, mạnh hơn hẳn t-test từng cặp. Ví dụ với σ ≈ 1,9 và 8–12 cấu hình × 3 seed: ngưỡng phát hiện ~4,5 điểm nếu hiệu ứng seed không dùng chung (nhờ thêm bậc tự do), ~2,3 điểm nếu tương quan 0,75. Ghép cặp từng đôi chỉ với 3 seed thì không đáng (bậc tự do 2). Đổi lại, kết luận chỉ đúng với một thứ tự batch; ghi rõ khi báo cáo.

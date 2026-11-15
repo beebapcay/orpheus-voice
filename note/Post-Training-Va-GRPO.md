@@ -42,6 +42,21 @@ Lỗi trong miền giảm một nửa, nhưng lỗi trên In-the-Wild tăng gấ
 
 **Mức quên phụ thuộc backbone.** Quan sát một seed: cùng dữ liệu, cùng siêu tham số, một backbone 300M đa ngôn ngữ quên rõ trên In-the-Wild (2,6% → 7,6%), còn backbone 300M chỉ pre-train tiếng Anh thì không quên (2,0% → 1,4%). Kết luận "SFT làm quên" cần kiểm trên hơn một backbone. Backbone nhỏ (95M) bị nặng nhất: sau fine-tune trên một nguồn tiếng thật, nó coi 60–80% tiếng thật nguồn khác là giả ở ngưỡng 0, và EER trên bộ dữ liệu khác kém bản 317M cùng họ ~13,6 điểm (chưa fine-tune chỉ kém ~9,4).
 
+### 2.2. Giảm quên không cần huấn luyện thêm: nội suy trọng số
+
+WiSE-FT (2022) trộn trọng số của mô hình trước và sau fine-tune:
+
+$$\theta_\alpha = (1 - \alpha)\,\theta_\text{trước} + \alpha\,\theta_\text{sau}, \quad \alpha \in [0, 1]$$
+
+$\alpha = 0$ là mô hình chưa fine-tune, $\alpha = 1$ là bản fine-tune. Bài gốc làm với mô hình ảnh (CLIP): trên ImageNet và 5 dịch chuyển phân bố, trộn trọng số tăng độ chính xác dưới dịch chuyển 4–6 điểm phần trăm so với các cách trước, đồng thời vẫn tăng 1,6 điểm trên chính ImageNet, mà không tốn thêm tính toán khi huấn luyện hay suy luận.
+
+| Điều kiện | Lý do |
+|---|---|
+| Hai mô hình cùng kiến trúc, bản sau fine-tune **từ chính** bản trước | Hai điểm nằm gần nhau trong không gian trọng số, đường thẳng nối chúng không đi qua vùng lỗi cao |
+| Mô hình trước tốt ngoài miền, bản sau tốt trong miền | Nếu không, trộn chỉ cho điểm nằm giữa, không trội cả hai |
+
+Nên thử trước các cách tốn công hơn (đổi hàm loss, thêm phạt), vì chỉ cần chấm lại vài giá trị $\alpha$. Kết quả là một **đường đánh đổi** trong miền và ngoài miền; báo cả đường, không chỉ một điểm.
+
 ## 3. SFT và học tăng cường khác nhau ở đâu
 
 **SFT (fine-tune có giám sát):** đưa đáp án đúng, ép mô hình tăng xác suất của đáp án đó. Loss là $-\log p(\text{nhãn đúng})$. Câu nào mô hình đang sai càng nặng thì bị kéo càng mạnh.
@@ -193,6 +208,31 @@ Lực kéo theo số lần SFT (mô phỏng Monte Carlo, 10 câu × 64 mẫu m�
 Hai tác dụng phụ cần đối chứng khi thử cách sửa này:
 1. **Bước cập nhật nhỏ hơn SFT ở mọi câu.** Nếu kết quả tốt lên, có thể chỉ vì học chậm hơn. Cần thêm một lần GRPO gốc với learning rate thấp để tách "đổi cơ chế" khỏi "giảm cường độ".
 2. **Phạt KL nặng lên tương đối.** Khi chia cho $\sigma_\text{batch}$, biên độ lợi thế luôn ≈ 1; khi chia cho $\sigma_\text{batch} + 1$, biên độ co về 0 lúc mô hình bão hoà (0,10 ở batch trên), còn số hạng KL giữ nguyên. Vậy gần bão hoà, cập nhật bị phạt KL chi phối, mô hình tự dừng và bị kéo về mô hình tham chiếu. Cách sửa này vì vậy gần với "tăng $\beta$" hơn vẻ ngoài của nó.
+
+### 8.4. Phạt KL trong GRPO kéo về đâu
+
+Cách cài đặt phổ biến (theo DeepSeekMath) ước lượng KL bằng $k_3 = e^{r} - r - 1$, với $r = \log \pi_\text{ref}(\tilde y) - \log \pi_\theta(\tilde y)$ và $\tilde y$ lấy mẫu từ mô hình **hiện tại**, rồi lấy gradient qua $\log \pi_\theta(\tilde y)$. Kỳ vọng gradient của nó là gradient của $\mathrm{KL}(\pi_\text{ref} \,\|\, \pi_\theta)$, không phải của $\mathrm{KL}(\pi_\theta \,\|\, \pi_\text{ref})$. Với bộ phân loại hai lớp, theo log-odds $z$ của nhãn đúng:
+
+| Dạng | Lực kéo về mô hình tham chiếu | Khi mô hình đã đúng chắc ($p \to 1$) |
+|---|---|---|
+| $k_3$ trên mẫu của mô hình hiện tại | $\beta\,(p - p_\text{ref})$ | Không tắt: vẫn còn $\beta(1 - p_\text{ref})$ |
+| $\mathrm{KL}(\pi_\theta \,\|\, \pi_\text{ref})$ chính xác | $\beta\,p(1-p)(z - z_\text{ref})$ | Tắt dần về 0 |
+
+(Kiểm bằng Monte Carlo 2 triệu mẫu: khớp $\beta(p - p_\text{ref})$ trong 2%.)
+
+Hệ quả: với câu đã đúng chắc, lực đẩy của lợi thế $\approx (1-p)/s$ (s là mẫu số chuẩn hoá phần thưởng) cân với lực KL $\approx \beta(1 - p_\text{ref})$ tại
+
+$$\Delta z^* \approx \ln \frac{1}{\beta\, s}$$
+
+| Cách | $\beta$ | $s$ (batch đúng ~99%, $\sigma \approx 0{,}11$) | $\Delta z^*$ |
+|---|---|---|---|
+| GRPO chuẩn hoá theo batch | 0,04 | 0,11 | 5,4 |
+| Như trên, $\beta = 1$ | 1 | 0,11 | 2,2 |
+| Mẫu số $\sigma + 1$ | 0,04 | 1,11 | 3,1 |
+| SFT cộng cùng số hạng KL | 0,04 | 1 | 3,2 |
+| SFT, hoặc GRPO với $\beta = 0$ | 0 | | Không có: tiếp tục làm sắc, chậm dần |
+
+Đọc: phạt KL không chỉ giữ câu ở ranh giới; nó đặt một giới hạn cho việc làm sắc câu đã đúng. Hai cách có cùng $\Delta z^*$ vẫn có thể khác nhau ở câu phân vân (SFT kéo 0,5, GRPO với mẫu số $\sigma + 1$ kéo ≤ 0,25), nên so chúng tách được "trọng số kiểu học tăng cường" khỏi "phạt KL". Sau vài nghìn bước, mô hình thường chưa tới điểm cân bằng, nên tốc độ kéo cũng quan trọng như vị trí cân bằng.
 
 ## 9. Ưu và nhược điểm
 
