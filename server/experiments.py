@@ -35,8 +35,11 @@ NUM_WORKERS = 2
 STEPS = 4563          # số bước optimizer của bản đủ: 3 epoch × 1.521 batch (R trên Kaggle)
 SCORE = ["seaspoof_vi_dev", "seaspoof_vi_test", "radar_vi", "ood_forget", "mlaad_vi_test"]
 S0_MODELS = ["mms_300m", "mms_300m_nda", "w2v_large", "w2v_small"]
-GRPO_ARGS = ["--env", "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"]
+GRPO_ENV = ["PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"]
 COMMON_ARGS = ["--oom-retry", "0", "--probe-mem"]
+# Lần thử đo: in dấu vân tay 30 batch đầu mỗi worker (src/mem_probe.py), để kiểm cùng seed thì SFT và GRPO
+# có nhận cùng batch, cùng phép tăng cường RawBoost không (quyết định cách phân tích qua seed, mục 13)
+PROBE_ENV = ["BATCH_HASH_N=30"]
 
 # Batch mỗi epoch ở max_batch_length 50 (mô phỏng DynamicBatchSampler, GĐ6 mục 8; n50 khớp pilot GĐ4)
 FEW_SHOT_BPE = {"n50": 12, "n200": 42, "n1000": 178}
@@ -50,8 +53,11 @@ def sft_set(workers, seed, epochs=3, step_limit=4600):
 
 
 def train_job(name, tier, model="mms_300m", method="sft", init="post", seed=1, extra_set=(), train="seaspoof_vi_train",
-              epochs=3, step_limit=4600, workers=NUM_WORKERS, args=(), score=tuple(SCORE), valid="seaspoof_vi_dev"):
-    a = list(COMMON_ARGS) + list(args) + (list(GRPO_ARGS) if method.startswith("grpo") else [])
+              epochs=3, step_limit=4600, workers=NUM_WORKERS, args=(), score=tuple(SCORE), valid="seaspoof_vi_dev",
+              env=()):
+    # finetune.py --env là nargs="*": gộp mọi biến vào MỘT cờ (viết hai lần thì lần sau ghi đè lần trước)
+    e = list(env) + (list(GRPO_ENV) if method.startswith("grpo") else [])
+    a = list(COMMON_ARGS) + list(args) + (["--env", *e] if e else [])
     return {"name": name, "tier": tier, "kind": "train", "model": model, "method": method, "init": init,
             "train": train, "valid": valid, "set": sft_set(workers, seed, epochs, step_limit) + list(extra_set),
             "args": a, "score": list(score)}
@@ -105,7 +111,7 @@ def build(workers=NUM_WORKERS):
     for code in ("R", "G1"):
         for w in (2, 6):
             j = cfg(code, 1, 0, name=f"probe_{code}_w{w}", step_limit=200, epochs=1, workers=w,
-                    args=["--discard-ckpt"], score=(), valid="seaspoof_vi_train_n50")
+                    args=["--discard-ckpt"], score=(), valid="seaspoof_vi_train_n50", env=PROBE_ENV)
             J.append(j)
 
     # Tầng 1: S0 (mốc chung của mọi bảng), R, G1, A0; xen kẽ theo seed để có seed 1 của mọi cấu hình sớm

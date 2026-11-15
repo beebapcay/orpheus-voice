@@ -44,8 +44,32 @@ def _periodic(every):
             return
 
 
+def _batch_hash(n):
+    """Tuỳ chọn (BATCH_HASH_N=n): in dấu vân tay của n batch đầu mà mỗi tiến trình đọc dữ liệu tạo ra:
+      BATCH_HASH pid=... ids=<md5 danh sách ID> n=<số câu> wav=<md5 sóng âm đã qua RawBoost, chuẩn hoá>
+    Dùng ở lần thử đo để kiểm: cùng seed và cùng số worker thì SFT và GRPO có nhận đúng cùng các batch, cùng
+    phép tăng cường không (seed được đặt sau khi dựng mô hình; sampler dùng seed cố định). Không đổi phép
+    tính: chỉ đọc batch sau khi tạo. Vá phương thức của chính lớp PaddedBatch (không tạo lớp con) để batch
+    gửi từ worker về tiến trình chính vẫn pickle được."""
+    import hashlib
+    from speechbrain.dataio import batch as sbb
+    orig, left = sbb.PaddedBatch.__init__, {"n": n}
+
+    def init(self, examples, *a, **k):
+        orig(self, examples, *a, **k)
+        if left["n"] > 0 and hasattr(self, "wav") and hasattr(self, "id"):
+            left["n"] -= 1
+            ids = hashlib.md5("|".join(map(str, self.id)).encode()).hexdigest()[:16]
+            wav = hashlib.md5(self.wav.data.detach().cpu().numpy().tobytes()).hexdigest()[:16]
+            print(f"BATCH_HASH pid={os.getpid()} ids={ids} n={len(self.id)} wav={wav}", flush=True)
+
+    sbb.PaddedBatch.__init__ = init
+
+
 T0 = time.time()
 atexit.register(_report)
+if int(os.environ.get("BATCH_HASH_N", "0") or 0) > 0:
+    _batch_hash(int(os.environ["BATCH_HASH_N"]))
 threading.Thread(target=_periodic, args=(float(os.environ.get("MEM_PROBE_EVERY", "60")),),
                  daemon=True).start()
 

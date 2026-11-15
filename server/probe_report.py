@@ -85,6 +85,29 @@ def main():
           "bước (gồm bước đầu chậm). gpu_util_*: chỉ trong khoảng huấn luyện; p10: phân vị 10 (GPU có lúc "
           "chờ dữ liệu không). Giây mỗi bước, bộ nhớ: thấp hơn là tốt hơn; GPU dùng: cao hơn là tốt hơn.")
 
+    # Dấu vân tay batch (BATCH_HASH_N, src/mem_probe.py): cùng seed, cùng số worker thì SFT và GRPO có nhận
+    # cùng batch (ids) và cùng phép tăng cường RawBoost (wav) không. Quyết định phân tích qua seed có ghép
+    # cặp được không (chore/GD6-GRPO.md mục 13)
+    fp = {}
+    for d in sorted(glob.glob(os.path.join(a.train, a.pattern))):
+        p = os.path.join(d, "main.log")
+        if os.path.exists(p):
+            hits = re.findall(r"BATCH_HASH pid=\d+ ids=(\w+) n=\d+ wav=(\w+)", open(p, errors="replace").read())
+            if hits:
+                fp[os.path.basename(d)] = hits
+    if len(fp) >= 2:
+        print("\n| lần A | lần B | batch của A | cùng danh sách câu ở B | cùng cả sóng âm (sau RawBoost) |")
+        print("|---|---|---|---|---|")
+        names = sorted(fp)
+        for i, x in enumerate(names):
+            for y in names[i + 1:]:
+                ids_y, both_y = {h[0] for h in fp[y]}, set(fp[y])
+                print(f"| {x} | {y} | {len(fp[x])} | {sum(h[0] in ids_y for h in fp[x])} | "
+                      f"{sum(h in both_y for h in fp[x])} |")
+        print("\nCùng seed và cùng số worker mà trùng cả sóng âm: các cấu hình cùng đường dữ liệu nhận đúng cùng "
+              "batch và cùng phép tăng cường, chỉ khác dropout và phép lấy mẫu của GRPO, nên so qua seed được "
+              "ghép cặp theo seed. Khác số worker thì chỉ trùng danh sách câu (sampler dùng seed cố định).")
+
 
 if __name__ == "__main__":
     main()
