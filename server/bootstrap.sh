@@ -13,6 +13,8 @@
 #      safetensors, torch CPU) cho server/run.py, src/finetune.py, src/score_zeroshot.py
 #   5. dữ liệu kiểm tra RADAR VI, RADAR EN (tập con), In-the-Wild (tập con), tải thẳng từ Zenodo và
 #      Hugging Face bằng src/prep_data.py, đúng danh sách câu đã commit (protocols/ids/)
+#   3b. kiểm TF32 bằng số (server/tf32_check.py): NVIDIA_TF32_OVERRIDE=0 phải cho kết quả fp32
+#   5b. tạo radar_vi_rv_{train,dev,test}.csv cho kiểm chế độ D1 (src/split_radar_regime.py)
 #   6. kiểm dữ liệu (server/check_data.py) và tải trước checkpoint (server/run.py prefetch)
 set -euo pipefail
 ROOT="${ORPHEUS_ROOT:-/workspace/orpheus}"
@@ -58,6 +60,19 @@ if grep -qE "is not in the model|Wrong para. length" results/env/toy_check.txt; 
   log "CẢNH BÁO: có cảnh báo nạp trọng số trong toy example"
 fi
 
+# 3b. TF32: SpeechBrain 1.0.2 tự bật TF32 khi import; NVIDIA_TF32_OVERRIDE=0 phải ghi đè được (server/tf32_check.py)
+if ! grep -q "NVIDIA_TF32_OVERRIDE=0 .*-> fp32" results/env/tf32_check.txt 2>/dev/null; then
+  export MAMBA_ROOT_PREFIX="$ROOT/work/mamba"
+  (cd / && NVIDIA_TF32_OVERRIDE=0 "$ROOT/work/bin/micromamba" run -n antideepfake python "$ROOT/server/tf32_check.py") > results/env/tf32_check.txt 2>&1 || true
+  (cd / && env -u NVIDIA_TF32_OVERRIDE "$ROOT/work/bin/micromamba" run -n antideepfake python "$ROOT/server/tf32_check.py") >> results/env/tf32_check.txt 2>&1 || true
+fi
+grep "TF32_CHECK" results/env/tf32_check.txt | tee -a "$LOG" || true
+if grep -q "NVIDIA_TF32_OVERRIDE=0 .*-> fp32" results/env/tf32_check.txt; then
+  log "TF32: NVIDIA_TF32_OVERRIDE=0 cho kết quả fp32 (như T4)"
+else
+  log "CẢNH BÁO: NVIDIA_TF32_OVERRIDE=0 không tắt được TF32; xem results/env/tf32_check.txt trước khi chạy tiếp"
+fi
+
 # 4. Môi trường điều phối
 export MAMBA_ROOT_PREFIX="$ROOT/work/mamba"
 MM="$ROOT/work/bin/micromamba"
@@ -78,6 +93,10 @@ if [ ! -f data/prep/orpheus_data_manifest.json ]; then
     --sets radar_vi,radar_en_sub,itw_sub >>"$LOG" 2>&1
 fi
 cp data/prep/orpheus_data_manifest.json results/env/ 2>/dev/null || true
+# 5b. Kiểm chế độ D1: chia RADAR VI theo danh sách câu đã commit (protocols/ids/radar_vi_rv_*.tsv)
+if [ ! -f data/prep/radar_vi_rv_test.csv ]; then
+  "$DPY" code/split_radar_regime.py --ids-dir ids --make-csv data/prep/radar_vi.csv | tee -a "$LOG"
+fi
 
 # 6. Kiểm dữ liệu, tải trước checkpoint
 "$DPY" server/check_data.py --root "$ROOT" | tee results/env/check_data.txt

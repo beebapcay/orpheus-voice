@@ -14,7 +14,7 @@ Câu hỏi của giai đoạn: fine-tune bằng GRPO trên tiếng Việt có gi
 | 1 | Phân tích không cần GPU: kiểm định qua seed, hiệu chuẩn, theo hệ thống sinh, mốc cơ chế | Mục 7 | Xong (15/11) |
 | 1 | **Bộ đầy đủ trên server vast.ai** (76 lần, cùng phần cứng, 3 seed mọi cấu hình): script, chọn thí nghiệm | Mục 9, 12, `server/` | Script xong, thử trên máy (15/11); người dùng thuê máy **sau khi** xem kết quả lần 1, 2 Kaggle (mục 9) |
 | 1 | Đánh giá toàn diện hướng thực nghiệm (người dùng yêu cầu): đối chiếu chế độ của bài, độ mạnh thống kê, nguồn ngẫu nhiên của seed, lực của phạt KL; sửa lỗi xoá checkpoint của bộ server; dấu vân tay batch ở tầng 0 | Mục 13 | Xong (15/11); chờ người dùng chốt các đề xuất ở 13.5 |
-| 1 | Phân hạng (bắt buộc, nên, có điều kiện, tuỳ chọn) và kế hoạch theo giai đoạn A–E có điểm kiểm (người dùng yêu cầu) | Mục 14 | Đề xuất (15/11); chờ người dùng chốt |
+| 1 | Phân hạng (bắt buộc, nên, có điều kiện, tuỳ chọn) và kế hoạch theo giai đoạn A–E có điểm kiểm (người dùng yêu cầu) | Mục 14 | **Đã chốt** (15/11 tối): làm đầy đủ, giữ giai đoạn và điểm kiểm (mục 14.7); bộ server 122 lần, hạ tầng đã thử trên máy |
 | 2 | Ít mẫu (N = 50, 200, 1000), hoặc cắt (L7) | | Chưa |
 | 3 | Hiệu chuẩn điểm, phân tích theo hệ thống sinh | | Chưa |
 
@@ -670,7 +670,7 @@ Ba kịch bản ở điểm kiểm C (quyết định lớn nhất):
 ### 14.3. Quy tắc tự quyết
 
 - Việc có điều kiện: Claude tự bật khi đạt điều kiện ở 14.1, rồi báo. Người dùng chỉ được hỏi trong 4 trường hợp: kết luận Kaggle bị đảo; dự đoán cơ chế sai; cần thêm GPU; D1.
-- **Mốc cứng:** thí nghiệm GPU trên server xong trước hết ngày **22/11**; Kaggle (từ 21/11) xong trước **24/11**; GĐ7 từ ~24/11. Vượt mốc thì cắt theo thứ tự (cắt trước: giá trị thấp, chi phí cao): D2 → ít mẫu 3 seed xuống 1 seed → bỏ ít mẫu → D1 → G2 → mốc XLS-R-2B → seed 2–3 của tầng 3 (câu hỏi 1 khi đó dùng bộ Kaggle). Không bao giờ cắt hạng bắt buộc.
+- **Mốc cứng:** thí nghiệm GPU trên server xong trước hết ngày **22/11**; Kaggle (từ 21/11) xong trước **24/11**; GĐ7 từ ~24/11. Vượt mốc thì cắt theo thứ tự (cắt trước: giá trị thấp, chi phí cao): D2 → ít mẫu 3 seed xuống 1 seed → bỏ ít mẫu → D1 → G2 → mốc XLS-R-2B → seed 2–3 của tầng 3 (câu hỏi 1 khi đó dùng bộ Kaggle). Không bao giờ cắt hạng bắt buộc. *(Sửa sau khi chốt, mục 14.7: làm đầy đủ; vượt mốc thì báo và hỏi người dùng, kèm thứ tự cắt này làm đề xuất, không tự cắt.)*
 
 ### 14.4. Lịch dự kiến (2 × 3090, k ≈ 3, bộ khuyến nghị cộng việc có điều kiện thường xảy ra; bắt đầu sáng 16/11)
 
@@ -700,3 +700,39 @@ Dư ~3 ngày trước mốc 22/11 cho lỗi và chạy lại. Với 4 GPU, A–E
 | Ít mẫu 3 seed (mục 8, phương án C) | Tuỳ chọn, chốt phạm vi ở điểm kiểm D (3 seed, 1 seed, hoặc bỏ) | Đắt nhất (89 giờ T4, ~30% bộ); ở miền bão hoà kết quả khó đọc |
 | Giữ G2 (Q2) | Tuỳ chọn, chạy cuối giai đoạn C | Bài và Kaggle seed 1 đã cho G2 ≈ G1 |
 | Mọi cấu hình 3 seed (bộ chính) | Giữ, nhưng tầng 3 thành việc lấp chỗ trống, có thể cắt khi vượt mốc | Câu hỏi 1 có đường lùi là bộ Kaggle |
+
+### 14.7. Đã chốt (15/11 tối): làm đầy đủ, chia giai đoạn có điểm kiểm
+
+**Người dùng:** "Tôi đồng ý với bạn gợi ý. Cứ thực hiện đầy đủ các thử nghiệm." Giữ cấu trúc giai đoạn A–E và điểm kiểm (đánh giá lại kế hoạch ở mỗi điểm, ghi mục mới trong file này), nhưng không cắt hạng mục nào: việc "có điều kiện" và "tuỳ chọn" đều chạy. Chỉ việc phụ thuộc một lựa chọn (bản sửa tốt nhất cho tầng ít mẫu) chọn ở điểm kiểm C. Vượt mốc 22/11 thì báo và hỏi.
+
+**Bộ server: 122 lần** (`server/experiments.py`, `server/README.md` mục 1; ~530 giờ T4):
+
+| Tầng | Giai đoạn | Nội dung | Lần |
+|---|---|---|---|
+| 0 | A | Thử đo (R, G1 × 2/6 worker; dấu vân tay batch) + SFT + KL thử 100 bước | 5 |
+| 1 | B | S0 × 4; R, G1, A0 × 3 seed | 13 |
+| 2 | C | G1s, G1b; G1lr, Rlr, G3; SFTKL, G1s0; G2 (× 3 seed) | 24 |
+| 3 | D | WiSE-FT (R, A0, G1, G1s, G1b; α 0,5 × 3 seed, α 0,25 và 0,75 seed 1) | 25 |
+| 4 | D | Không RawBoost: G1sA, G1bA, G1A × 3 seed | 9 |
+| 5 | D | Seed 4, 5: R, G1, G1s, G1b | 8 |
+| 6 | E | P0, B2, N0, B1 × 3 seed | 12 |
+| 7 | E | D1 kiểm chế độ: S0 trên hai tập chia; Rrv, G1rv × 3 seed | 7 |
+| 8 | E | Ít mẫu: SFT, G1 × N 50/200/1000 × 3 seed (+ bản sửa tốt nhất × 9, thêm ở điểm kiểm C) | 18 (+9) |
+| 9 | E | Mốc XLS-R-2B | 1 |
+
+Thời gian: 2 GPU ~3,2–4,4 ngày, 4 GPU ~1,6–2,2 ngày (tốc độ 2,5–3,5 lần T4). Khuyến nghị thuê 4 GPU cùng loại (giá theo giờ GPU nên gần cùng chi phí).
+
+**Hạ tầng đã làm và đã thử trên máy (15/11):**
+
+| Thứ | File | Thử |
+|---|---|---|
+| Hàng đợi động: đọc lại `experiments.py` mỗi lần nhận việc; `needs` (chờ lần nguồn); `results/hold` tạm dừng; lần cần lỗi thì lần phụ thuộc "skipped" | `server/run.py`, `vast.sh hold/release` | Bộ thí nghiệm giả, 2 GPU giả: lỗi kéo theo bỏ, chờ phụ thuộc, `skip.txt`, `hold`, thêm lần khi đang chạy đều đúng |
+| SFT + KL: cross-entropy như SFT + đúng số hạng KL k3 của GRPO, thay `rl.grpo2_loss` qua runpy (không sửa code gốc) | `src/loss_variants.py`, `finetune.py --loss-variant sft_kl` | Với `algo/rl.py` gốc: loss bằng CE + β·KL tính tay (0,377121), qua cả chuỗi `mem_probe.py` |
+| WiSE-FT: nội suy theo từng tensor, dừng nếu lệch khoá hoặc kích thước, chấm bằng `--local`, xoá file nội suy sau khi chấm; thống kê `interp.json` | `src/interp_score.py` | α = 0; 0,5; 1 đúng trên state_dict giả; lệch khoá thì dừng |
+| D1: chia RADAR VI phân tầng theo nhãn, seed 2026: train 6.047 câu (7,73 giờ), dev 672, test 6.719 (8,47 giờ); 652 batch mỗi epoch nên 4.563 bước = 7,0 epoch (đặt 9 epoch, dừng bằng giới hạn bước) | `src/split_radar_regime.py`, `protocols/ids/radar_vi_rv_*.tsv`, `bootstrap.sh` bước 5b, `check_data.py` | Mô phỏng `DynamicBatchSampler` của SpeechBrain 1.0.2 cho đúng 1.521 (tập train đủ) và 12/42/178 (ít mẫu); tạo CSV từ CSV giả đúng số câu |
+| Kiểm TF32 bằng số (fp32 so với fp64), có và không đặt `NVIDIA_TF32_OVERRIDE=0` | `server/tf32_check.py`, `bootstrap.sh` bước 3b | Trên server (cần GPU) |
+| Giới hạn bước giữa epoch | Đọc `main.py`: vòng huấn luyện tự viết kiểm `_optimizer_step_limit_exceeded` mỗi batch rồi `break`; epoch dư dừng ở batch đầu; chấm dev một lần sau mọi epoch | Áp dụng cho ít mẫu và D1 |
+
+Danh sách 76 lần cũ giữ nguyên lệnh (so từng lần với bản trước), chỉ đổi số tầng.
+
+**Việc còn lại trước điểm kiểm B và cuối bộ:** A1 (mô hình hai yếu tố trong `src/analyze_ablation.py`, cần trước điểm kiểm B); đo độ trôi trọng số (`src/weight_drift.py`, chạy trên server trước `cleanup`); phân tích riêng cho D1 (khi có kết quả).

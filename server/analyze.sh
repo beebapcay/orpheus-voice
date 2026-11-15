@@ -27,7 +27,12 @@ PAIRS=(G1:R G1:A0 G2:G1 G3:G1 G2:R A0:R N0:R B2:R P0:R R:S0_mms_300m G1:S0_mms_3
        G1s:S0_mms_300m G1b:S0_mms_300m G1lr:S0_mms_300m
        G1sA:A0 G1bA:A0 G1sA:G1s G1bA:G1b A0:S0_mms_300m G1sA:S0_mms_300m G1bA:S0_mms_300m
        G1n50:SFTn50 G1n200:SFTn200 G1n1000:SFTn1000
-       SFTn50:R SFTn200:R SFTn1000:R G1n50:G1 G1n200:G1 G1n1000:G1)
+       SFTn50:R SFTn200:R SFTn1000:R G1n50:G1 G1n200:G1 G1n1000:G1
+       Rlr:R G1lr:Rlr Rlr:S0_mms_300m G1lr:S0_mms_300m
+       SFTKL:R SFTKL:G1s SFTKL:G1b G1s0:G1s G1s0:G3 G1s0:R
+       G1A:A0 G1A:G1 G1sA:G1A G1bA:G1A
+       Rw50:R Rw50:S0_mms_300m A0w50:A0 A0w50:S0_mms_300m G1w50:G1 G1w50:S0_mms_300m
+       G1sw50:G1s G1bw50:G1b Rw50:A0 G1rv:Rrv)
 
 echo "== analyze_ablation.py"
 "$PY" src/analyze_ablation.py --finetune "$S/finetune" --zeroshot "$S/zeroshot" --out "$S/analysis" \
@@ -36,10 +41,10 @@ echo "== calibrate.py"
 "$PY" src/calibrate.py --finetune "$S/finetune" --zeroshot "$S/zeroshot" --out "$S/calibration" \
   > "$S/calibration/calibration_output.txt"
 
-# Cơ chế: chỉ các lần cùng điểm xuất phát với S0 MMS-300M (post-trained): R, A0, G*, SFTn* (không P0:
-# khởi tạo fairseq; không B1, B2, N0: backbone khác)
+# Cơ chế: chỉ các lần cùng điểm xuất phát với S0 MMS-300M (post-trained): R, Rlr, A0, SFTKL, G*, SFTn*, WiSE-FT
+# (Rw*, A0w*, G1*w*) (không P0: khởi tạo fairseq; không B1, B2, N0: backbone khác)
 CFGS=()
-while IFS= read -r r; do CFGS+=("$r"); done < <(ls "$S/finetune" | grep -E '^(R|A0|G[0-9A-Za-z]*|SFTn[0-9]+)_s[0-9]+$' || true)
+while IFS= read -r r; do CFGS+=("$r"); done < <(ls "$S/finetune" | grep -E '^(R|Rlr|A0|SFTKL|G[0-9A-Za-z]*|SFTn[0-9]+|(R|A0)w[0-9]+)_s[0-9]+$' || true)
 if [ "${#CFGS[@]}" -gt 0 ]; then
   echo "== analyze_mechanism.py (${#CFGS[@]} lần)"
   "$PY" src/analyze_mechanism.py --finetune "$S/finetune" --zeroshot "$S/zeroshot" --out "$S/analysis" \

@@ -1,0 +1,24 @@
+{
+ "seed": 2026,
+ "source": "radar_vi.tsv",
+ "splits": {
+  "train": {
+   "n": 6047,
+   "real": 3150,
+   "fake": 2897,
+   "hours": 7.734
+  },
+  "dev": {
+   "n": 672,
+   "real": 350,
+   "fake": 322,
+   "hours": 0.835
+  },
+  "test": {
+   "n": 6719,
+   "real": 3500,
+   "fake": 3219,
+   "hours": 8.473
+  }
+ }
+}

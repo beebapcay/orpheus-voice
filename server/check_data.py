@@ -22,6 +22,9 @@ CHECKS = [
     ("prep", "radar_en_sub", "radar_en_sub.tsv"),
     ("prep", "itw_sub", "itw_sub.tsv"),
     ("prep", "ood_forget", None),
+    ("prep", "radar_vi_rv_train", "radar_vi_rv_train.tsv"),     # kiểm chế độ D1 (src/split_radar_regime.py)
+    ("prep", "radar_vi_rv_dev", "radar_vi_rv_dev.tsv"),
+    ("prep", "radar_vi_rv_test", "radar_vi_rv_test.tsv"),
 ]
 
 

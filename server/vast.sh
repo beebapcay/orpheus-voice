@@ -8,10 +8,11 @@
 #   bash server/vast.sh data                        chép SEA-Spoof vi và MLAAD vi (Data/*/data) lên
 #   bash server/vast.sh bootstrap                   chạy server/bootstrap.sh trên server (chạy nền)
 #   bash server/vast.sh bootlog                     xem tiến độ dựng server
-#   bash server/vast.sh start [tham số run.py]      chạy nền server/run.py run ... (ví dụ --tiers 0)
+#   bash server/vast.sh start [tham số run.py]      chạy nền server/run.py run ... (--tiers 0; không --tiers: mọi tầng ≥ 1)
 #   bash server/vast.sh status                      results/status.txt + cuối driver.log
 #   bash server/vast.sh log <tên lần> [số dòng]     log của một lần chạy
 #   bash server/vast.sh skip <tên lần>...           bỏ qua các lần đang chờ (ghi results/skip.txt, có hiệu lực ngay)
+#   bash server/vast.sh hold | release              tạm dừng / cho GPU rảnh nhận việc lại (lần đang chạy vẫn chạy)
 #   bash server/vast.sh fetch                       tải kết quả về results/server/raw/ (không checkpoint)
 #   bash server/vast.sh collect <nhãn>              gộp vào results/server/ và lưu bằng chứng results/runs/server-<nhãn>/
 #   bash server/vast.sh stop --yes                  dừng điều phối và mọi lần đang chạy
@@ -96,6 +97,12 @@ case "$CMD" in
   skip)
     load; shift; [ $# -gt 0 ] || { echo "cần tên lần chạy"; exit 2; }
     remote "mkdir -p $R/results && printf '%s\n' $* >> $R/results/skip.txt && cat $R/results/skip.txt"
+    ;;
+  hold)
+    load; remote "mkdir -p $R/results && touch $R/results/hold && echo 'Đã tạo results/hold: GPU rảnh không nhận việc mới'"
+    ;;
+  release)
+    load; remote "rm -f $R/results/hold && echo 'Đã xoá results/hold: GPU nhận việc lại'"
     ;;
   fetch)
     load

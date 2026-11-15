@@ -193,6 +193,9 @@ def run_train(args, ckpt_init, overrides, allowed_warns=()):
     ov = dict(overrides)
     # main.py gốc, hoặc main.py chạy qua mem_probe.py (cùng phép tính, ghi thêm đỉnh bộ nhớ thật)
     entry = [os.path.join(HERE, "mem_probe.py"), "main.py"] if args.probe_mem else ["main.py"]
+    if args.loss_variant:
+        # Hàm loss thay thế qua runpy (src/loss_variants.py), không sửa code gốc; ví dụ sft_kl = SFT + KL của GRPO
+        entry = [os.path.join(HERE, "loss_variants.py"), args.loss_variant] + entry
     for attempt in range(args.oom_retry + 1):
         if os.path.exists(exp) and not args.resume:
             shutil.rmtree(exp)
@@ -238,6 +241,8 @@ def run_train(args, ckpt_init, overrides, allowed_warns=()):
         info["train_longest"] = args.train_longest
     if args.env:
         info["env"] = " ".join(args.env)
+    if args.loss_variant:
+        info["loss_variant"] = args.loss_variant
     info["oom"] = any(p in text for p in OOM_PATTERNS)
     info.update(parse_train_log(text))
     # Tích luỹ gradient: thanh tqdm đếm batch; mỗi bước optimizer (và lịch learning rate) gồm
@@ -330,6 +335,9 @@ def main():
                     help="chỉ huấn luyện trên N câu dài nhất của --train (thử áp lực bộ nhớ)")
     ap.add_argument("--discard-ckpt", action="store_true",
                     help="lần chạy đo: không giữ checkpoint, không chấm")
+    ap.add_argument("--loss-variant", default=None, choices=["sft_kl"],
+                    help="hàm loss thay thế (src/loss_variants.py): sft_kl = cross-entropy như SFT + beta*KL k3 như "
+                         "GRPO; dùng với --method grpo_v2 (có mô hình tham chiếu)")
     ap.add_argument("--env", nargs="*", default=[],
                     help="biến môi trường thêm cho main.py, KHOÁ=giá trị "
                          "(ví dụ PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True)")

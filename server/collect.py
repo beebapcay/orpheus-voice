@@ -28,7 +28,7 @@ import time
 
 KEEP_SCORE = ("scores.csv", "metrics.csv", "metrics.txt", "metrics_subsets.csv", "metrics_subsets.txt", "timing.json")
 KEEP_TRAIN = ("main.log", "monitor.csv", "exp_log.txt", "hyperparams.yaml", "valid_history.json", "preflight.log",
-              "best_CKPT.yaml", "env.log", "log.txt")
+              "best_CKPT.yaml", "env.log", "log.txt", "interp.json")
 WARN = re.compile(r"Traceback|Error|is not in the model|Wrong para\. length|OutOfMemory|LỖI|THẤT BẠI")
 
 
