@@ -437,4 +437,33 @@ Phần ít mẫu (tầng 4) trong chế độ này chủ yếu đo "ít dữ li�
 | 8 | Giả thuyết cơ chế cũ (GRPO bỏ qua câu sai chắc) bị bác: G1 kéo câu sai chắc mạnh bằng SFT và lật tiếng thật sang giả nhiều hơn | 10.2 |
 | 9 | Nguyên nhân: miền fine-tune bão hoà; cuối huấn luyện 66–76% batch có mọi nhãn lấy mẫu đều đúng; chuẩn hoá phần thưởng khiến GRPO tiếp tục làm sắc câu đã đúng (~30 lần SFT ở p = 0,999): G1 99,4% câu dev đúng với p > 0,999 (R 91–97%) | 11 |
 
-**Việc tiếp theo** (session sau): người dùng thuê máy và gửi chuỗi SSH; Claude chạy `server/vast.sh` (init, check, code, data, bootstrap, tầng 0), báo tốc độ, chốt số worker, chạy tầng 1–6; sau tầng 2 chọn bản ghép ở tầng 4 (`skip` bản kia); gom kết quả (`fetch`, `collect`) và phân tích trên `results/server/`. Kiểm bài Dr. GRPO trước khi trích.
+**Việc tiếp theo** (session sau): người dùng thuê máy và gửi chuỗi SSH; Claude chạy `server/vast.sh` (init, check, code, data, bootstrap, tầng 0), báo tốc độ, chốt số worker, chạy tầng 1–6; sau tầng 2 chọn bản ghép ở tầng 4 (`skip` bản kia); gom kết quả (`fetch`, `collect`) và phân tích trên `results/server/`. Kiểm bài Dr. GRPO trước khi trích (đã kiểm, mục 12.1).
+
+### 12.1. Đối chiếu G1s với bài Dr. GRPO (kiểm 15/11, trước khi trích)
+
+Bài: Liu và cộng sự, "Understanding R1-Zero-Like Training: A Critical Perspective", COLM 2025, arXiv 2503.20783 (`resource/paper/DrGRPO-2503.20783.pdf`). Code ta: AntiDeepfake `algo/rl.py` commit `86098091`, `grpo3_loss` dòng 172: `reward_norm = (reward - reward.mean())/(reward.std() + rl_config['std_floor'])`, tính trên **cả B × 64 mẫu của batch** (đọc lại 15/11).
+
+| Nội dung | Bài Dr. GRPO | Ở ta |
+|---|---|---|
+| Chuẩn hoá phần thưởng | GRPO chia cho độ lệch chuẩn phần thưởng của G câu trả lời **của cùng một câu hỏi** (mục 3.1, công thức lợi thế) | Chia cho độ lệch chuẩn của **cả batch** |
+| Thiên lệch bài nêu | "Question-level difficulty bias": câu hỏi có độ lệch chuẩn thấp (quá dễ hoặc quá khó, phần thưởng gần như toàn 1 hoặc toàn 0) nhận trọng số cao hơn. Bài ghi rõ: chuẩn hoá lợi thế thường tính trên cả batch là kỹ thuật phổ biến; vấn đề là chuẩn hoá theo từng câu hỏi | Mọi câu trong batch chung một 1/σ_batch, nên không có thiên lệch giữa các câu cùng batch. Tác động là khác: 1/σ_batch nhân cả bước cập nhật và tăng dần khi mô hình bão hoà, như một learning rate tự tăng |
+| Thiên lệch độ dài (chia cho \|o_i\|) | Có (câu trả lời nhiều token) | Không áp dụng (một nhãn mỗi câu) |
+| Cách sửa | Dr. GRPO bỏ cả hai số hạng (mục 3.2); lợi thế còn lại bằng RLOO nhân một hệ số (phụ lục) | G1s: `std_floor` 1,0. Phần thưởng 0/1 có σ ≤ 0,5, nên mẫu số σ_batch + 1 nằm trong [1; 1,5]: gần như bỏ chia |
+| Bằng chứng | Phụ lục C, hình 8 (Qwen2.5-1.5B, bài toán): bỏ riêng độ lệch chuẩn hoặc riêng độ dài đều cho phần thưởng huấn luyện và độ chính xác cao hơn GRPO gốc. Bài không đo quên hay tổng quát hoá ngoài miền | Kiểm ở tầng 2 của bộ server |
+
+**Cách trích trong báo cáo:** "G1s dùng cùng phép sửa với Dr. GRPO (bỏ chia cho độ lệch chuẩn), nhưng vì một lý do khác: code AntiDeepfake chuẩn hoá theo batch, nên phép chia không tạo thiên lệch độ khó giữa các câu như bài phân tích, mà phóng đại bước cập nhật khi miền fine-tune đã bão hoà." Không viết rằng Dr. GRPO chứng minh việc bỏ chuẩn hoá giúp giữ tổng quát hoá.
+
+**Kiểm lực kéo bằng mô phỏng** (cùng cách `src/grpo_gradient_sim.py`: 10 câu × 64 mẫu, 4.000 lượt, bỏ KL và clip; khớp công thức p(1 − p)/(σ_batch + c) trong 5%). Lực kéo lên log-odds nhãn đúng, tính theo số lần lực của SFT (1 − p):
+
+| Batch | σ_batch | Câu | G1 (c = 1e-5) | G1s (c = 1) |
+|---|---|---|---|---|
+| Hỗn hợp (p từ 0,02 đến 0,999) | 0,48 | sai chắc, p = 0,02 | 0,04 | 0,01 |
+| | | phân vân, p = 0,5 | 1,04 | 0,34 |
+| | | đúng chắc, p = 0,999 | 1,9 | 0,7 |
+| Bão hoà (p từ 0,9 đến 0,9999) | 0,11 | p = 0,9 | 7,9 | 0,80 |
+| | | đúng chắc, p = 0,999 | 9,2 | 0,90 |
+
+Ba hệ quả cho việc diễn giải tầng 2:
+1. Ở batch bão hoà, G1s kéo câu đúng chắc gần bằng SFT (0,9 lần), G1 kéo gấp ~9 lần: G1s bỏ được đúng hiệu ứng "tiếp tục làm sắc câu đã đúng" (mục 11, vấn đề 1).
+2. G1s kéo nhẹ hơn SFT ở mọi câu (0,34 lần ở câu phân vân), nên một phần khác biệt có thể chỉ do bước cập nhật nhỏ hơn: so thêm với G1lr (lr 1e-7).
+3. Biên độ lợi thế (căn trung bình bình phương) của G1 luôn ≈ 1; của G1s là 0,32 (batch hỗn hợp) và 0,10 (batch bão hoà), còn số hạng KL không đổi. Vậy khi bão hoà, phạt KL β = 0,04 của G1s nặng tương đối gấp ~10 lần so với G1 (tương đương β ≈ 0,4 nếu giữ biên độ lợi thế của G1): **G1s cũng mạnh lên về phía "kéo về mô hình tham chiếu", giống G1b**. Khác G1b ở chỗ G1s không phóng đại bước cập nhật. Đây là phân tích, chưa có số đo.

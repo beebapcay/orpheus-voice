@@ -170,6 +170,30 @@ Bảng ở mục 8 cho thấy một chiều thường bị bỏ qua: với câu 
 
 Hệ quả: lợi thế "ít quên" của GRPO trong bài báo xuất hiện khi dữ liệu fine-tune **khó** (mô hình dùng thẳng EER ~23–29%, đa số câu ở ranh giới). Khi miền đích đã dễ, không nên kỳ vọng GRPO nhẹ tay hơn SFT; cần phạt KL mạnh hơn hoặc giảm learning rate.
 
+### 8.3. Bỏ chia cho độ lệch chuẩn
+
+Dr. GRPO (2025, huấn luyện LLM giải toán) chỉ ra hai thiên lệch trong công thức GRPO và bỏ cả hai:
+
+| Số hạng | Thiên lệch | Có ở bộ phân loại không |
+|---|---|---|
+| Chia cho độ dài câu trả lời $\lvert o_i \rvert$ | Câu trả lời đúng ngắn được thưởng nhiều hơn; câu trả lời sai dài bị phạt ít hơn, nên câu sai dài dần | Không (mỗi câu một nhãn) |
+| Chia cho độ lệch chuẩn phần thưởng **của từng câu hỏi** | Câu hỏi quá dễ hoặc quá khó (phần thưởng gần như toàn 1 hoặc toàn 0) có độ lệch chuẩn nhỏ nên được trọng số lớn hơn | Có, nếu chuẩn hoá theo nhóm như công thức (4) |
+
+Bỏ độ lệch chuẩn thì lợi thế chỉ còn $r - \bar r$ (tương đương REINFORCE leave-one-out nhân một hệ số), và lực kéo thành $p(1 - p)$.
+
+Nếu cài đặt chuẩn hoá theo **cả batch** (mục 8.1), không có thiên lệch giữa các câu cùng batch, nhưng phép chia gây một hiệu ứng khác: $1/\sigma_\text{batch}$ nhân cả bước cập nhật và tăng khi mô hình đúng gần hết, như một learning rate tự tăng. Cách sửa nhẹ nhất: cộng một hằng $c$ vào mẫu số, $(r - \bar r)/(\sigma + c)$. $c \to 0$ là GRPO gốc; $c$ lớn hơn nhiều $\sigma$ là bỏ chuẩn hoá. Với phần thưởng 0/1, $\sigma \le 0{,}5$, nên $c = 1$ đã đủ để mẫu số gần như hằng (từ 1 đến 1,5).
+
+Lực kéo theo số lần SFT (mô phỏng Monte Carlo, 10 câu × 64 mẫu mỗi batch, bỏ KL và kẹp):
+
+| Batch | Câu | Chia cho $\sigma_\text{batch}$ | Chia cho $\sigma_\text{batch} + 1$ |
+|---|---|---|---|
+| Hỗn hợp ($\sigma_\text{batch} = 0{,}48$) | phân vân, $p = 0{,}5$ | 1,0 | 0,34 |
+| Bão hoà ($\sigma_\text{batch} = 0{,}11$) | đúng chắc, $p = 0{,}999$ | 9,2 | 0,9 |
+
+Hai tác dụng phụ cần đối chứng khi thử cách sửa này:
+1. **Bước cập nhật nhỏ hơn SFT ở mọi câu.** Nếu kết quả tốt lên, có thể chỉ vì học chậm hơn. Cần thêm một lần GRPO gốc với learning rate thấp để tách "đổi cơ chế" khỏi "giảm cường độ".
+2. **Phạt KL nặng lên tương đối.** Khi chia cho $\sigma_\text{batch}$, biên độ lợi thế luôn ≈ 1; khi chia cho $\sigma_\text{batch} + 1$, biên độ co về 0 lúc mô hình bão hoà (0,10 ở batch trên), còn số hạng KL giữ nguyên. Vậy gần bão hoà, cập nhật bị phạt KL chi phối, mô hình tự dừng và bị kéo về mô hình tham chiếu. Cách sửa này vì vậy gần với "tăng $\beta$" hơn vẻ ngoài của nó.
+
 ## 9. Ưu và nhược điểm
 
 | Ưu điểm | Nhược điểm |
