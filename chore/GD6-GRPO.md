@@ -9,7 +9,7 @@ Câu hỏi của giai đoạn: fine-tune bằng GRPO trên tiếng Việt có gi
 | 1 | Chuẩn bị lần thử đo GRPO: đọc code GRPO (YAML v1/v2, `main.py`, `algo/rl.py`), kiểm ghi đè lồng `rl_config`, tích luỹ gradient, mô phỏng số batch | Mục 2; `src/mem_probe.py`; `src/finetune.py` (`--probe-mem`, `--oom-retry`, `--train-longest`, `--discard-ckpt`, `--env`); `kaggle/finetune/run.py` | Xong (15/11), đã thử trên máy |
 | 1 | **Lần thử đo bộ nhớ và tốc độ GRPO trên T4** (L1) | `orpheus-finetune` v5, mục 3 | **Xong** (15/11, 0,47 giờ): G1 batch 50 vừa với `expandable_segments`, 3,07 s/bước |
 | 1 | Báo kết quả lần thử; người dùng chốt: Kaggle hay thuê server, dùng quota còn lại tuần này thế nào | Mục 3, 5 | **Đã chốt** (15/11, mục 5): Kaggle; batch 50 + `expandable_segments`; P1 làm, P2 không, P3 không cắt |
-| 1 | Lần 1: G1 s1, G2 s1; lần 2 (song song): R s4, R s5 | `orpheus-finetune` v6, `orpheus-finetune-b` v2; mục 6 | Đang đẩy (15/11) |
+| 1 | Lần 1: G1 s1, G2 s1; lần 2 (song song): R s4, R s5 | `orpheus-finetune` v6, `orpheus-finetune-b` v2; mục 6, 10 | Lần 2 **xong** (14:39, 4,66 giờ, mục 10.1); lần 1 đang chạy |
 | 2–3 | G1 s2–s5, G3 (từ 21/11) | Mục 6 | Chưa |
 | 1 | Phân tích không cần GPU: kiểm định qua seed, hiệu chuẩn, theo hệ thống sinh, mốc cơ chế | Mục 7 | Xong (15/11) |
 | 1 | **Bộ đầy đủ trên server vast.ai** (54 lần, cùng phần cứng, 3 seed mọi cấu hình): script, chọn thí nghiệm | Mục 9, `server/` | Script xong, thử trên máy (15/11); người dùng thuê máy **sau khi** xem kết quả lần 1, 2 Kaggle (mục 9) |
@@ -120,7 +120,7 @@ Kiểm tra dev cuối lần chạy (`seaspoof_vi_dev`, batch 10 câu, câu dài 
 | 2 | **`inner_step_size` đếm theo batch, không theo bước optimizer** như `README_grpo.md` viết | Chỉ khác khi tích luỹ gradient | Đặt 2000 nếu dùng batch 25 × 2 (đã kiểm, mục 3.1 kết quả 5) |
 | 3 | **G1 ở batch 50 hết bộ nhớ trên batch toàn câu dài do phân mảnh, không do thiếu dung lượng**; qua khi bật `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, đỉnh 13,9 / ~14,7 GB | Giữ được đúng batch, số bước, lịch learning rate của R (L1) mà không đổi phép tính. Biên còn mỏng (~400 MiB giữ). `finetune.py` mặc định sẽ tự giảm batch khi hết bộ nhớ: với GRPO phải đặt `--oom-retry 0` | Đề xuất: mọi lần GRPO dùng batch 50 + `expandable_segments` + `--oom-retry 0`; nếu một lần hết bộ nhớ giữa chừng thì báo, cân nhắc chuyển cả nhóm sang 25 × 2 |
 | 4 | **GRPO chậm 1,55 lần SFT** (G1 3,07 s/bước; G2 2,95) | Kernel GRPO hai lần ~5,8 giờ, gần một nửa quota còn lại tuần này | Mục 5 |
-| 5 | **Quy tắc "2 độ lệch chuẩn" của GĐ5 lạc quan so với kiểm định t khi R chỉ có 3 seed:** A0 − R RADAR VI −5,65 điểm, p = 0,08; chỉ P0 − R có ý nghĩa (ItW, RADAR EN, FRR) | Kết luận RawBoost (GĐ5 phát hiện 4) là khả dĩ, chưa có ý nghĩa thống kê. Mọi so sánh G1 phải báo KTC theo seed, không chỉ KTC bootstrap theo câu | R seed 4, 5 (lần 2) đưa bậc tự do lên 4; chạy lại mục 5 khi có |
+| 5 | **Quy tắc "2 độ lệch chuẩn" của GĐ5 lạc quan so với kiểm định t khi R chỉ có 3 seed:** A0 − R RADAR VI −5,65 điểm, p = 0,08; chỉ P0 − R có ý nghĩa (ItW, RADAR EN, FRR) | Kết luận RawBoost (GĐ5 phát hiện 4) là khả dĩ, chưa có ý nghĩa thống kê. Mọi so sánh G1 phải báo KTC theo seed, không chỉ KTC bootstrap theo câu | **Cập nhật sau lần 2 (R 5 seed, bậc tự do 4): A0 − R −5,83 điểm RADAR VI, p = 0,047 (vừa có ý nghĩa); R − S0 +4,12, p = 0,008** (mục 10.1) |
 | 6 | **Hiệu chuẩn trên dev (chỉ tiếng thật VIVOS) làm actDCF ngoài miền tệ hơn**, ở mọi biến thể; chỉ giúp tập cùng nguồn tiếng thật | Trả lời ngày 3 của plan: lệch hiệu chuẩn sau fine-tune là do lệch nguồn tiếng thật, không sửa được bằng dev cùng nguồn | Báo cáo kết quả này; chấm lại với G1 khi có để xem GRPO có lệch ít hơn không |
 
 ## 5. Ngân sách quota
@@ -162,6 +162,8 @@ Mỗi lần huấn luyện chấm sau fine-tune trên `seaspoof_vi_dev`, `seaspo
 
 ### 7.1. So sánh qua seed bằng kiểm định t (`src/analyze_ablation.py` mục 5, `results/finetune/analysis/seed_tests.csv`)
 
+*Bảng dưới tính với R 3 seed (trước lần 2). Cập nhật với R 5 seed: mục 10.1.*
+
 GĐ5 đọc các cấu hình 1 seed bằng quy tắc "cách trung bình R ~2 độ lệch chuẩn" (GĐ5 mục 3.4). Kiểm định chính thức: một bên 1 seed thì so với khoảng dự đoán của bên kia, t = (A − B)/(s·√(1 + 1/n)), bậc tự do n − 1 (giả định cấu hình 1 seed có cùng độ lệch seed với R); hai bên ≥ 2 seed thì Welch. Chênh lệch điểm EER (%), KTC 95%, p hai phía; R có 3 seed (bậc tự do 2):
 
 | So sánh | RADAR VI | ItW | RADAR EN | FRR RADAR VI ở ngưỡng 0 |
@@ -194,7 +196,7 @@ Cách làm: học s' = a·s + b trên `seaspoof_vi_dev` (1.035 thật VIVOS + 1.
 Toàn bộ 12 cấu hình × 7 tập (kể cả FRR, FAR ở ngưỡng Bayes): `results/calibration/calibration_output.txt`.
 
 Mỗi kết quả, một câu giải thích:
-1. **Hiệu chuẩn học trên dev làm actDCF ngoài miền tệ hơn ở gần như mọi cấu hình và cả ba biến thể** (RADAR VI, ItW, RADAR EN, `test_cvreal`), kể cả biến thể ổn định nhất (`shift`). Vậy nguyên nhân không phải do phép khớp suy biến.
+1. **Hiệu chuẩn học trên dev làm actDCF ngoài miền tệ hơn ở gần như mọi cấu hình và cả ba biến thể** (ngoại lệ duy nhất trên RADAR VI: R s5 với `affine` gần như không đổi, 0,901 → 0,899) (RADAR VI, ItW, RADAR EN, `test_cvreal`), kể cả biến thể ổn định nhất (`shift`). Vậy nguyên nhân không phải do phép khớp suy biến.
 2. **Nó chỉ giúp khi tiếng thật của tập kiểm tra cùng nguồn với dev** (VIVOS): MLAAD, `test_seen`, dev. Độ dời học được gần như luôn âm (b < 0, tức nâng ngưỡng): trên dev, tiếng thật VIVOS được chấm "thật" rất chắc, còn một phần câu giả lọt qua, nên dev đòi khắt khe hơn với tiếng thật; ngoài miền thì ngược lại, tiếng thật nguồn khác đã bị loại quá nhiều (FRR RADAR VI của R: 26–33% trước, 30–43% sau `affine`).
 3. **Sau fine-tune dev tách được hoàn toàn** (EER dev 0% ở R, A0, N0, P0, B1), nên `affine` cho hệ số dốc rất lớn (A0 a = 45,9; R s2 a = 33,9) và không xác định rõ; `shift` và `platt` cho a ≈ 1, b ≈ −1 đến −2.
 4. Hệ quả cho báo cáo: lệch hiệu chuẩn sau fine-tune (actDCF − minDCF ≈ 0,2 trên RADAR VI) **không sửa được bằng dev cùng nguồn với train**; cần dev có tiếng thật đa nguồn (không dùng Common Voice vì trùng nguồn RADAR). Khớp hạn chế đã dự báo ở GĐ5 L8 và phát hiện 9.
@@ -303,3 +305,36 @@ Công thức: đúng như Kaggle (đã đối chiếu từng tham số với b�
 **Cần người dùng:** thuê máy theo `server/README.md` mục 2 (4 × GPU ≥ 24 GB cùng loại, không RTX 50xx; ≥ 8 nhân CPU và ≥ 16 GB RAM mỗi GPU; ≥ 250 GB ổ; on-demand), thêm khoá SSH vào vast.ai, gửi chuỗi kết nối SSH.
 
 **Quyết định (15/11, người dùng):** chờ kết quả Kaggle lần 1, 2 (G1 s1, G2 s1, R s4, R s5; dự kiến ~15:45) rồi mới thuê server. Tiêu chí xem G1 s1 trước khi chạy GRPO ở quy mô lớn: (1) chạy hết 4.563 bước, không hết bộ nhớ, loss không NaN; (2) đỉnh bộ nhớ và giây mỗi bước khớp lần thử đo (13,9 GB, 3,07 s); (3) trong miền (dev, `test_seen`) tốt hơn S0, tức GRPO có học; (4) RADAR VI, ItW, FRR ở ngưỡng 0 nằm trong khoảng hợp lý so với R (5 seed). Không đạt (1)–(3) thì sửa cấu hình GRPO trước khi chạy trên server.
+
+## 10. Kết quả các lần chạy GĐ6
+
+### 10.1. Lần 2 (`orpheus-finetune-b` v2, 15/11, 4,66 giờ; `results/runs/orpheus-finetune-b-v2/`)
+
+COMPLETE, 0 cảnh báo nạp trọng số, code `orpheus-src` bản `a08bc23`. R s4, R s5: mỗi lần 4.563 bước (3 × 1.521), learning rate cuối 6,83e-07 (đúng lịch E1'), 2,25 và 2,07 s mỗi bước, GPU 99,5%. Cấu hình chỉ khác R s1–s3 ở seed (mục 6).
+
+**R qua 5 seed, EER (%)** (thấp hơn là tốt hơn; `results/finetune/analysis/table_main.csv`, `table_seeds.csv`):
+
+| Tập | s1 | s2 | s3 | s4 | s5 | **Trung bình ± độ lệch chuẩn** | S0 MMS-300M |
+|---|---|---|---|---|---|---|---|
+| RADAR VI | 23,07 | 23,23 | 25,77 | 26,63 | 22,32 | **24,20 ± 1,88** | 20,08 |
+| ItW | 7,60 | 4,50 | 4,80 | 6,20 | 9,10 | **6,44 ± 1,93** | 2,60 |
+| RADAR EN | 26,70 | 28,10 | 28,10 | 31,60 | 27,50 | **28,40 ± 1,88** | 26,20 |
+| FRR RADAR VI ở ngưỡng 0 (%) | 29,21 | 33,83 | 35,06 | 23,71 | 42,80 | **32,92 ± 7,10** | 4,81 |
+| `test_cvreal` | 2,70 | 4,56 | 6,15 | 6,10 | 4,09 | 4,72 ± 1,45 | 7,44 |
+| MLAAD | | 0,09 | 0,16 | 0,28 | 0,21 | 0,19 ± 0,08 | 5,18 |
+
+**Kiểm định qua seed với R 5 seed** (chênh lệch điểm EER %, KTC 95%, p hai phía; `seed_tests.csv`). R so với S0: t-test một mẫu (S0 dùng thẳng, không có độ lệch seed). Cấu hình 1 seed so với R: khoảng dự đoán từ 5 seed của R (bậc tự do 4).
+
+| So sánh | RADAR VI | ItW | RADAR EN | FRR RADAR VI ở ngưỡng 0 |
+|---|---|---|---|---|
+| **R − S0** (SFT so với dùng thẳng) | **+4,12 [1,78; 6,45], p = 0,008** | **+3,84 [1,44; 6,24], p = 0,011** | +2,20 [−0,13; 4,53], p = 0,059 | **+28,11 [19,30; 36,92], p < 0,001** |
+| A0 − R | **−5,83 [−11,54; −0,11], p = 0,047** | −0,34, p = 0,88 | −3,40, p = 0,17 | −5,84, p = 0,50 |
+| N0 − R | −3,70 [−9,42; 2,02], p = 0,15 | −1,04, p = 0,65 | −3,10, p = 0,21 | −1,64, p = 0,84 |
+| B2 − R | −3,17 [−8,89; 2,54], p = 0,20 | −5,04, p = 0,076 | −5,00, p = 0,072 | −7,28, p = 0,40 |
+| P0 − R | **+7,25 [1,54; 12,97], p = 0,024** | **+8,46 [2,58; 14,34], p = 0,016** | +5,50, p = 0,056 | +20,45, p = 0,058 |
+
+Mỗi kết quả, một câu giải thích:
+1. **SFT làm kém ngoài miền với MMS-300M là kết luận có ý nghĩa thống kê** (câu hỏi 2): qua 5 seed, RADAR VI kém S0 4,12 điểm (p = 0,008), ItW 3,84 điểm (p = 0,011), và tỉ lệ thật bị coi là giả trên RADAR VI tăng 28 điểm (p < 0,001). Đồng thời MLAAD (tiếng thật cùng nguồn VIVOS) tốt hơn S0 ~5 điểm ở cả 4 seed.
+2. **Độ lệch giữa seed lớn hơn ước tính từ 3 seed:** RADAR VI 1,52 → 1,88; RADAR EN 0,81 → 1,88; FRR ở ngưỡng 0 dao động 23,7–42,8% (độ lệch chuẩn 7,1). EER ổn định hơn nhiều so với lỗi ở ngưỡng cố định: vị trí ngưỡng (hiệu chuẩn) sau fine-tune phụ thuộc mạnh vào seed.
+3. **RawBoost khi fine-tune làm kém RADAR VI: vừa có ý nghĩa** (A0 − R −5,83, p = 0,047, A0 1 seed). Post-training quan trọng: có ý nghĩa (P0 − R). Ngôn ngữ pre-training (B2) và bản NDA (N0): chưa có ý nghĩa với 1 seed.
+4. Mốc cơ chế (mục 7.4) và hiệu chuẩn (mục 7.2) của R s4, s5 cùng mẫu hình với s1–s3: trên dev, câu giả S0 sai chắc được kéo Δz 9,8–11,2; trên RADAR VI, 13–33% câu thật S0 đúng chắc bị lật thành sai; hiệu chuẩn trên dev không giúp RADAR VI.

@@ -1,0 +1,5 @@
+Score: higher = real. beta = 1.900, actDCF threshold = -0.642
+EER in %, lower is better. minDCF/actDCF: lower is better, 1.0 = no better than accepting everything.
+subset  n_real  n_fake   eer_%  minDCF  actDCF  eer_threshold
+Pooled    7000    6438 22.3174  0.4995  0.9012        -4.8897
+Saved to /kaggle/working/results/scores/R_s5/radar_vi/metrics.csv

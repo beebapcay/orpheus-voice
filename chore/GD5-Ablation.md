@@ -229,7 +229,7 @@ Mỗi kết quả, một câu giải thích:
 
 Trên ItW (R = 5,63 ± 1,71): A0 6,10 và N0 5,40 nằm trong khoảng của R (các chênh lệch ItW của A0, N0 ở mục 3.1, 3.3 không còn đáng tin); B2 1,40 và P0 14,90 vẫn cách xa.
 
-**Sửa 15/11 (GĐ6 mục 7.1):** kiểm định t chính thức (khoảng dự đoán từ 3 seed của R, bậc tự do 2) chặt hơn quy tắc "2 độ lệch chuẩn" ở bảng trên: A0 − R trên RADAR VI −5,65 điểm, p = 0,08 (chưa có ý nghĩa ở mức 5%); chỉ P0 − R có ý nghĩa (ItW, RADAR EN, FRR). Cột "Kết luận" ở bảng trên là đọc sơ bộ; R seed 4, 5 (GĐ6 lần 2) sẽ cho bậc tự do 4.
+**Sửa 15/11 (GĐ6 mục 7.1):** kiểm định t chính thức (khoảng dự đoán từ 3 seed của R, bậc tự do 2) chặt hơn quy tắc "2 độ lệch chuẩn" ở bảng trên: A0 − R trên RADAR VI −5,65 điểm, p = 0,08 (chưa có ý nghĩa ở mức 5%); chỉ P0 − R có ý nghĩa (ItW, RADAR EN, FRR). Cột "Kết luận" ở bảng trên là đọc sơ bộ; R seed 4, 5 (GĐ6 lần 2) sẽ cho bậc tự do 4. **Cập nhật sau GĐ6 lần 2 (R 5 seed, GĐ6 mục 10.1):** R = 24,20 ± 1,88 (RADAR VI); A0 − R −5,83, p = 0,047; P0 − R +7,25, p = 0,024; N0, B2 chưa có ý nghĩa; R − S0 +4,12, p = 0,008 (SFT làm kém RADAR VI có ý nghĩa thống kê).
 
 ## 4. Phát hiện ảnh hưởng thí nghiệm
 

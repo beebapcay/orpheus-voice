@@ -80,7 +80,7 @@ def main():
                    help="A:B, chênh lệch EER(A) − EER(B). Bootstrap rút ngẫu nhiên tuần tự theo thứ tự cặp, "
                         "nên chỉ nối thêm cặp mới vào cuối để giữ nguyên số của các cặp cũ")
     p.add_argument("--group-pairs", nargs="*",
-                   default=["G1:R", "G1:A0", "G2:G1", "G3:G1", "G2:R", "A0:R", "N0:R", "B2:R", "P0:R"],
+                   default=["G1:R", "G1:A0", "G2:G1", "G3:G1", "G2:R", "A0:R", "N0:R", "B2:R", "P0:R", "R:S0_mms_300m", "G1:S0_mms_300m", "G2:S0_mms_300m"],
                    help="A:B theo mã cấu hình (<mã>_s<seed>), so qua các seed (mục 5)")
     p.add_argument("--n-boot", type=int, default=1000)
     p.add_argument("--seed", type=int, default=2026)
@@ -272,6 +272,11 @@ def group_compare(main_t, pairs, metrics_=SEED_METRICS):
 
     t = main_t[main_t.config.str.match(r".+_s\d+$")].copy()
     t["base"] = t.config.map(lambda c: _re.sub(r"_s\d+$", "", c))
+    # Mốc cố định (S0_*, ref_*: dùng thẳng, không huấn luyện nên không có độ lệch seed): so bằng
+    # t-test một mẫu, se = s_A/√n_A
+    fixed = main_t[main_t.config.str.match(r"^(S0_|ref_)")].copy()
+    fixed["base"] = fixed.config
+    t = pd.concat([t, fixed], ignore_index=True)
     rows = []
     for pair in pairs:
         A, B = pair.split(":")
@@ -286,7 +291,10 @@ def group_compare(main_t, pairs, metrics_=SEED_METRICS):
             if na == 0 or nb == 0 or (na < 2 and nb < 2):
                 continue
             d = xa.mean() - xb.mean()
-            if na >= 2 and nb >= 2:
+            if B.startswith(("S0_", "ref_")) and na >= 2:
+                se = xa.std(ddof=1) / np.sqrt(na)
+                df, kind = na - 1, "một mẫu, B cố định"
+            elif na >= 2 and nb >= 2:
                 va, vb = xa.var(ddof=1) / na, xb.var(ddof=1) / nb
                 se = np.sqrt(va + vb)
                 df = (va + vb) ** 2 / (va ** 2 / (na - 1) + vb ** 2 / (nb - 1)) if va + vb > 0 else np.nan
