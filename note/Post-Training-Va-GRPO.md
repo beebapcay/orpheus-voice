@@ -173,6 +173,18 @@ Cách kiểm trực tiếp, rẻ: fine-tune bằng cross-entropy có trọng s�
 | Phần thưởng đơn giản (đúng = 1, sai = 0) | Chỉ có tác dụng khi điểm xuất phát đã tốt (đã post-train) |
 | Có ablation tách vai trò của phạt KL và phần thưởng âm | Ablation chỉ trên một backbone, một bộ dữ liệu; cơ chế chưa giải thích |
 
+### 9.1. Chi phí đo được trên một GPU 16 GB (backbone 317M, batch ~50 giây âm thanh)
+
+| | SFT | GRPO đơn giản (thêm mô hình tham chiếu) | GRPO đủ (thêm tham chiếu và mô hình cũ) |
+|---|---|---|---|
+| Thời gian mỗi bước so với SFT | 1 | ~1,5 | ~1,55 |
+| Bộ nhớ thêm | | ~1,3 GB (một bản 317M tham số fp32) | ~2,5 GB |
+
+- Hai bản phụ chỉ chạy forward không gradient, nên tốn thêm ~1/4 thời gian mỗi bản chứ không gấp đôi; lấy mẫu 64 nhãn mỗi câu gần như không tốn gì với bài toán hai lớp.
+- **Đo bộ nhớ bằng `torch.cuda.max_memory_allocated`, không bằng nvidia-smi:** nvidia-smi thấy cả phần allocator của PyTorch giữ sẵn nên gần như luôn báo gần đầy, kể cả khi mô hình chỉ cần ít hơn nhiều.
+- **Hết bộ nhớ có thể do phân mảnh, không do thiếu dung lượng.** Thông báo lỗi cho biết bao nhiêu là "reserved but unallocated"; nếu phần này lớn (ví dụ ~0,8 GB trong khi yêu cầu chỉ 0,28 GB), đặt `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` thường đủ, không đổi phép tính. Giảm batch cũng chữa được nhưng đổi số bước và lịch learning rate, nên mất khả năng so với cấu hình cũ.
+- **Thử áp lực bằng batch toàn câu dài nhất** trước khi chạy dài: với batch giới hạn theo tổng thời lượng, bộ nhớ gần như không đổi giữa các batch, phần chênh đến từ attention (bậc hai theo độ dài câu).
+
 ## 10. Câu hỏi tự kiểm tra
 
 1. Post-training nằm ở đâu trong quy trình, và khác fine-tune ở điểm nào?

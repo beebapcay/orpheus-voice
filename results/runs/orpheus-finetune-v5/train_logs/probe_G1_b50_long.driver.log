@@ -1,0 +1,47 @@
+[02:30:21] [probe_G1_b50_long] kiểm nạp trọng số: 0 cảnh báo; PREFLIGHT_OK 431 tensor, 317392642 tham số
+[02:30:21] tập con 240 câu dài nhất: 9.06–15.94 s, 206 thật -> /kaggle/working/results/train/probe_G1_b50_long/seaspoof_vi_train_longest240.csv
+[02:30:21] [probe_G1_b50_long] huấn luyện, GPU 0: python /tmp/orpheus/src/mem_probe.py main.py hparams/ft_grpo/mms_300m_pre-post-grpo_v1.yaml --base_path /tmp/orpheus/work --output_folder /kaggle/working/results/train/probe_G1_b50_long/exp --train_csv /kaggle/working/results/train/probe_G1_b50_long/seaspoof_vi_train_longest240.csv --valid_csv /kaggle/input/datasets/beebapcay/orpheus-seaspoof-vi/seaspoof_vi_train_n50.csv --ckpt_path /tmp/orpheus/cache/mms_300m.ckpt --number_of_epochs 1 --warmup 460 --lr 1e-6 --valid_step 1000000000 --num_workers 2 --seed 1 --max_batch_length 50
+[02:31:04] [probe_G1_b50_long] hết bộ nhớ GPU với max_batch_length=50; không thử lại (--oom-retry 0)
+[02:31:04] [probe_G1_b50_long] main.py lỗi (mã 1). Cuối log:
+  File "/tmp/orpheus/work/AntiDeepfake/models/W2V.py", line 105, in forward
+    return self.__forward(wav, inference)[0]
+  File "/tmp/orpheus/work/AntiDeepfake/models/W2V.py", line 89, in __forward
+    emb = self.m_ssl.extract_feat(wav)
+  File "/tmp/orpheus/work/AntiDeepfake/models/W2V.py", line 57, in extract_feat
+    emb = self.model(input_tmp, mask=False, features_only=True)['x']
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/tmp/orpheus/work/fairseq/fairseq/models/wav2vec/wav2vec2.py", line 528, in forward
+    features = self.feature_extractor(source)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/tmp/orpheus/work/fairseq/fairseq/models/wav2vec/wav2vec2.py", line 812, in forward
+    x = conv(x)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/container.py", line 250, in forward
+    input = module(input)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/container.py", line 250, in forward
+    input = module(input)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/tmp/orpheus/work/fairseq/fairseq/modules/layer_norm.py", line 43, in forward
+    output = F.layer_norm(
+  File "/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/functional.py", line 2910, in layer_norm
+    return torch.layer_norm(
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 280.00 MiB. GPU 0 has a total capacity of 14.56 GiB of which 240.81 MiB is free. Including non-PyTorch memory, this process has 14.32 GiB memory in use. Of the allocated memory 13.35 GiB is allocated by PyTorch, and 811.40 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+MEM_PROBE max_allocated_mib=13667 max_reserved_mib=14654 total_mib=14912 t=40
+
+[02:31:04] [probe_G1_b50_long] KẾT QUẢ HUẤN LUYỆN: {"run": "probe_G1_b50_long", "model": "mms_300m", "method": "grpo_v1", "train": "seaspoof_vi_train", "valid": "seaspoof_vi_train_n50", "returncode": 1, "train_seconds": 43, "overrides": "{\"number_of_epochs\": \"1\", \"warmup\": \"460\", \"lr\": \"1e-6\", \"valid_step\": \"1000000000\", \"num_workers\": \"2\", \"seed\": \"1\", \"max_batch_length\": \"50\"}", "max_batch_length": "50", "train_longest": 240, "oom": true, "batches_per_epoch": 63, "sec_per_it": 3.28, "grad_accumulation_factor": 1, "sec_per_opt_step": 3.28, "peak_alloc_mib": 13667, "peak_reserved_mib": 14654, "gpu_total_mib": 14912, "peak_mem_mib": 13649.0, "gpu_util_mean": 24.9, "cpu_util_mean": 60.8, "monitor_samples": 8, "status": "error", "init": "post", "load_warnings_allowed": 0}

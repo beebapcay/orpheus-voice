@@ -1,0 +1,9 @@
+[
+ {
+  "epoch": 1,
+  "steps": 63,
+  "lr": 1.35e-07,
+  "valid_loss": 0.0575,
+  "valid_eer": 8.7
+ }
+]

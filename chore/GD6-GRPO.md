@@ -7,7 +7,7 @@ Câu hỏi của giai đoạn: fine-tune bằng GRPO trên tiếng Việt có gi
 | Ngày | Việc | Sản phẩm | Trạng thái |
 |---|---|---|---|
 | 1 | Chuẩn bị lần thử đo GRPO: đọc code GRPO (YAML v1/v2, `main.py`, `algo/rl.py`), kiểm ghi đè lồng `rl_config`, tích luỹ gradient, mô phỏng số batch | Mục 2; `src/mem_probe.py`; `src/finetune.py` (`--probe-mem`, `--oom-retry`, `--train-longest`, `--discard-ckpt`, `--env`); `kaggle/finetune/run.py` | Xong (15/11), đã thử trên máy |
-| 1 | **Lần thử đo bộ nhớ và tốc độ GRPO trên T4** (L1) | `orpheus-finetune` v5, mục 3 | Đang chạy |
+| 1 | **Lần thử đo bộ nhớ và tốc độ GRPO trên T4** (L1) | `orpheus-finetune` v5, mục 3 | **Xong** (15/11, 0,47 giờ): G1 batch 50 vừa với `expandable_segments`, 3,07 s/bước |
 | 1 | Báo kết quả lần thử; người dùng chốt: Kaggle hay thuê server, dùng quota còn lại tuần này thế nào | Mục 3, 5 | **Kaggle: đã chốt** (15/11, mục 5); quota tuần này: chờ kết quả lần thử |
 | 1–2 | G1 (3 seed), G2, G3 | | Chưa |
 | 2 | Ít mẫu (N = 50, 200, 1000), hoặc cắt (L7) | | Chưa |
@@ -73,21 +73,68 @@ Mục đích (L1): biết GRPO có vừa T4 ở batch 50 s như R không, cần 
 
 Ước tính: dựng môi trường ~5 phút; mỗi lần đo ~1,5–2 phút khởi tạo (ba bản mô hình, nạp checkpoint) cộng thời gian huấn luyện (GRPO ước ~1,7 lần SFT, tức ~3,3 s mỗi bước ở batch 50). Tổng ~45 phút, ~0,75 giờ quota.
 
-Kết quả: (chờ lần chạy).
+### 3.1. Kết quả (`orpheus-finetune` v5, 15/11, 0,47 giờ; `results/runs/orpheus-finetune-v5/`)
+
+COMPLETE, được cấp máy ngay khi đẩy (9:17), chạy 28 phút. Không có lỗi hay cảnh báo deterministic với GRPO (`torch.multinomial` chạy được khi `use_deterministic_algorithms(True)`). Số liệu: `results/runs/orpheus-finetune-v5/train_summary.csv`, log `train_logs/<run>/main.log` (dòng `MEM_PROBE`).
+
+**Bộ nhớ (MiB) và tốc độ.** PyTorch thấy T4 có 14.912 MiB (14,56 GiB); theo thông báo hết bộ nhớ, phần ngoài PyTorch (CUDA context) ~180 MiB, nên PyTorch giữ được tối đa ~14.700 MiB. "Đỉnh cấp phát" = `max_memory_allocated` (tensor thật sự dùng); "đỉnh giữ" = `max_memory_reserved` (gồm phần allocator giữ sẵn, gần với số nvidia-smi thấy). Giây mỗi bước tính theo bước optimizer; SFT (R, GĐ5) 1,93–2,06 s.
+
+| Lần đo | Cấu hình | Kết quả | Bước optimizer | Giây mỗi bước | Đỉnh cấp phát | Đỉnh giữ | GPU dùng (%) |
+|---|---|---|---|---|---|---|---|
+| `probe_G1_b50` | G1, batch 50 | Qua | 150 | **3,07** | 13.826 | 14.696 | 92 |
+| `probe_G1_b50_long` | G1, batch 50, 240 câu dài nhất | **Hết bộ nhớ** sau ~40 s | | | 13.667 (13,35 GiB lúc lỗi) | 14.654 | |
+| `probe_G1_b50_long_exp` | Như trên + `expandable_segments:True` | Qua (đủ 63 batch) | 63 | 2,84 | **13.925** | **14.314** | 86 |
+| `probe_G1_b25x2` | G1, batch 25 × 2 | Qua | 150 (300 batch) | 3,46 | 11.432 | 14.220 | 92 |
+| `probe_G1_b25x2_long` | Như trên, 240 câu dài nhất | Qua | 64 (129 batch) | 3,40 | 11.277 | 14.208 | 88 |
+| `probe_G2_b50` | G2, batch 50 | Qua | 100 | **2,95** | 12.580 | 14.696 | 92 |
+| `probe_G2_b50_long` | G2, batch 50, 240 câu dài nhất | Qua | 63 | 2,71 | 12.704 | 14.640 | 88 |
+
+Mỗi kết quả, một câu giải thích:
+1. **G1 ở batch 50 vừa về dung lượng nhưng hỏng vì phân mảnh:** lúc lỗi, PyTorch mới cấp 13,35 GiB và còn 811 MiB "giữ nhưng chưa dùng" (các khối rời, không ghép được cho yêu cầu 280 MiB). Bật `expandable_segments` (cho allocator nối dài vùng nhớ thay vì cắt khối cố định; không đổi phép tính) thì cùng 240 câu dài nhất chạy qua, đỉnh giữ 14.314 MiB, còn ~400 MiB so với ~14.700 MiB (≈ 1,4 lần yêu cầu lớn nhất gặp được, 280 MiB).
+2. **Bộ nhớ gần như không đổi theo batch:** G1 ở batch thường cần 13.826 MiB, batch toàn câu dài 13.925 MiB (+100 MiB). Giới hạn tổng thời lượng 50 s mỗi batch giữ phần lớn activation cố định; câu dài chỉ thêm phần attention. Thử áp lực vì vậy đại diện được cho trường hợp xấu nhất của lần chạy đủ.
+3. **Batch 25 × 2 an toàn hơn nhiều** (11,4 GB, dư ~3 GB) nhưng chậm hơn 13% (3,46 so với 3,07 s mỗi bước) vì batch nhỏ dùng GPU kém hiệu quả hơn.
+4. **GRPO chậm 1,55 lần SFT (G1) và 1,49 lần (G2)**, ít hơn ước 1,7 của GĐ5 (L10). G2 chỉ bỏ một lượt forward của mô hình cũ nên nhanh hơn G1 có 4%. G2 vừa batch 50 mà không cần `expandable_segments` (12,7 GB ở trường hợp xấu nhất).
+5. **Cơ chế đã kiểm trên máy thật:** cấu hình đã giải của `probe_G1_b25x2` có `inner_step_size: 2000`, giữ nguyên các khoá khác; `last_lr` 3,24e-07 sau 150 bước ở cả batch 50 và 25 × 2 (= 1e-6 × 149/460): lịch learning rate theo bước optimizer; 1.521 và 3.072 batch mỗi epoch, khớp mô phỏng ở mục 2.
+
+### 3.2. Ước tính một lần chạy đủ (3 epoch)
+
+Chấm sau fine-tune (5 tập, có MLAAD) lấy từ GĐ5 lần 4: 256 phút mỗi lần trừ 149–160 phút huấn luyện = 96–107 phút. Hai lần huấn luyện chạy song song trên hai GPU của một kernel (như lúc đo).
+
+| Cấu hình | Huấn luyện | Chấm | Một kernel (2 lần song song, cả dựng môi trường) |
+|---|---|---|---|
+| G1 hoặc G3, batch 50 + `expandable_segments` | 4.563 × 3,07 s ≈ 3,9 giờ (+ ~5 phút khởi tạo, kiểm tra dev cuối) | ~1,7 giờ | **~5,8 giờ** |
+| G1, batch 25 × 2 | 4.600 × 3,46 s ≈ 4,4 giờ | ~1,7 giờ | ~6,3 giờ |
+| G2, batch 50 | 4.563 × 2,95 s ≈ 3,7 giờ | ~1,7 giờ | ~5,5 giờ (cặp với G1 thì theo G1: ~5,8) |
+| SFT (R thêm seed) | ~2,6 giờ | ~1,7 giờ | ~4,4 giờ (GĐ5 lần 4: 4,34 giờ, không tính chấm zero-shot) |
+
+Kiểm tra dev cuối lần chạy (`seaspoof_vi_dev`, batch 10 câu, câu dài nhất 12,12 s, không gradient) giữ nguyên như R: bộ nhớ tĩnh lúc đó ~6,4 GB (ba bản mô hình + trạng thái Adam; gradient đã xoá), cộng activation tạm ước ≤ 3 GB, xa giới hạn.
 
 ## 4. Phát hiện ảnh hưởng thí nghiệm
 
 | # | Phát hiện | Ảnh hưởng | Việc cần làm |
 |---|---|---|---|
 | 1 | **Huấn luyện chạy fp32 dù YAML ghi `precision: fp16`** (`fit_batch` của `main.py` không có `autocast`; đọc code, chưa kiểm khi chạy) | Không đổi so sánh (SFT và GRPO cùng code). Giải thích bộ nhớ sát trần. Ghi vào báo cáo phần cấu hình | Không sửa code gốc |
-| 2 | **`inner_step_size` đếm theo batch, không theo bước optimizer** như `README_grpo.md` viết | Chỉ khác khi tích luỹ gradient | Đặt 2000 nếu dùng batch 25 × 2 |
+| 2 | **`inner_step_size` đếm theo batch, không theo bước optimizer** như `README_grpo.md` viết | Chỉ khác khi tích luỹ gradient | Đặt 2000 nếu dùng batch 25 × 2 (đã kiểm, mục 3.1 kết quả 5) |
+| 3 | **G1 ở batch 50 hết bộ nhớ trên batch toàn câu dài do phân mảnh, không do thiếu dung lượng**; qua khi bật `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, đỉnh 13,9 / ~14,7 GB | Giữ được đúng batch, số bước, lịch learning rate của R (L1) mà không đổi phép tính. Biên còn mỏng (~400 MiB giữ). `finetune.py` mặc định sẽ tự giảm batch khi hết bộ nhớ: với GRPO phải đặt `--oom-retry 0` | Đề xuất: mọi lần GRPO dùng batch 50 + `expandable_segments` + `--oom-retry 0`; nếu một lần hết bộ nhớ giữa chừng thì báo, cân nhắc chuyển cả nhóm sang 25 × 2 |
+| 4 | **GRPO chậm 1,55 lần SFT** (G1 3,07 s/bước; G2 2,95) | Kernel GRPO hai lần ~5,8 giờ, gần một nửa quota còn lại tuần này | Mục 5 |
 
 ## 5. Ngân sách quota
 
 | Lần | Quota dùng | Còn lại | Ghi chú |
 |---|---|---|---|
 | Trước GĐ6 | | 11,60 giờ đến 21/11 | Kiểm 15/11 |
-| Thử đo (`orpheus-finetune` v5) | | | Ước ~0,75 giờ; đẩy 9:17, được cấp máy ngay |
+| Thử đo (`orpheus-finetune` v5) | 0,47 giờ | **11,12 giờ** đến 21/11 | Ước ~0,75 giờ; đẩy 9:17, được cấp máy ngay |
+
+**Ngân sách sau lần thử (mục 3.2; kernel GRPO ~5,8 giờ, kernel SFT ~4,4 giờ):**
+
+| Gói | Lần chạy | Kernel | Quota |
+|---|---|---|---|
+| Theo plan | G1 × 3, G2, G3 | 3 | ~17,4 giờ |
+| + P2 | + G1 không RawBoost (ghép kernel thứ ba với G3) | 3 | ~17,4 giờ |
+| + P1 | + G1 seed 4, 5 (GRPO) và R seed 4, 5 (SFT) | 5 | ~27,6 giờ |
+| Có | 11,12 giờ tuần này (chỉ đủ **một** kernel GRPO; dư ~5,3 giờ, vừa một kernel SFT) + 30 giờ từ 21/11 | | 41,1 giờ |
+
+Quota tuần này mất lúc 7 giờ 21/11. Hai kernel chạy song song được (quota tính theo từng phiên).
 
 **Đã chốt (15/11, người dùng):** chạy GĐ6 trên Kaggle như hiện tại, một tài khoản; không thuê server (nên không cần chạy lại R, A0). Không tạo tài khoản Kaggle thứ hai: điều khoản Kaggle cấm một người có hơn một tài khoản đang hoạt động (theo kết quả tìm kiếm trích kaggle.com/terms; trang render bằng JavaScript nên chưa đọc trực tiếp), rủi ro mất cả tài khoản chính (dataset riêng tư, output và checkpoint GĐ5). Theo ước tính trước lần thử, tổng quota đủ (GĐ6 ~17 giờ; ~31 giờ nếu thêm 2 seed cho R và G1 cùng G1 không RawBoost; có ~10,85 giờ tuần này + 30 giờ từ 21/11); chỉ là xong GPU muộn hơn (~22–23/11).
 
