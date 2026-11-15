@@ -14,46 +14,33 @@ import threading
 import time
 
 # ---- Sửa phần này cho mỗi lần chạy -------------------------------------------
-# GĐ6, lần thử đo GRPO (chore/GD6-GRPO.md mục 2; GĐ5 mục 9, L1): bộ nhớ và tốc độ của GRPO trên
-#   T4, chưa huấn luyện thật. Mỗi lần đo chạy ngắn (optimizer_step_limit), không giữ checkpoint,
-#   không chấm; main.py chạy qua mem_probe.py để ghi đỉnh bộ nhớ PyTorch thật. --oom-retry 0: hết
-#   bộ nhớ thì ghi nhận, không tự giảm batch. "_long": chỉ 240 câu dài nhất của train (thử áp lực:
-#   batch toàn câu ~9–16 s, tốn bộ nhớ attention nhất).
-#   GPU 0: G1 (grpo_v1, đủ: clip + mô hình cũ + KL) ở batch 50 như R; nếu hết bộ nhớ thì thử lại
-#          với PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True (không đổi phép tính).
-#   GPU 1: G1 ở batch 25 + tích luỹ gradient 2 (phương án giữ số bước: 1.536 so với 1.521 bước
-#          mỗi epoch; inner_step_size 2000 batch = 1000 bước optimizer như cấu hình gốc), rồi G2
-#          (grpo_v2, không clip, không mô hình cũ) ở batch 50.
-#   Lịch learning rate như E1' (warmup 460, lr 1e-6); với số bước ngắn chỉ nằm trong warmup.
+# GĐ6 (chore/GD6-GRPO.md mục 6). Hai kernel dùng chung file này: đặt JOB trước mỗi lần đẩy;
+#   bản đã đẩy của từng kernel lưu ở results/runs/<kernel>-v<N>/run.py.
+#   "grpo1" -> orpheus-finetune v6: G1 seed 1 (GPU 0), G2 seed 1 (GPU 1).
+#   "r45"   -> orpheus-finetune-b v2: R seed 4, 5 (P1: thêm seed cho thước đo độ lệch của R).
+#   Mọi lần dùng NGUYÊN bộ ghi đè SFT của GĐ5 (lịch learning rate E1', GĐ5 mục 4.1): GRPO chỉ đổi
+#   file YAML (hàm loss). GRPO thêm (đã chốt 15/11 sau lần thử đo v5, mục 3):
+#   PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True (batch 50 hết bộ nhớ do phân mảnh nếu không
+#   bật; không đổi phép tính), --oom-retry 0 (không tự giảm batch), --probe-mem (ghi đỉnh bộ nhớ
+#   thật). Lần R giữ đúng như R seed 1–3 (không thêm gì).
+JOB = "grpo1"
 SFT = ["max_batch_length=50", "number_of_epochs=3", "optimizer_step_limit=4600", "warmup=460",
        "lr=1e-6", "valid_step=1000000000", "num_workers=2"]
 SCORE = ["seaspoof_vi_dev", "seaspoof_vi_test", "radar_vi", "ood_forget", "mlaad_vi_test"]
-PROBE = ["number_of_epochs=1", "warmup=460", "lr=1e-6", "valid_step=1000000000", "num_workers=2",
-         "seed=1"]
-B50 = ["max_batch_length=50"]
-B25X2 = ["max_batch_length=25", "grad_accumulation_factor=2", "rl_config={inner_step_size: 2000}"]
-PARGS = ["--probe-mem", "--oom-retry", "0", "--discard-ckpt"]
-LONG = ["--train-longest", "240"]
-EXP = ["--env", "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"]
-_p = {"model": "mms_300m", "train": "seaspoof_vi_train", "valid": "seaspoof_vi_train_n50",
-      "score": [], "probe": True}
-RUNS = {
-    0: [
-        dict(_p, run="probe_G1_b50", method="grpo_v1", set=PROBE + B50 + ["optimizer_step_limit=150"],
-             args=PARGS),
-        dict(_p, run="probe_G1_b50_long", method="grpo_v1", set=PROBE + B50, args=PARGS + LONG),
-        dict(_p, run="probe_G1_b50_long_exp", method="grpo_v1", set=PROBE + B50, args=PARGS + LONG + EXP,
-             only_if_failed=["probe_G1_b50", "probe_G1_b50_long"]),
-    ],
-    1: [
-        dict(_p, run="probe_G1_b25x2", method="grpo_v1",
-             set=PROBE + B25X2 + ["optimizer_step_limit=150"], args=PARGS),
-        dict(_p, run="probe_G1_b25x2_long", method="grpo_v1", set=PROBE + B25X2, args=PARGS + LONG),
-        dict(_p, run="probe_G2_b50", method="grpo_v2", set=PROBE + B50 + ["optimizer_step_limit=100"],
-             args=PARGS),
-        dict(_p, run="probe_G2_b50_long", method="grpo_v2", set=PROBE + B50, args=PARGS + LONG),
-    ],
+GARGS = ["--oom-retry", "0", "--probe-mem", "--env", "PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"]
+_r = {"model": "mms_300m", "train": "seaspoof_vi_train", "valid": "seaspoof_vi_dev", "score": SCORE}
+JOBS = {
+    "grpo1": {
+        0: [dict(_r, run="G1_s1", method="grpo_v1", set=SFT + ["seed=1"], args=GARGS)],
+        1: [dict(_r, run="G2_s1", method="grpo_v2", set=SFT + ["seed=1"], args=GARGS)],
+    },
+    "r45": {
+        0: [dict(_r, run="R_s4", set=SFT + ["seed=4"])],
+        1: [dict(_r, run="R_s5", set=SFT + ["seed=5"])],
+    },
 }
+RUNS = JOBS[JOB]
+print(f"JOB = {JOB}", flush=True)
 # Chấm zero-shot sau khi mọi lần huấn luyện xong (score_zeroshot.py, hai GPU), vào results/zeroshot/
 ZEROSHOT = []
 # -------------------------------------------------------------------------------

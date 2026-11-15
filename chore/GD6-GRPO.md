@@ -8,8 +8,9 @@ Câu hỏi của giai đoạn: fine-tune bằng GRPO trên tiếng Việt có gi
 |---|---|---|---|
 | 1 | Chuẩn bị lần thử đo GRPO: đọc code GRPO (YAML v1/v2, `main.py`, `algo/rl.py`), kiểm ghi đè lồng `rl_config`, tích luỹ gradient, mô phỏng số batch | Mục 2; `src/mem_probe.py`; `src/finetune.py` (`--probe-mem`, `--oom-retry`, `--train-longest`, `--discard-ckpt`, `--env`); `kaggle/finetune/run.py` | Xong (15/11), đã thử trên máy |
 | 1 | **Lần thử đo bộ nhớ và tốc độ GRPO trên T4** (L1) | `orpheus-finetune` v5, mục 3 | **Xong** (15/11, 0,47 giờ): G1 batch 50 vừa với `expandable_segments`, 3,07 s/bước |
-| 1 | Báo kết quả lần thử; người dùng chốt: Kaggle hay thuê server, dùng quota còn lại tuần này thế nào | Mục 3, 5 | **Kaggle: đã chốt** (15/11, mục 5); quota tuần này: chờ kết quả lần thử |
-| 1–2 | G1 (3 seed), G2, G3 | | Chưa |
+| 1 | Báo kết quả lần thử; người dùng chốt: Kaggle hay thuê server, dùng quota còn lại tuần này thế nào | Mục 3, 5 | **Đã chốt** (15/11, mục 5): Kaggle; batch 50 + `expandable_segments`; P1 làm, P2 không, P3 không cắt |
+| 1 | Lần 1: G1 s1, G2 s1; lần 2 (song song): R s4, R s5 | `orpheus-finetune` v6, `orpheus-finetune-b` v2; mục 6 | Đang đẩy (15/11) |
+| 2–3 | G1 s2–s5, G3 (từ 21/11) | Mục 6 | Chưa |
 | 2 | Ít mẫu (N = 50, 200, 1000), hoặc cắt (L7) | | Chưa |
 | 3 | Hiệu chuẩn điểm, phân tích theo hệ thống sinh | | Chưa |
 
@@ -135,6 +136,23 @@ Kiểm tra dev cuối lần chạy (`seaspoof_vi_dev`, batch 10 câu, câu dài 
 | Có | 11,12 giờ tuần này (chỉ đủ **một** kernel GRPO; dư ~5,3 giờ, vừa một kernel SFT) + 30 giờ từ 21/11 | | 41,1 giờ |
 
 Quota tuần này mất lúc 7 giờ 21/11. Hai kernel chạy song song được (quota tính theo từng phiên).
+
+**Đã chốt (15/11, người dùng, sau lần thử):**
+- Mọi lần GRPO: **batch 50 + `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`**, `--oom-retry 0`, `--probe-mem`; còn lại đúng bộ ghi đè SFT (E1'). Nếu một lần hết bộ nhớ giữa chừng: báo người dùng, cân nhắc chuyển cả nhóm GRPO sang 25 × 2.
+- Tuần này: **G1 s1 + G2 s1** (`orpheus-finetune` v6) **song song R s4 + R s5** (`orpheus-finetune-b` v2): ~5,8 + ~4,4 = ~10,2 giờ trong 11,12 giờ (dư ~0,9 giờ).
+- **P1: làm** (R và G1 mỗi cấu hình 5 seed). **P2: không làm** (không có G1 không RawBoost; so G1 với A0 phải ghi rõ hai yếu tố khác nhau). **P3: không cắt** (ngày 2 ít mẫu giữ như plan).
+
+## 6. Các lần chạy
+
+| Lần | Kernel | GPU 0 | GPU 1 | Ước tính | Tuần quota |
+|---|---|---|---|---|---|
+| 1 | `orpheus-finetune` v6 | G1 seed 1 | G2 seed 1 | ~5,8 giờ | đến 21/11 |
+| 2 | `orpheus-finetune-b` v2 (song song lần 1) | R seed 4 | R seed 5 | ~4,4 giờ | đến 21/11 |
+| 3 | kernel rảnh trước | G1 seed 2 | G1 seed 3 | ~5,8 giờ | từ 21/11 |
+| 4 | kernel còn lại | G3 seed 1 (`rl_config={beta: 0.0}`) | G1 seed 4 | ~5,8 giờ | từ 21/11 |
+| 5 | | G1 seed 5 | (trống: ngày 2 ít mẫu hoặc chốt sau) | ~5,8 giờ | từ 21/11 |
+
+Mỗi lần huấn luyện chấm sau fine-tune trên `seaspoof_vi_dev`, `seaspoof_vi_test`, `radar_vi`, `ood_forget`, `mlaad_vi_test` (như R seed 2, 3). Lần 3–5 tổng ~17,4 giờ trong 30 giờ tuần sau.
 
 **Đã chốt (15/11, người dùng):** chạy GĐ6 trên Kaggle như hiện tại, một tài khoản; không thuê server (nên không cần chạy lại R, A0). Không tạo tài khoản Kaggle thứ hai: điều khoản Kaggle cấm một người có hơn một tài khoản đang hoạt động (theo kết quả tìm kiếm trích kaggle.com/terms; trang render bằng JavaScript nên chưa đọc trực tiếp), rủi ro mất cả tài khoản chính (dataset riêng tư, output và checkpoint GĐ5). Theo ước tính trước lần thử, tổng quota đủ (GĐ6 ~17 giờ; ~31 giờ nếu thêm 2 seed cho R và G1 cùng G1 không RawBoost; có ~10,85 giờ tuần này + 30 giờ từ 21/11); chỉ là xong GPU muộn hơn (~22–23/11).
 
