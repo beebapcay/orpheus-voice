@@ -85,21 +85,43 @@ def download(url, dest):
     raise RuntimeError(f"không tải được {url}")
 
 
-class Checkpoints:
-    """Tải và chuyển checkpoint một lần cho mỗi mô hình; xoá khi job cuối của mô hình xong."""
+class _FileLock:
+    """Khoá giữa các TIẾN TRÌNH (fcntl) quanh việc tải một checkpoint: trên server nhiều tiến trình
+    (finetune.py, score_zeroshot.py, mỗi GPU một) dùng chung một cache; threading.Lock chỉ chặn được
+    giữa các luồng trong một tiến trình. Hai tiến trình cùng tải sẽ cùng ghi một file .part."""
 
-    def __init__(self, cache, refcount):
+    def __init__(self, path):
+        self.path = path
+
+    def __enter__(self):
+        import fcntl
+        self.f = open(self.path, "w")
+        fcntl.flock(self.f, fcntl.LOCK_EX)
+        return self
+
+    def __exit__(self, *exc):
+        import fcntl
+        fcntl.flock(self.f, fcntl.LOCK_UN)
+        self.f.close()
+
+
+class Checkpoints:
+    """Tải và chuyển checkpoint một lần cho mỗi mô hình; xoá khi job cuối của mô hình xong
+    (trừ khi keep=True: server dùng chung cache với các lần fine-tune đang khởi tạo từ chính file đó)."""
+
+    def __init__(self, cache, refcount, keep=False):
         self.cache = cache
         self.refcount = dict(refcount)
         self.locks = {m: threading.Lock() for m in refcount}
         self.guard = threading.Lock()
+        self.keep = keep
 
     def get(self, model):
         yaml, repo, zname, _ = MODELS[model]
         if repo is None:                  # checkpoint cục bộ (--local), ví dụ sau fine-tune
             return zname
         ckpt = os.path.join(self.cache, zname)
-        with self.locks[model]:
+        with self.locks[model], _FileLock(ckpt + ".lock"):
             if os.path.exists(ckpt):
                 return ckpt
             log(f"[{model}] tải checkpoint từ Hugging Face ({repo})")
@@ -124,9 +146,10 @@ class Checkpoints:
         with self.guard:
             self.refcount[model] -= 1
             last = self.refcount[model] == 0
-        if last and MODELS[model][1] is not None:     # không xoá checkpoint cục bộ
+        if last and MODELS[model][1] is not None and not self.keep:     # không xoá checkpoint cục bộ
             for f in glob.glob(os.path.join(self.cache, MODELS[model][2].replace(".ckpt", "") + ".*")):
-                os.remove(f)
+                if not f.endswith(".lock"):           # giữ file khoá (tiến trình khác có thể đang giữ)
+                    os.remove(f)
             log(f"[{model}] xong mọi tập, xoá checkpoint khỏi cache")
 
 
@@ -382,6 +405,9 @@ def main():
     ap.add_argument("--shard-size", type=int, default=2000)
     ap.add_argument("--ram-gb", type=float, default=None)
     ap.add_argument("--jobs", nargs="+", required=True)
+    ap.add_argument("--keep-ckpt", action="store_true",
+                    help="không xoá checkpoint khỏi cache khi chấm xong (server: cache dùng chung với các lần "
+                         "fine-tune khởi tạo từ cùng file; Kaggle: mặc định xoá để tiết kiệm ổ)")
     args = ap.parse_args()
     args.mm = os.path.join(args.base, "bin", "micromamba")
     os.makedirs(args.out, exist_ok=True)
@@ -408,7 +434,7 @@ def main():
 
     ram_gb = args.ram_gb or max(8.0, 0.85 * available_ram_gb())
     log(f"{len(jobs)} job, GPU {args.gpus}, ngân sách RAM {ram_gb:.0f} GB")
-    ckpts = Checkpoints(args.cache, refcount)
+    ckpts = Checkpoints(args.cache, refcount, keep=args.keep_ckpt)
     ram = RamBudget(ram_gb)
     q = queue.Queue()
     for j in jobs:

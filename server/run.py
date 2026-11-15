@@ -70,8 +70,11 @@ def write_state(name, **kw):
 def command(j, gpu):
     py = sys.executable
     if j["kind"] == "zeroshot":
+        # --keep-ckpt: cache dùng chung với các lần fine-tune khởi tạo từ cùng checkpoint (chấm S0 xong mà xoá
+        # cache/mms_300m.ckpt thì lần R/G1/A0 đang khởi động ở GPU khác báo "Not find" hoặc tải lại trùng nhau)
         return [py, os.path.join(CODE, "score_zeroshot.py"), "--base", BASE, "--data-root", *DATA,
-                "--out", os.path.join(OUT, "zeroshot"), "--cache", CACHE, "--gpus", str(gpu), "--jobs", *j["jobs"]]
+                "--out", os.path.join(OUT, "zeroshot"), "--cache", CACHE, "--gpus", str(gpu), "--keep-ckpt",
+                "--jobs", *j["jobs"]]
     cmd = [py, os.path.join(CODE, "finetune.py"), "--base", BASE, "--data-root", *DATA, "--out", OUT,
            "--cache", CACHE, "--gpu", str(gpu), "--run", j["name"], "--model", j["model"], "--method", j["method"],
            "--init", j["init"], "--train", j["train"], "--valid", j["valid"], *j["args"], "--set", *j["set"]]
