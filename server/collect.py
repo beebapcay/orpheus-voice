@@ -12,7 +12,7 @@ không trộn hai phần cứng:
 Phân tích: python src/analyze_ablation.py --finetune results/server/finetune --zeroshot results/server/zeroshot
            --out results/server/analysis (tương tự calibrate.py, analyze_mechanism.py).
 
-Bằng chứng (commit): results/runs/server-<nhãn>/ gồm code đã chạy (VERSION, server/*.py|sh), môi
+Bằng chứng (chỉ lưu trên máy chủ đồ án; results/runs/ không đưa lên repo chung): results/runs/server-<nhãn>/ gồm code đã chạy (VERSION, server/*.py|sh), môi
 trường (env/: máy, phiên bản, pip freeze, log dựng, toy example), driver.log, status.txt, trạng thái
 và log từng lần (jobs/), log huấn luyện (train_logs/<lần>/), train_summary.csv, summary chấm, RUN.md.
 Không lưu: checkpoint, embedding, âm thanh.

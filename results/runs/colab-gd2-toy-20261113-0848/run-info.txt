@@ -1,3 +1,0 @@
-code nhóm: 8e5f337 Notebook GĐ2: điền REPO_URL, không để lộ token khi git lỗi
-name, memory.total [MiB]
-Tesla T4, 15360 MiB

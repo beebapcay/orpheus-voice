@@ -2,9 +2,9 @@
 
 **Chạy trên máy của người khác (không qua vast.ai, người đó tự gõ lệnh):** `server/local.sh`, hướng dẫn cho người chạy: `server/HUONG-DAN-CHAY.md`. Kết quả gửi về (`local.sh pack`) nhận bằng `bash server/vast.sh import <file.tar.gz>` rồi `collect` như thường.
 
-Một bộ thí nghiệm **hoàn chỉnh** chạy trên một loại máy, để mọi phép so sánh trong báo cáo dùng kết quả cùng phần cứng. Bộ Kaggle (T4) vẫn chạy song song và giữ làm lần lặp độc lập trên phần cứng khác. Lý do và danh sách đầy đủ: `chore/GD6-GRPO.md` mục 9; danh sách lần chạy: `server/experiments.py`.
+Một bộ thí nghiệm **hoàn chỉnh** chạy trên một loại máy, để mọi phép so sánh trong báo cáo dùng kết quả cùng phần cứng. Kết quả từ hai loại GPU khác nhau không đặt chung vào một phép so sánh (khác phép tính số học, khác chuỗi ngẫu nhiên của tăng cường dữ liệu); bộ Kaggle (T4) đã chạy trước đó chỉ dùng làm lần lặp độc lập trên phần cứng khác. Danh sách lần chạy: `server/experiments.py`.
 
-## 1. Bộ thí nghiệm (122 lần; người dùng chốt 15/11: làm đầy đủ, chia giai đoạn có điểm kiểm, `chore/GD6-GRPO.md` mục 14)
+## 1. Bộ thí nghiệm (122 lần, chia giai đoạn A–E; sau mỗi giai đoạn chủ đồ án xem kết quả và có thể thêm, bớt lần chạy)
 
 | Tầng | Giai đoạn | Nội dung | Lần chạy |
 |---|---|---|---|
@@ -53,23 +53,23 @@ Công thức giữ nguyên như Kaggle (lịch E1', batch 50, GRPO với `expand
 
 Thời gian (tính theo T4; SFT ~4,3 giờ, GRPO ~5,6 giờ mỗi lần, cả chấm; chấm riêng ~1,7 giờ): cả bộ ~530 giờ. Tốc độ GPU thuê so với T4 chỉ biết sau tầng 0; nhanh hơn T4 2,5–3,5 lần thì 2 GPU mất ~3,2–4,4 ngày, 4 GPU ~1,6–2,2 ngày. vast.ai tính theo giờ GPU, nên 4 GPU tốn gần bằng 2 GPU mà xong sớm gấp đôi.
 
-## 3. Người dùng làm
+## 3. Thuê máy (chủ đồ án)
 
 1. Thêm khoá SSH công khai của máy (`~/.ssh/id_ed25519.pub` hoặc `id_rsa.pub`) vào tài khoản vast.ai (Account → SSH Keys).
 2. Thuê máy theo mục 2, đợi trạng thái Running.
-3. Gửi Claude chuỗi kết nối SSH vast.ai hiển thị (dạng `ssh -p 12345 root@ssh5.vast.ai`). Claude không đọc khoá.
-4. Khi xong: Claude chạy `cleanup --yes` (xoá SEA-Spoof, MLAAD, checkpoint); người dùng huỷ (destroy) máy trên vast.ai.
+3. Lấy chuỗi kết nối SSH vast.ai hiển thị (dạng `ssh -p 12345 root@ssh5.vast.ai`) cho bước `init` dưới đây.
+4. Khi xong: chạy `cleanup --yes` (xoá SEA-Spoof, MLAAD, checkpoint), rồi huỷ (destroy) máy trên vast.ai.
 
-## 4. Claude làm (từ máy, `bash server/vast.sh ...`)
+## 4. Điều khiển máy thuê (từ máy của mình, `bash server/vast.sh ...`)
 
 | Bước | Lệnh | Ghi chú |
 |---|---|---|
 | 1 | `init <host> <port>`, `check` | Ghi `server/host.env` (không commit), kiểm GPU, CPU, RAM, ổ |
 | 2 | `code`, `data` | Chép `src/`, `protocols/ids/`, `server/`; SEA-Spoof vi (2,5 GB) và MLAAD vi (1,5 GB). SEA-Spoof không được phân phối lại: chỉ chép lên máy riêng đã thuê, xoá khi trả máy |
 | 3 | `bootstrap`, `bootlog` | Dựng môi trường như Kaggle, toy example (EER phải 6,11%), tải RADAR/ItW đúng danh sách câu, kiểm dữ liệu, tải trước checkpoint |
-| 4 | `start --tiers 0`, `status`; sau đó `fetch` và `python3 server/probe_report.py --train results/server/raw/train --summary results/server/raw/train_summary.csv` | Thử đo; chốt số worker (`experiments.NUM_WORKERS`) và ước thời gian, báo người dùng. `probe_report.py` tính GPU, CPU dùng chỉ trong khoảng huấn luyện (`gpu_util_mean` của `train_summary.csv` gồm cả lúc nạp mô hình, thấp hơn thực tế 5–10 điểm ở lần đo ngắn), và so dấu vân tay batch (`BATCH_HASH_N`): cùng seed, cùng số worker thì R và G1 có nhận cùng batch, cùng phép tăng cường RawBoost không (quyết định ghép cặp theo seed khi phân tích, `chore/GD6-GRPO.md` mục 13) |
+| 4 | `start --tiers 0`, `status`; sau đó `fetch` và `python3 server/probe_report.py --train results/server/raw/train --summary results/server/raw/train_summary.csv` | Thử đo; chốt số worker (`experiments.NUM_WORKERS`) và ước thời gian. `probe_report.py` tính GPU, CPU dùng chỉ trong khoảng huấn luyện (`gpu_util_mean` của `train_summary.csv` gồm cả lúc nạp mô hình, thấp hơn thực tế 5–10 điểm ở lần đo ngắn), và so dấu vân tay batch (`BATCH_HASH_N`): cùng seed, cùng số worker thì R và G1 có nhận cùng batch, cùng phép tăng cường RawBoost không (quyết định ghép cặp theo seed khi phân tích) |
 | 5 | `start --workers N` (mọi tầng ≥ 1) | Chạy nền (`setsid nohup`), không phụ thuộc SSH; chạy lại lệnh là chạy tiếp các lần chưa xong |
-| 6 | `status`, `log <tên>`, `skip <tên>...`, `hold`, `release` | Theo dõi: `results/status.txt` cập nhật mỗi phút; `skip` bỏ qua lần đang chờ; `hold` để GPU rảnh không nhận việc mới (lần đang chạy vẫn chạy), `release` nhận lại. Điểm kiểm A–E: ghi mục mới trong `chore/GD6-GRPO.md` |
+| 6 | `status`, `log <tên>`, `skip <tên>...`, `hold`, `release` | Theo dõi: `results/status.txt` cập nhật mỗi phút; `skip` bỏ qua lần đang chờ; `hold` để GPU rảnh không nhận việc mới (lần đang chạy vẫn chạy), `release` nhận lại. Điểm kiểm A–E: chủ đồ án đánh giá lại kế hoạch |
 | 7 | `fetch`, `collect <nhãn>` | Tải kết quả (không checkpoint) về `results/server/raw/`, gộp vào `results/server/`, bằng chứng vào `results/runs/server-<nhãn>/` |
 | 8 | Phân tích | `bash server/analyze.sh` (trên máy, cần `.venv` có pandas, numpy, scipy): chạy `analyze_ablation.py` (kèm các cặp so qua seed của bản sửa), `calibrate.py`, `analyze_mechanism.py` trên `results/server/`, ghi `results/server/analysis/`, `results/server/calibration/` |
 | 9 | Đo độ trôi trọng số trên mọi checkpoint (trước `cleanup`) | Checkpoint chỉ có trên server |

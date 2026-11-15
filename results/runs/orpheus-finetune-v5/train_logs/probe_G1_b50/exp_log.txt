@@ -1,1 +1,0 @@
-epoch: 1, steps: 150, lr: 3.24e-07 - valid loss: 1.87e-02, valid eer: 11.11

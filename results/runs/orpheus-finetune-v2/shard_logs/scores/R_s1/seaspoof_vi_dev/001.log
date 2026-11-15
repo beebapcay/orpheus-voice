@@ -1,40 +1,0 @@
-INFO:speechbrain.utils.quirks:Applied quirks (see `speechbrain.utils.quirks`): [allow_tf32, disable_jit_profiling]
-INFO:speechbrain.utils.quirks:Excluded quirks specified by the `SB_DISABLE_QUIRKS` environment (comma-separated list): []
------ analysis start -----
-
-/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/utils/weight_norm.py:143: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
-  WeightNorm.apply(module, name, dim)
-WARNING:speechbrain.utils.train_logger:torchvision is not available - cannot save figures
-INFO:speechbrain.core:Info: test_only arg overridden by command line input to: False
-INFO:speechbrain.core:Info: debug arg overridden by command line input to: False
-INFO:speechbrain.core:Info: debug_batches arg overridden by command line input to: 2
-INFO:speechbrain.core:Info: debug_epochs arg overridden by command line input to: 2
-INFO:speechbrain.core:Info: debug_persistently arg overridden by command line input to: False
-INFO:speechbrain.core:Info: device arg overridden by command line input to: cuda:0
-INFO:speechbrain.core:Info: data_parallel_backend arg overridden by command line input to: False
-INFO:speechbrain.core:Info: distributed_backend arg overridden by command line input to: nccl
-INFO:speechbrain.core:Info: find_unused_parameters arg overridden by command line input to: True
-INFO:speechbrain.core:Info: jit arg overridden by command line input to: False
-INFO:speechbrain.core:Info: compile arg overridden by command line input to: False
-INFO:speechbrain.core:Info: precision arg from hparam file is used
-INFO:speechbrain.core:Info: max_grad_norm arg from hparam file is used
-INFO:speechbrain.core:Info: skip_nonfinite_grads arg overridden by command line input to: False
-INFO:speechbrain.core:Info: optimizer_step_limit arg from hparam file is used
-INFO:speechbrain.core:Info: tqdm_colored_bar arg overridden by command line input to: False
-INFO:speechbrain.core:Info: remove_vector_weight_decay arg overridden by command line input to: False
-INFO:speechbrain.core:Info: profile_training arg overridden by command line input to: False
-INFO:speechbrain.core:Info: profile_warmup arg overridden by command line input to: 5
-INFO:speechbrain.core:Info: profile_steps arg overridden by command line input to: 5
-INFO:speechbrain.core:Gradscaler enabled: True. Using precision: fp16.
-/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/speechbrain/core.py:796: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
-  self.scaler = torch.cuda.amp.GradScaler(enabled=gradscaler_enabled)
-INFO:speechbrain.core:SSLBrain Model Statistics:
-* Total Number of Trainable Parameters: 317.4M
-* Total Number of Parameters: 317.4M
-* Trainable Parameters represent 100.0000% of the total size.
-INFO:__main__:Loading pre-trained weights detector from /kaggle/working/results/ckpt/R_s1.ckpt
-INFO:speechbrain.utils.checkpoints:Would load a checkpoint here, but none found yet.
-  0%|          | 0/70 [00:00<?, ?it/s]  1%|▏         | 1/70 [00:00<00:21,  3.18it/s]  3%|▎         | 2/70 [00:00<00:13,  5.17it/s]  6%|▌         | 4/70 [00:00<00:08,  8.17it/s]  9%|▊         | 6/70 [00:00<00:06, 10.23it/s] 11%|█▏        | 8/70 [00:00<00:06, 10.14it/s] 14%|█▍        | 10/70 [00:01<00:05, 10.71it/s] 17%|█▋        | 12/70 [00:01<00:05, 11.58it/s] 20%|██        | 14/70 [00:01<00:04, 12.24it/s] 23%|██▎       | 16/70 [00:01<00:04, 12.46it/s] 26%|██▌       | 18/70 [00:01<00:04, 12.75it/s] 29%|██▊       | 20/70 [00:01<00:03, 13.09it/s] 31%|███▏      | 22/70 [00:01<00:03, 13.25it/s] 34%|███▍      | 24/70 [00:02<00:03, 12.91it/s] 37%|███▋      | 26/70 [00:02<00:03, 13.05it/s] 40%|████      | 28/70 [00:02<00:03, 13.49it/s] 43%|████▎     | 30/70 [00:02<00:02, 13.67it/s] 46%|████▌     | 32/70 [00:02<00:02, 13.42it/s] 49%|████▊     | 34/70 [00:02<00:02, 12.74it/s] 51%|█████▏    | 36/70 [00:03<00:02, 12.87it/s] 54%|█████▍    | 38/70 [00:03<00:02, 11.58it/s] 57%|█████▋    | 40/70 [00:03<00:02, 12.12it/s] 60%|██████    | 42/70 [00:03<00:02, 11.73it/s] 63%|██████▎   | 44/70 [00:03<00:02, 11.53it/s] 66%|██████▌   | 46/70 [00:03<00:02, 11.90it/s] 69%|██████▊   | 48/70 [00:04<00:01, 12.42it/s] 71%|███████▏  | 50/70 [00:04<00:01, 11.67it/s] 74%|███████▍  | 52/70 [00:04<00:01, 11.43it/s] 77%|███████▋  | 54/70 [00:04<00:01, 12.21it/s] 80%|████████  | 56/70 [00:04<00:01, 12.78it/s] 83%|████████▎ | 58/70 [00:04<00:01, 11.51it/s] 86%|████████▌ | 60/70 [00:05<00:00, 12.35it/s] 89%|████████▊ | 62/70 [00:05<00:00, 11.86it/s] 91%|█████████▏| 64/70 [00:05<00:00, 12.32it/s] 94%|█████████▍| 66/70 [00:05<00:00, 11.60it/s] 97%|█████████▋| 68/70 [00:05<00:00, 11.43it/s]100%|██████████| 70/70 [00:05<00:00, 10.91it/s]100%|██████████| 70/70 [00:05<00:00, 11.68it/s]
-INFO:__main__:Scores saved to /tmp/orpheus/work/Log/exps/exp_mms_300m_zs_R_s1_seaspoof_vi_dev_001/evaluation_score.csv
-INFO:__main__:Embeddings saved to /tmp/orpheus/work/Log/exps/exp_mms_300m_zs_R_s1_seaspoof_vi_dev_001/evaluation_score.pkl
-INFO:__main__:Equal error rate: 0.000000000 %

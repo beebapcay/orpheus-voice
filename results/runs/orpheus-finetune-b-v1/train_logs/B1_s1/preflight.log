@@ -1,3 +1,0 @@
-/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/utils/weight_norm.py:143: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
-  WeightNorm.apply(module, name, dim)
-PREFLIGHT_OK 220 tensor, 95046146 tham số

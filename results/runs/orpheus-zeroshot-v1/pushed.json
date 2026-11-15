@@ -1,9 +1,0 @@
-{
-  "kernel": "orpheus-zeroshot",
-  "version": 1,
-  "pushed_at": {
-    "local": "2026-11-13 khoảng 17:56 +07:00"
-  },
-  "repo_commit": "9b9fc04",
-  "note": "Ghi lại sau (13/11 tối) từ lịch sử git: run.py và kernel-metadata.json lấy ở commit trên, nội dung giống bản đã đẩy."
-}

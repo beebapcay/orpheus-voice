@@ -1,43 +1,0 @@
-error    libmamba Could not set lock (Resource temporarily unavailable)
-warning  libmamba Cannot lock '/root/.cache/mamba/proc'
-    Waiting for other mamba process to finish
-INFO:speechbrain.utils.quirks:Applied quirks (see `speechbrain.utils.quirks`): [disable_jit_profiling, allow_tf32]
-INFO:speechbrain.utils.quirks:Excluded quirks specified by the `SB_DISABLE_QUIRKS` environment (comma-separated list): []
------ analysis start -----
-
-/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/torch/nn/utils/weight_norm.py:143: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
-  WeightNorm.apply(module, name, dim)
-WARNING:speechbrain.utils.train_logger:torchvision is not available - cannot save figures
-INFO:speechbrain.core:Info: test_only arg overridden by command line input to: False
-INFO:speechbrain.core:Info: debug arg overridden by command line input to: False
-INFO:speechbrain.core:Info: debug_batches arg overridden by command line input to: 2
-INFO:speechbrain.core:Info: debug_epochs arg overridden by command line input to: 2
-INFO:speechbrain.core:Info: debug_persistently arg overridden by command line input to: False
-INFO:speechbrain.core:Info: device arg overridden by command line input to: cuda:0
-INFO:speechbrain.core:Info: data_parallel_backend arg overridden by command line input to: False
-INFO:speechbrain.core:Info: distributed_backend arg overridden by command line input to: nccl
-INFO:speechbrain.core:Info: find_unused_parameters arg overridden by command line input to: True
-INFO:speechbrain.core:Info: jit arg overridden by command line input to: False
-INFO:speechbrain.core:Info: compile arg overridden by command line input to: False
-INFO:speechbrain.core:Info: precision arg from hparam file is used
-INFO:speechbrain.core:Info: max_grad_norm arg from hparam file is used
-INFO:speechbrain.core:Info: skip_nonfinite_grads arg overridden by command line input to: False
-INFO:speechbrain.core:Info: optimizer_step_limit arg from hparam file is used
-INFO:speechbrain.core:Info: tqdm_colored_bar arg overridden by command line input to: False
-INFO:speechbrain.core:Info: remove_vector_weight_decay arg overridden by command line input to: False
-INFO:speechbrain.core:Info: profile_training arg overridden by command line input to: False
-INFO:speechbrain.core:Info: profile_warmup arg overridden by command line input to: 5
-INFO:speechbrain.core:Info: profile_steps arg overridden by command line input to: 5
-INFO:speechbrain.core:Gradscaler enabled: True. Using precision: fp16.
-/tmp/orpheus/work/mamba/envs/antideepfake/lib/python3.9/site-packages/speechbrain/core.py:796: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
-  self.scaler = torch.cuda.amp.GradScaler(enabled=gradscaler_enabled)
-INFO:speechbrain.core:SSLBrain Model Statistics:
-* Total Number of Trainable Parameters: 317.4M
-* Total Number of Parameters: 317.4M
-* Trainable Parameters represent 100.0000% of the total size.
-INFO:__main__:Loading pre-trained weights detector from /tmp/orpheus/cache/mms_300m.ckpt
-INFO:speechbrain.utils.checkpoints:Would load a checkpoint here, but none found yet.
-  0%|          | 0/150 [00:00<?, ?it/s]  1%|          | 1/150 [00:00<01:04,  2.30it/s]  2%|▏         | 3/150 [00:00<00:26,  5.54it/s]  3%|▎         | 5/150 [00:00<00:18,  7.82it/s]  5%|▍         | 7/150 [00:00<00:15,  9.28it/s]  6%|▌         | 9/150 [00:01<00:13, 10.28it/s]  7%|▋         | 11/150 [00:01<00:12, 10.84it/s]  9%|▊         | 13/150 [00:01<00:12, 11.24it/s] 10%|█         | 15/150 [00:01<00:11, 11.70it/s] 11%|█▏        | 17/150 [00:01<00:11, 12.01it/s] 13%|█▎        | 19/150 [00:01<00:10, 12.14it/s] 14%|█▍        | 21/150 [00:02<00:10, 12.43it/s] 15%|█▌        | 23/150 [00:02<00:10, 12.40it/s] 17%|█▋        | 25/150 [00:02<00:10, 12.36it/s] 18%|█▊        | 27/150 [00:02<00:10, 12.01it/s] 19%|█▉        | 29/150 [00:02<00:09, 12.11it/s] 21%|██        | 31/150 [00:02<00:09, 12.16it/s] 22%|██▏       | 33/150 [00:03<00:09, 12.22it/s] 23%|██▎       | 35/150 [00:03<00:09, 12.66it/s] 25%|██▍       | 37/150 [00:03<00:08, 12.89it/s] 26%|██▌       | 39/150 [00:03<00:08, 12.40it/s] 27%|██▋       | 41/150 [00:03<00:08, 12.37it/s] 29%|██▊       | 43/150 [00:03<00:08, 12.60it/s] 30%|███       | 45/150 [00:04<00:09, 11.64it/s] 31%|███▏      | 47/150 [00:04<00:08, 11.93it/s] 33%|███▎      | 49/150 [00:04<00:08, 12.08it/s] 34%|███▍      | 51/150 [00:04<00:08, 12.23it/s] 35%|███▌      | 53/150 [00:04<00:07, 12.35it/s] 37%|███▋      | 55/150 [00:04<00:07, 12.53it/s] 38%|███▊      | 57/150 [00:04<00:07, 12.47it/s] 39%|███▉      | 59/150 [00:05<00:07, 12.61it/s] 41%|████      | 61/150 [00:05<00:07, 12.42it/s] 42%|████▏     | 63/150 [00:05<00:06, 12.50it/s] 43%|████▎     | 65/150 [00:05<00:07, 12.11it/s] 45%|████▍     | 67/150 [00:05<00:06, 12.28it/s] 46%|████▌     | 69/150 [00:05<00:06, 12.39it/s] 47%|████▋     | 71/150 [00:06<00:06, 12.66it/s] 49%|████▊     | 73/150 [00:06<00:06, 12.66it/s] 50%|█████     | 75/150 [00:06<00:05, 12.63it/s] 51%|█████▏    | 77/150 [00:06<00:05, 12.64it/s] 53%|█████▎    | 79/150 [00:06<00:05, 12.58it/s] 54%|█████▍    | 81/150 [00:06<00:05, 12.50it/s] 55%|█████▌    | 83/150 [00:07<00:05, 12.63it/s] 57%|█████▋    | 85/150 [00:07<00:05, 12.77it/s] 58%|█████▊    | 87/150 [00:07<00:04, 12.75it/s] 59%|█████▉    | 89/150 [00:07<00:04, 12.47it/s] 61%|██████    | 91/150 [00:07<00:04, 12.65it/s] 62%|██████▏   | 93/150 [00:07<00:04, 12.42it/s] 63%|██████▎   | 95/150 [00:08<00:04, 12.41it/s] 65%|██████▍   | 97/150 [00:08<00:04, 12.14it/s] 66%|██████▌   | 99/150 [00:08<00:04, 11.53it/s] 67%|██████▋   | 101/150 [00:08<00:04, 11.61it/s] 69%|██████▊   | 103/150 [00:08<00:03, 12.09it/s] 70%|███████   | 105/150 [00:08<00:03, 12.02it/s] 71%|███████▏  | 107/150 [00:09<00:03, 12.12it/s] 73%|███████▎  | 109/150 [00:09<00:03, 12.09it/s] 74%|███████▍  | 111/150 [00:09<00:03, 12.21it/s] 75%|███████▌  | 113/150 [00:09<00:02, 12.68it/s] 77%|███████▋  | 115/150 [00:09<00:02, 12.46it/s] 78%|███████▊  | 117/150 [00:09<00:02, 12.69it/s] 79%|███████▉  | 119/150 [00:09<00:02, 12.52it/s] 81%|████████  | 121/150 [00:10<00:02, 12.34it/s] 82%|████████▏ | 123/150 [00:10<00:02, 12.73it/s] 83%|████████▎ | 125/150 [00:10<00:01, 12.84it/s] 85%|████████▍ | 127/150 [00:10<00:01, 11.57it/s] 86%|████████▌ | 129/150 [00:10<00:01, 12.22it/s] 87%|████████▋ | 131/150 [00:10<00:01, 12.37it/s] 89%|████████▊ | 133/150 [00:11<00:01, 12.30it/s] 90%|█████████ | 135/150 [00:11<00:01, 12.38it/s] 91%|█████████▏| 137/150 [00:11<00:01, 12.49it/s] 93%|█████████▎| 139/150 [00:11<00:00, 12.46it/s] 94%|█████████▍| 141/150 [00:11<00:00, 12.52it/s] 95%|█████████▌| 143/150 [00:11<00:00, 12.63it/s] 97%|█████████▋| 145/150 [00:12<00:00, 12.43it/s] 98%|█████████▊| 147/150 [00:12<00:00, 12.47it/s] 99%|█████████▉| 149/150 [00:12<00:00, 12.74it/s]100%|██████████| 150/150 [00:12<00:00, 12.03it/s]
-INFO:__main__:Scores saved to /tmp/orpheus/work/Log/exps/exp_mms_300m_zs_mms_300m_toy_000/evaluation_score.csv
-INFO:__main__:Embeddings saved to /tmp/orpheus/work/Log/exps/exp_mms_300m_zs_mms_300m_toy_000/evaluation_score.pkl
-INFO:__main__:Equal error rate: 6.110074627 %

@@ -38,3 +38,11 @@ results/**/shards/
 # Server thuê: địa chỉ SSH (không commit) và kết quả thô tải về
 server/host.env
 results/server/raw/
+
+# Repo chung của team (từ 15/11/2026): ghi chép cá nhân, công cụ chạy trên tài khoản Kaggle/Colab cá nhân và
+# bằng chứng từng lần chạy chỉ giữ ở máy của chủ đồ án, không đưa lên repo
+chore/
+note/
+kaggle/
+colab/
+results/runs/
