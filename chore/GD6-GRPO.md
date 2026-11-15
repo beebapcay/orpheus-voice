@@ -376,3 +376,35 @@ Mỗi kết quả, một câu giải thích (1 seed cho G1, G2):
 3. **G1 dịch cả phân bố về phía "giả" mạnh hơn SFT:** câu giả được kéo về đúng nhiều hơn (RADAR VI Δz 6,0 so với 3,7; VoxCPM2 chỉ lọt 8% so với 29–59%), câu thật bị đẩy sang giả nhiều hơn; EER gần như không đổi. Khớp dự đoán thứ 3 ở GĐ5 mục 6.3: khi batch gần như đúng hết, σ_batch nhỏ nên 1/σ_batch khuếch đại bước cập nhật (batch đúng 99% thì ×10), tức GRPO trong code là một bản fine-tune "mạnh tay" hơn SFT chứ không nhẹ tay hơn; phạt KL β = 0,04 không đủ giữ.
 4. **G2 ≈ G1** (bỏ clip và mô hình cũ không đổi kết quả), như bài báo kết luận (GRPO_s gần GRPO).
 5. Pipeline GRPO chạy đúng và ổn định; đủ điều kiện chạy GRPO ở quy mô lớn (server hoặc Kaggle tuần sau).
+
+## 11. Đánh giá lại hướng thực nghiệm (15/11, sau lần 1, 2; người dùng yêu cầu)
+
+**Kết luận:** hướng đúng và vững cho câu hỏi 1, 2. Với câu hỏi 3, thiết kế hiện tại đúng kỹ thuật (đúng code gốc, đúng công thức, so sánh công bằng) nhưng đặt GRPO vào một chế độ khác hẳn bài báo, nên nhiều khả năng chỉ cho kết quả "GRPO ≈ SFT" mà không trả lời được vì sao. Nên chỉnh phần GRPO trước khi chạy quy mô lớn.
+
+**Phần vững** (số liệu mục 10): pipeline đã kiểm (toy 6,11%, 4 tiêu chí của G1, R 5 seed); câu hỏi 2: SFT làm kém ngoài miền có ý nghĩa thống kê (R − S0: RADAR VI +4,12, p = 0,008; ItW +3,84, p = 0,011; FRR +28, p < 0,001); câu hỏi 1: post-training (P0 − R, p ≤ 0,024), RawBoost khi fine-tune (A0 − R −5,83, p = 0,047), kích thước (B1 kém B2 13,6 điểm, 1 seed); ngôn ngữ pre-training không giúp.
+
+**Vấn đề 1: miền fine-tune đã bão hoà, nên GRPO chạy ngoài vùng nó được thiết kế.** Kiểm trên điểm dev (mô phỏng batch 12 câu × 64 nhãn lấy mẫu):
+
+| Mô hình | p(nhãn đúng) trung bình trên dev | 1/σ_batch trung vị | % batch mọi nhãn lấy mẫu đều đúng (lợi thế = 0, chỉ còn KL) | % câu dev đúng với p > 0,999 | % câu RADAR VI đúng với p > 0,999 |
+|---|---|---|---|---|---|
+| S0 (đầu fine-tune) | 0,909 | 3,6 | 1,6 | 48,4 | 23,4 |
+| R s1–s5 (cuối) | 0,999 | rất lớn | 66 (R s1) | 91–97 | 39–43 |
+| G1 s1 (cuối) | 0,9995 | rất lớn | 76 | **99,4** | **52,9** |
+| G2 s1 (cuối) | | | | **99,7** | **57,5** |
+
+Theo kỳ vọng gradient (note `Post-Training-Va-GRPO.md` mục 8): với câu đã đúng chắc (p = 0,999), SFT kéo tiếp với lực 1 − p = 0,001 (gần như dừng), còn GRPO (chuẩn hoá theo nhóm hoặc theo batch) với lực ≈ √(p(1 − p)) ≈ 0,032, tức **~30 lần SFT**. Ở SEA-Spoof, phần lớn câu train đã đúng chắc từ sớm, nên cập nhật của GRPO bị chi phối bởi việc **tiếp tục làm sắc các câu đã đúng**: mô hình tự tin hơn R (99,4% câu dev đúng với p > 0,999 so với 91–97%), cả phân bố điểm dịch xa hơn, tiếng thật nguồn khác bị đẩy sang "giả" nhiều hơn (mục 10.2). Bài báo fine-tune trên DFE24, nơi MMS-300M dùng thẳng có EER 29,23% (GĐ5 mục 6.1): phần lớn câu ở ranh giới, nơi GRPO và SFT kéo tương đương, nên không gặp chế độ này. Giả thuyết cũ (GRPO "bỏ qua câu sai chắc", GĐ5 mục 6.3) nhìn nhầm phía: điều quyết định ở miền bão hoà là phía câu **đã đúng**.
+
+**Vấn đề 2: "tổng quát hoá" đo được bị chi phối bởi tiếng thật một nguồn.** Lỗi ngoài miền chính sau fine-tune ở mọi cấu hình là tiếng thật không phải VIVOS bị coi là giả (FRR RADAR VI +28 điểm, có ý nghĩa), trong khi MLAAD (tiếng thật VIVOS) tốt lên. Lối tắt "thật = VIVOS" nằm trong dữ liệu; đổi hàm loss từ SFT sang GRPO không xoá được lối tắt dữ liệu, chỉ đổi mức mô hình bám vào nó. Vì vậy chênh lệch SFT–GRPO bị nén lại.
+
+**Vấn đề 3: cường độ fine-tune.** Lịch E1' giữ lr ~1e-6 gần như suốt 4.563 bước (bài báo thực tế ~2–3e-7, GĐ4 phát hiện 9); cùng lr, GRPO trong miền bão hoà còn mạnh tay hơn SFT (vấn đề 1). Không sai (công bằng giữa các cấu hình), nhưng xa chế độ của bài báo.
+
+**Hệ quả cho câu hỏi 3:** chạy thêm seed của G1, G2, G3 như kế hoạch sẽ cho kết luận "GRPO không giữ tổng quát hoá tốt hơn SFT trong điều kiện này" có khoảng tin cậy: hợp lệ (plan: kết quả ngược giả thuyết vẫn là kết quả), nhưng chưa trả lời "thành phần nào tạo khác biệt" và "vì sao". Đề xuất đổi trọng tâm câu hỏi 3 thành: **vì sao GRPO không giúp khi miền đích đã bão hoà và tiếng thật một nguồn, và cần gì để nó giúp**, với các thí nghiệm kiểm trực tiếp cơ chế (chờ người dùng chốt):
+
+| Thí nghiệm | Kiểm điều gì | Dự đoán nếu cách giải thích đúng |
+|---|---|---|
+| G1 với β = 1 (phạt KL mạnh; bài báo: ngoài miền tốt nhất) | Giữ mô hình gần điểm xuất phát có chặn được việc làm sắc không | Ít tự tin hơn G1, FRR và ItW gần S0 hơn, trong miền vẫn ~0% (đã bão hoà) |
+| G1 với lr thấp (ví dụ 1e-7) | Do cường độ cập nhật hay do bản chất GRPO | Gần S0 hơn; nếu G1 lr thấp vẫn kém S0 thì do dữ liệu (vấn đề 2) |
+| GRPO chuẩn hoá theo câu (công thức của bài, code dùng theo batch) | Chênh lệch giữa bài và code có quan trọng không | Gần G1 (cả hai đều làm sắc câu đã đúng); khác biệt nhỏ |
+| SFT với "trọng số kiểu GRPO" (cross-entropy nhân p(y\|x), GĐ5 mục 6.3 b) | Cơ chế nằm ở trọng số theo p chứ không ở lấy mẫu | Giống G1 |
+
+Phần ít mẫu (tầng 4) trong chế độ này chủ yếu đo "ít dữ liệu thì bão hoà nhanh hơn, quên ra sao", nên xếp sau các thí nghiệm cơ chế. Vấn đề 2 không sửa được bằng hàm loss; muốn kiểm phải thêm tiếng thật đa nguồn vào dữ liệu fine-tune (không dùng Common Voice, FOSD vì trùng RADAR), là thay đổi dữ liệu lớn: ghi làm hướng phát triển, hoặc làm nếu người dùng chốt.

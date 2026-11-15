@@ -164,6 +164,12 @@ Hai hệ quả:
 
 Cách kiểm trực tiếp, rẻ: fine-tune bằng cross-entropy có trọng số $p(y \mid x)$ cho mỗi câu (không cần lấy mẫu). Nếu kết quả gần GRPO thì cơ chế nằm ở trọng số này.
 
+### 8.2. Khi miền fine-tune đã gần như giải xong (quan sát thực nghiệm)
+
+Bảng ở mục 8 cho thấy một chiều thường bị bỏ qua: với câu **đã đúng chắc** ($p = 0{,}999$), SFT gần như dừng kéo ($1 - p = 0{,}001$), còn GRPO vẫn kéo với lực $\approx \sqrt{p(1-p)} \approx 0{,}032$, tức khoảng **30 lần** SFT. Nếu mô hình dùng thẳng đã gần đúng hết trên dữ liệu fine-tune (EER ~1%), phần lớn câu rơi vào vùng này, nên GRPO chủ yếu **tiếp tục làm sắc những câu đã đúng**: mô hình ngày càng tự tin, cả phân bố điểm dịch xa hơn SFT. Quan sát được (một seed): sau fine-tune, 99,4% câu dev được đoán đúng với $p > 0{,}999$ ở GRPO so với 91–97% ở SFT; ngoài miền, tiếng thật nguồn khác bị coi là giả nhiều hơn. Đồng thời phần lớn batch có mọi nhãn lấy mẫu đều đúng, lợi thế bằng 0, chỉ còn phạt KL; các batch còn lại có vài nhãn sai mang trọng số rất lớn, nên cập nhật thưa và giật.
+
+Hệ quả: lợi thế "ít quên" của GRPO trong bài báo xuất hiện khi dữ liệu fine-tune **khó** (mô hình dùng thẳng EER ~23–29%, đa số câu ở ranh giới). Khi miền đích đã dễ, không nên kỳ vọng GRPO nhẹ tay hơn SFT; cần phạt KL mạnh hơn hoặc giảm learning rate.
+
 ## 9. Ưu và nhược điểm
 
 | Ưu điểm | Nhược điểm |
