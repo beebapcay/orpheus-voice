@@ -11,6 +11,7 @@ Mỗi thư mục `<kernel>-v<N>` là một lần chạy trên Kaggle (một vers
 | `orpheus-zeroshot-v2` | Zero-shot: MMS-300M NDA, MMS-1B, XLS-R-1B (hai bản), W2V-Large NDA, W2V-Small NDA | Xong, 2,71 giờ; NDA tốt hơn Default ở 4/5 backbone |
 | `orpheus-zeroshot-v3` | Zero-shot: HuBERT-XL, XLS-R-2B (hai bản) | Xong, 5,18 giờ; XLS-R-2B Default tốt nhất (13,71%) |
 | `orpheus-finetune-v1` | GĐ4 pilot fine-tune: R và A0 300 bước, overfit 100 câu; đo bộ nhớ, tốc độ, CPU | ERROR do một shard chấm chỉ có một lớp (đã sửa); huấn luyện xong cả 3; 0,74 giờ |
+| `orpheus-finetune-v6` | GĐ6 lần 1: G1 seed 1 (GRPO đủ), G2 seed 1 (GRPO đơn giản) | Xong, 5,53 giờ; RADAR VI G1 23,53%, G2 23,13% (R 24,20 ± 1,88); trong khoảng của R |
 | `orpheus-finetune-b-v2` | GĐ6 lần 2 (song song lần 1): R seed 4, 5 | Xong, 4,66 giờ; RADAR VI 26,63 / 22,32%; R qua 5 seed 24,20 ± 1,88% |
 | `orpheus-finetune-v5` | GĐ6 lần thử đo GRPO (7 lần đo ngắn): bộ nhớ, tốc độ G1/G2 ở batch 50 và 25 × 2, có thử áp lực 240 câu dài nhất | Xong, 0,47 giờ; G1 batch 50 hết bộ nhớ ở thử áp lực, qua với `expandable_segments` (đỉnh 13,9 / 14,6 GB); G1 3,07 s/bước, G2 2,95 s/bước (SFT ~2,0) |
 | `orpheus-finetune-v4` | GĐ5 lần 4: R seed 2, 3; chấm MLAAD; S0 trên MLAAD (4 mô hình) | Xong, 4,94 giờ; RADAR VI R qua 3 seed 24,02 ± 1,52%; MLAAD: S0 2,2–5,2%, R 0,09–0,16% |

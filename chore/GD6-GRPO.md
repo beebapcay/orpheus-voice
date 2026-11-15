@@ -9,7 +9,7 @@ Câu hỏi của giai đoạn: fine-tune bằng GRPO trên tiếng Việt có gi
 | 1 | Chuẩn bị lần thử đo GRPO: đọc code GRPO (YAML v1/v2, `main.py`, `algo/rl.py`), kiểm ghi đè lồng `rl_config`, tích luỹ gradient, mô phỏng số batch | Mục 2; `src/mem_probe.py`; `src/finetune.py` (`--probe-mem`, `--oom-retry`, `--train-longest`, `--discard-ckpt`, `--env`); `kaggle/finetune/run.py` | Xong (15/11), đã thử trên máy |
 | 1 | **Lần thử đo bộ nhớ và tốc độ GRPO trên T4** (L1) | `orpheus-finetune` v5, mục 3 | **Xong** (15/11, 0,47 giờ): G1 batch 50 vừa với `expandable_segments`, 3,07 s/bước |
 | 1 | Báo kết quả lần thử; người dùng chốt: Kaggle hay thuê server, dùng quota còn lại tuần này thế nào | Mục 3, 5 | **Đã chốt** (15/11, mục 5): Kaggle; batch 50 + `expandable_segments`; P1 làm, P2 không, P3 không cắt |
-| 1 | Lần 1: G1 s1, G2 s1; lần 2 (song song): R s4, R s5 | `orpheus-finetune` v6, `orpheus-finetune-b` v2; mục 6, 10 | Lần 2 **xong** (14:39, 4,66 giờ, mục 10.1); lần 1 đang chạy |
+| 1 | Lần 1: G1 s1, G2 s1; lần 2 (song song): R s4, R s5 | `orpheus-finetune` v6, `orpheus-finetune-b` v2; mục 6, 10 | **Xong**: lần 2 (14:39, 4,66 giờ, mục 10.1), lần 1 (15:31, 5,53 giờ, mục 10.2) |
 | 2–3 | G1 s2–s5, G3 (từ 21/11) | Mục 6 | Chưa |
 | 1 | Phân tích không cần GPU: kiểm định qua seed, hiệu chuẩn, theo hệ thống sinh, mốc cơ chế | Mục 7 | Xong (15/11) |
 | 1 | **Bộ đầy đủ trên server vast.ai** (54 lần, cùng phần cứng, 3 seed mọi cấu hình): script, chọn thí nghiệm | Mục 9, `server/` | Script xong, thử trên máy (15/11); người dùng thuê máy **sau khi** xem kết quả lần 1, 2 Kaggle (mục 9) |
@@ -338,3 +338,41 @@ Mỗi kết quả, một câu giải thích:
 2. **Độ lệch giữa seed lớn hơn ước tính từ 3 seed:** RADAR VI 1,52 → 1,88; RADAR EN 0,81 → 1,88; FRR ở ngưỡng 0 dao động 23,7–42,8% (độ lệch chuẩn 7,1). EER ổn định hơn nhiều so với lỗi ở ngưỡng cố định: vị trí ngưỡng (hiệu chuẩn) sau fine-tune phụ thuộc mạnh vào seed.
 3. **RawBoost khi fine-tune làm kém RADAR VI: vừa có ý nghĩa** (A0 − R −5,83, p = 0,047, A0 1 seed). Post-training quan trọng: có ý nghĩa (P0 − R). Ngôn ngữ pre-training (B2) và bản NDA (N0): chưa có ý nghĩa với 1 seed.
 4. Mốc cơ chế (mục 7.4) và hiệu chuẩn (mục 7.2) của R s4, s5 cùng mẫu hình với s1–s3: trên dev, câu giả S0 sai chắc được kéo Δz 9,8–11,2; trên RADAR VI, 13–33% câu thật S0 đúng chắc bị lật thành sai; hiệu chuẩn trên dev không giúp RADAR VI.
+
+### 10.2. Lần 1 (`orpheus-finetune` v6, 15/11, 5,53 giờ; `results/runs/orpheus-finetune-v6/`)
+
+COMPLETE, 0 cảnh báo nạp trọng số, code `a08bc23`. Cả hai lần 4.563 bước, learning rate cuối 6,83e-07, không hết bộ nhớ, không NaN (dòng duy nhất khớp "nonfinite" là thông tin cấu hình `skip_nonfinite_grads ... False`, R cũng có). G1: 3,34 s/bước (lần thử đo 3,07), đỉnh cấp phát 13.925 MiB (đúng bằng trường hợp xấu nhất của lần thử đo), giữ 14.260 MiB; G2: 2,62 s/bước, 12.682 MiB. Kernel 5,53 giờ (ước 5,8).
+
+**Đánh giá theo 4 tiêu chí (mục 9):** (1) đạt; (2) đạt (bộ nhớ khớp; tốc độ G1 chậm hơn lần đo 9%, G2 nhanh hơn 11%); (3) đạt: GRPO có học (dev 0,00%, `test_seen` 0,04%, F5-TTS 0,04%, MLAAD 0,05% so với S0 1,16 / 0,81 / 0,57 / 5,18%); (4) đạt: mọi thước đo ngoài miền nằm trong khoảng của R 5 seed hoặc tốt hơn.
+
+**EER (%), thấp hơn là tốt hơn** (R: trung bình ± độ lệch chuẩn 5 seed, khoảng [nhỏ nhất; lớn nhất]):
+
+| Cấu hình | `test_seen` | `test_cvreal` | MLAAD | **RADAR VI** | **ItW** | **RADAR EN** | FRR RADAR VI ở ngưỡng 0 | actDCF − minDCF RADAR VI |
+|---|---|---|---|---|---|---|---|---|
+| S0 MMS-300M | 0,81 | 7,44 | 5,18 | 20,08 | 2,60 | 26,20 | 4,81 | 0,01 |
+| R (5 seed) | 0,04 | 4,72 ± 1,45 | 0,19 | **24,20 ± 1,88** [22,32; 26,63] | **6,44 ± 1,93** [4,5; 9,1] | **28,40 ± 1,88** [26,7; 31,6] | 32,92 ± 7,10 [23,7; 42,8] | 0,09–0,40 |
+| A0 s1 | 0,04 | 2,79 | | 18,37 | 6,10 | 25,00 | 27,09 | 0,19 |
+| **G1 s1** (GRPO đủ) | 0,04 | 4,16 | 0,05 | **23,53** | **5,90** | **25,70** | 39,47 | 0,37 |
+| **G2 s1** (không clip, không mô hình cũ) | 0,04 | 4,29 | 0,17 | **23,13** | **4,30** | **26,00** | 39,90 | 0,39 |
+
+So với R (khoảng dự đoán từ 5 seed, bậc tự do 4): G1 − R RADAR VI −0,67 (p = 0,76), ItW −0,54 (p = 0,81), RADAR EN −2,70 (p = 0,26), FRR +6,55 (p = 0,45); G2 − R RADAR VI −1,07 (p = 0,63), ItW −2,14 (p = 0,37), RADAR EN −2,40 (p = 0,31). Không chênh lệch nào có ý nghĩa.
+
+**Kiểm giả thuyết cơ chế (mục 7.4; trung bình theo seed cho R, `mechanism_output.txt`):**
+
+| Tập | Lớp, nhóm theo S0 | Δz trung vị R / G1 / G2 | % lật nhãn ở ngưỡng 0 R / G1 / G2 |
+|---|---|---|---|
+| dev | giả, S0 sai chắc (56 câu) | 10,8 / **11,6** / 11,9 | 95 / 100 / 100 thành đúng |
+| dev | giả, S0 đúng chắc | 1,3 / 1,7 / 2,0 | |
+| RADAR VI | giả, S0 sai chắc (1.501) | 3,7 / **6,0** / 5,1 | 42 / 51 / 49 thành đúng |
+| RADAR VI | thật, S0 đúng chắc (5.907) | −1,1 / 0,0 / 0,2 | 22 / **30** / 30 thành sai |
+| ItW | thật, S0 đúng chắc (915) | −3,4 / −2,8 / −3,7 | 33 / **39** / 44 thành sai |
+| RADAR EN | thật, S0 đúng chắc (809) | −6,9 / −9,6 / −9,1 | 53 / **63** / 58 thành sai |
+
+**MLAAD VoxCPM2** (% câu giả lọt ở ngưỡng 0): R 29–59%, **G1 8,1%**, G2 27,4%. **Hiệu chuẩn:** actDCF RADAR VI G1 0,883, G2 0,887 (R 0,71–0,90); hiệu chuẩn trên dev vẫn không giúp.
+
+Mỗi kết quả, một câu giải thích (1 seed cho G1, G2):
+1. **Chưa thấy GRPO giữ tổng quát hoá tốt hơn SFT trên tiếng Việt:** G1 và G2 nằm trong khoảng của R ở mọi thước đo ngoài miền, và cũng kém S0 trên RADAR VI (+3,5 và +3,1 điểm) như SFT. Khác bài GRPO (MMS-300M: SFT 14,17%, GRPO 5,91% trên ItW), nhưng ở ta SFT chỉ làm quên ~3,8 điểm ItW nên khoảng để GRPO gỡ lại nhỏ hơn nhiều (P1).
+2. **Giả thuyết cơ chế (a) không được ủng hộ:** trên dev, G1 kéo câu giả S0 sai chắc mạnh **bằng hoặc hơn** SFT (Δz 11,6 so với 10,8), không "bỏ qua" như dự đoán từ kỳ vọng gradient p(1 − p)/σ_batch. Giả thuyết (b) cũng không: G1 lật tiếng thật đúng chắc sang giả **nhiều hơn** R ngoài miền (RADAR VI 30% so với 22%, RADAR EN 63% so với 53%), nên FRR cao hơn (39,5% so với 32,9%).
+3. **G1 dịch cả phân bố về phía "giả" mạnh hơn SFT:** câu giả được kéo về đúng nhiều hơn (RADAR VI Δz 6,0 so với 3,7; VoxCPM2 chỉ lọt 8% so với 29–59%), câu thật bị đẩy sang giả nhiều hơn; EER gần như không đổi. Khớp dự đoán thứ 3 ở GĐ5 mục 6.3: khi batch gần như đúng hết, σ_batch nhỏ nên 1/σ_batch khuếch đại bước cập nhật (batch đúng 99% thì ×10), tức GRPO trong code là một bản fine-tune "mạnh tay" hơn SFT chứ không nhẹ tay hơn; phạt KL β = 0,04 không đủ giữ.
+4. **G2 ≈ G1** (bỏ clip và mô hình cũ không đổi kết quả), như bài báo kết luận (GRPO_s gần GRPO).
+5. Pipeline GRPO chạy đúng và ổn định; đủ điều kiện chạy GRPO ở quy mô lớn (server hoặc Kaggle tuần sau).

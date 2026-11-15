@@ -1,0 +1,5 @@
+Score: higher = real. beta = 1.900, actDCF threshold = -0.642
+EER in %, lower is better. minDCF/actDCF: lower is better, 1.0 = no better than accepting everything.
+subset  n_real  n_fake  eer_%  minDCF  actDCF  eer_threshold
+Pooled    4475    7521 2.1919  0.0578  0.1462        -5.2716
+Saved to /kaggle/working/results/scores/G1_s1/seaspoof_vi_test/metrics.csv
