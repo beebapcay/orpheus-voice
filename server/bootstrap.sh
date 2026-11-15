@@ -82,6 +82,8 @@ if ! "$MM" env list | grep -q orpheus-driver; then
   "$MM" run -n orpheus-driver pip install -q torch --index-url https://download.pytorch.org/whl/cpu >>"$LOG" 2>&1
 fi
 DPY="$MAMBA_ROOT_PREFIX/envs/orpheus-driver/bin/python"
+# huggingface_hub, pyarrow: cho `server/local.sh fetch-data` (tự tạo SEA-Spoof, MLAAD từ Hugging Face)
+"$DPY" -c "import huggingface_hub, pyarrow" 2>/dev/null || "$MM" run -n orpheus-driver pip install -q huggingface_hub pyarrow >>"$LOG" 2>&1
 "$DPY" -c "import pandas, numpy, scipy, soundfile, safetensors, torch; print('driver', pandas.__version__, numpy.__version__, torch.__version__)" | tee -a "$LOG"
 "$MM" run -n orpheus-driver pip freeze > results/env/driver-pip-freeze.txt
 
@@ -96,6 +98,12 @@ cp data/prep/orpheus_data_manifest.json results/env/ 2>/dev/null || true
 # 5b. Kiểm chế độ D1: chia RADAR VI theo danh sách câu đã commit (protocols/ids/radar_vi_rv_*.tsv)
 if [ ! -f data/prep/radar_vi_rv_test.csv ]; then
   "$DPY" code/split_radar_regime.py --ids-dir ids --make-csv data/prep/radar_vi.csv | tee -a "$LOG"
+fi
+
+# SKIP_DATA=1 (server/local.sh env): dừng ở đây, trước khi kiểm SEA-Spoof, MLAAD (chưa tạo) và tải checkpoint
+if [ "${SKIP_DATA:-0}" = 1 ]; then
+  log "Dựng môi trường và dữ liệu kiểm tra xong (SKIP_DATA=1). Tạo hoặc chép SEA-Spoof, MLAAD rồi chạy lại bootstrap"
+  exit 0
 fi
 
 # 6. Kiểm dữ liệu, tải trước checkpoint

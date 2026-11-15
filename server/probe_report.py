@@ -85,6 +85,20 @@ def main():
           "bước (gồm bước đầu chậm). gpu_util_*: chỉ trong khoảng huấn luyện; p10: phân vị 10 (GPU có lúc "
           "chờ dữ liệu không). Giây mỗi bước, bộ nhớ: thấp hơn là tốt hơn; GPU dùng: cao hơn là tốt hơn.")
 
+    # Khuyến nghị số worker: nhỏ nhất mà GPU dùng ≥ 90% trong khoảng huấn luyện ở cả SFT (R) và GRPO (G1)
+    util = {r["run"]: r["gpu_util_train"] for r in res if r["gpu_util_train"] != ""}
+    rec = None
+    for w in (2, 6):
+        u = [util.get(f"probe_{c}_w{w}") for c in ("R", "G1")]
+        if all(x is not None for x in u):
+            if min(u) >= 90:
+                rec = w
+                break
+            rec = w          # chưa đạt 90% thì lấy số worker lớn nhất đã đo
+    if rec is not None:
+        print(f"\nWORKERS_RECOMMENDED={rec}  (nhỏ nhất cho GPU dùng ≥ 90% ở cả R và G1; không đạt thì lấy số lớn nhất "
+              f"đã đo; GPU dùng: {', '.join(f'{k} {v}%' for k, v in sorted(util.items()))})")
+
     # Dấu vân tay batch (BATCH_HASH_N, src/mem_probe.py): cùng seed, cùng số worker thì SFT và GRPO có nhận
     # cùng batch (ids) và cùng phép tăng cường RawBoost (wav) không. Quyết định phân tích qua seed có ghép
     # cặp được không (chore/GD6-GRPO.md mục 13)

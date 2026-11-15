@@ -1,5 +1,7 @@
 # Chạy bộ thí nghiệm trên server thuê (vast.ai)
 
+**Chạy trên máy của người khác (không qua vast.ai, người đó tự gõ lệnh):** `server/local.sh`, hướng dẫn cho người chạy: `server/HUONG-DAN-CHAY.md`. Kết quả gửi về (`local.sh pack`) nhận bằng `bash server/vast.sh import <file.tar.gz>` rồi `collect` như thường.
+
 Một bộ thí nghiệm **hoàn chỉnh** chạy trên một loại máy, để mọi phép so sánh trong báo cáo dùng kết quả cùng phần cứng. Bộ Kaggle (T4) vẫn chạy song song và giữ làm lần lặp độc lập trên phần cứng khác. Lý do và danh sách đầy đủ: `chore/GD6-GRPO.md` mục 9; danh sách lần chạy: `server/experiments.py`.
 
 ## 1. Bộ thí nghiệm (122 lần; người dùng chốt 15/11: làm đầy đủ, chia giai đoạn có điểm kiểm, `chore/GD6-GRPO.md` mục 14)

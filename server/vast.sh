@@ -18,6 +18,8 @@
 #   bash server/vast.sh stop --yes                  dừng điều phối và mọi lần đang chạy
 #   bash server/vast.sh cleanup --yes               xoá SEA-Spoof, MLAAD, checkpoint trên server (trước khi trả máy)
 #   bash server/vast.sh ssh                         mở shell trên server
+#   bash server/vast.sh import <file.tar.gz>        nhận kết quả do người khác chạy (server/local.sh pack) vào
+#                                                   results/server/raw/ (rồi collect như thường)
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
@@ -113,6 +115,18 @@ case "$CMD" in
     rs "$VAST_USER@$VAST_HOST:$R/code/VERSION" "$dst/_code/"
     rs --exclude __pycache__ "$VAST_USER@$VAST_HOST:$R/server/" "$dst/_code/server/"
     du -sh "$dst"
+    ;;
+  import)
+    # File do người khác gửi: chỉ là dữ liệu (CSV, JSON, log), không chạy gì trong đó. Giải nén vào thư mục tạm mới
+    T="${2:?file .tar.gz từ server/local.sh pack}"
+    dst="$REPO/results/server/raw"; tmp="$(mktemp -d)"
+    tar -xzf "$T" -C "$tmp"
+    [ -d "$tmp/results" ] || { echo "File không có results/: không phải output của local.sh pack" >&2; rm -rf "$tmp"; exit 2; }
+    mkdir -p "$dst/_code/server"
+    rsync -a "$tmp/results/" "$dst/"
+    [ -f "$tmp/code/VERSION" ] && cp "$tmp/code/VERSION" "$dst/_code/VERSION"
+    [ -d "$tmp/server" ] && rsync -a --exclude __pycache__ "$tmp/server/" "$dst/_code/server/"
+    rm -rf "$tmp"; du -sh "$dst"; echo "Tiếp: bash server/vast.sh collect <nhãn>"
     ;;
   collect)
     TAG="${2:?nhãn, ví dụ gd6-20261116}"
