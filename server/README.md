@@ -29,11 +29,25 @@ Công thức giữ nguyên như Kaggle (lịch E1', batch 50, GRPO với `expand
 | Không dùng | RTX 50xx (Blackwell) | torch 2.6.0 bản CUDA 11.8 của môi trường gốc không hỗ trợ |
 | CPU | ≥ 8 nhân mỗi GPU (32 cho 4 GPU) | RawBoost và đọc âm thanh chạy trên CPU; GĐ5 đã thấy CPU là nút thắt với 4 nhân cho 2 GPU |
 | RAM | ≥ 16 GB mỗi GPU (64 GB cho 4 GPU) | Mỗi lần nạp 1–3 bản mô hình và tiến trình đọc dữ liệu |
-| Ổ đĩa | ≥ 250 GB | Dữ liệu ~15 GB, môi trường ~15 GB, checkpoint gốc ~17 GB (cả XLS-R-2B 8,65 GB), ~100 checkpoint sau fine-tune ~130 GB (file nội suy WiSE-FT xoá sau khi chấm) |
+| Ổ đĩa | **256 GB** (đỉnh ước ~200–225 GB; bảng dưới) | Phần lớn là ~95 checkpoint sau fine-tune (~118 GB), giữ đến cuối để chạy WiSE-FT, đo độ trôi trọng số và chấm lại khi cần |
 | Mạng | Tải xuống nhanh (≥ 500 Mbps nếu có) | RADAR 8,75 GB từ Zenodo, checkpoint từ Hugging Face |
 | Loại thuê | **On-demand**, không interruptible | Bị ngắt giữa chừng là mất lần đang chạy (không chạy tiếp được giữa chừng, GĐ5 L6) |
 | Ảnh máy | Ubuntu 22.04, driver NVIDIA ≥ 520 (CUDA ≥ 11.8); ví dụ `nvidia/cuda:11.8.0-devel-ubuntu22.04` hoặc mẫu PyTorch của vast.ai | Môi trường tự cài torch riêng bằng micromamba |
 | Vị trí | Không đặt ở Trung Quốc | Cần GitHub, Hugging Face, Zenodo |
+
+**Ước dung lượng ổ (15/11, theo số đo Kaggle):**
+
+| Phần | GB | Căn cứ |
+|---|---|---|
+| Ảnh máy (vast.ai tính vào ổ được cấp) | ~10–15 | Ảnh CUDA của vast.ai (ước) |
+| Môi trường và cache cài đặt (`work/`, pip, micromamba) | ~12–15 | torch 2.6.0 cu118 (~2,3 GB tải, ~5 GB cài), fairseq, SpeechBrain; môi trường điều phối ~2 GB |
+| Dữ liệu | ~6,5 | SEA-Spoof vi 2,5 và MLAAD vi 1,5 (đo trên máy); RADAR VI, RADAR EN tập con, In-the-Wild tập con ~2,5 (output prep Kaggle 9,96 GB trừ In-the-Wild đầy đủ ~8,2 GB) |
+| Checkpoint gốc (`cache/`) | ~16,7 | MMS-300M, bản NDA, W2V-Large 1,27 mỗi bản; W2V-Small 0,38; XLS-R-2B 8,65; fairseq base_300m 3,81 (lúc chuyển XLS-R-2B thêm 8,65 tạm thời, ở đầu bộ) |
+| Checkpoint sau fine-tune (`results/ckpt/`) | ~118 | 92 × 1,27 GB (đo: 1.270 MB) + 3 × 0,38 (B1); file nội suy WiSE-FT xoá sau khi chấm |
+| Đang huấn luyện (2 lần cùng lúc) | ~8 | Mỗi lần: `save/` của SpeechBrain gồm mô hình 1,27 và trạng thái AdamW ~2,5; xoá sau khi chép checkpoint |
+| Embedding | ~20 | ~125 lần chấm × `emb.npy` ~160 MB (đo trên output Kaggle); bản sao theo shard (~20 GB nữa) `run.py` xoá sau mỗi lần chấm xong |
+| Điểm, log | ~3 | |
+| **Đỉnh (cuối bộ)** | **~195–205** | Còn ~50–60 GB trong 256 GB. `run.py` dừng nhận việc mới khi ổ còn < 25 GB (báo trong `status.txt`) |
 
 Thời gian (tính theo T4; SFT ~4,3 giờ, GRPO ~5,6 giờ mỗi lần, cả chấm; chấm riêng ~1,7 giờ): cả bộ ~530 giờ. Tốc độ GPU thuê so với T4 chỉ biết sau tầng 0; nhanh hơn T4 2,5–3,5 lần thì 2 GPU mất ~3,2–4,4 ngày, 4 GPU ~1,6–2,2 ngày. vast.ai tính theo giờ GPU, nên 4 GPU tốn gần bằng 2 GPU mà xong sớm gấp đôi.
 

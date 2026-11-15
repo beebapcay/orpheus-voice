@@ -29,7 +29,9 @@ Mọi tiến trình con nhận NVIDIA_TF32_OVERRIDE=0 (tính fp32 như T4: Speec
 Ampere/Ada dùng TF32 cho matmul và convolution nếu không ghi đè).
 """
 import argparse
+import glob
 import importlib
+import shutil
 import json
 import os
 import re
@@ -55,6 +57,7 @@ pick_lock = threading.Lock()      # chọn việc, đọc lại experiments.py (
 running_here = set()              # lần đang chạy do điều phối này khởi động
 T0 = time.time()
 WAIT = 60
+MIN_FREE_GB = 25      # ổ còn ít hơn thì không nhận việc mới (một lần huấn luyện cần ~4 GB tạm + 1,3 GB checkpoint)
 
 
 def log(msg):
@@ -132,6 +135,30 @@ def progress(name):
     return (drv[-1][:160] if drv else "khởi động")
 
 
+def free_gb():
+    try:
+        return shutil.disk_usage(OUT).free / 1e9
+    except OSError:
+        return float("inf")
+
+
+def cleanup_shards(j):
+    """Sau khi chấm xong: xoá embedding theo shard (*_emb.pkl), bản sao của emb.npy đã gộp, chỉ cần để chạy tiếp
+    giữa chừng trên Kaggle. Giữ emb.npy, điểm, độ đo. Tiết kiệm ~160 MB mỗi lần chấm 5 tập (~20 GB cả bộ)."""
+    if j["kind"] == "zeroshot":
+        dirs = [os.path.join(OUT, "zeroshot", spec.split(":", 1)[1].split(",")[0], spec.split(":", 1)[0])
+                for spec in j["jobs"]]
+    else:
+        dirs = glob.glob(os.path.join(OUT, "scores", j["name"], "*"))
+    n = 0
+    for d in dirs:
+        if os.path.exists(os.path.join(d, "emb.npy")):
+            for f in glob.glob(os.path.join(d, "shards", "*_emb.pkl")):
+                os.remove(f)
+                n += 1
+    return n
+
+
 def skip_list():
     """results/skip.txt: tên lần chạy cần bỏ qua (mỗi dòng một tên), đọc lại mỗi lần GPU nhận việc."""
     p = os.path.join(OUT, "skip.txt")
@@ -140,7 +167,8 @@ def skip_list():
 
 def select(args, mod=None):
     mod = mod or E
-    jobs = mod.build(args.workers)
+    # Sắp ổn định theo tầng: lần thêm vào cuối build() ở điểm kiểm vẫn đứng đúng chỗ theo tầng của nó
+    jobs = sorted(mod.build(args.workers), key=lambda j: j["tier"])
     if args.only:
         sel = [j for j in jobs if j["name"] in args.only]
         missing = set(args.only) - {j["name"] for j in sel}
@@ -193,7 +221,7 @@ def pick(jobs, gpu, msgs):
 
 
 def worker(gpu, args):
-    held = False
+    held = low_disk = False
     while True:
         if os.path.exists(HOLD):
             if not held:
@@ -204,6 +232,13 @@ def worker(gpu, args):
         if held:
             log(f"[GPU {gpu}] nhận việc lại")
             held = False
+        if free_gb() < MIN_FREE_GB:
+            if not low_disk:
+                log(f"[GPU {gpu}] CẢNH BÁO: ổ chỉ còn {free_gb():.0f} GB (< {MIN_FREE_GB}); tạm dừng nhận việc tới khi đủ")
+                low_disk = True
+            time.sleep(WAIT)
+            continue
+        low_disk = False
         msgs = []
         with pick_lock:
             jobs = load_jobs(args, msgs)
@@ -231,6 +266,11 @@ def worker(gpu, args):
         with pick_lock:
             running_here.discard(j["name"])
         log(f"[GPU {gpu}] {'xong' if rc == 0 else 'LỖI'} {j['name']} (mã {rc}) sau {st['seconds'] / 60:.1f} phút")
+        if rc == 0:
+            try:
+                cleanup_shards(j)
+            except OSError as e:
+                log(f"[GPU {gpu}] dọn embedding theo shard của {j['name']} lỗi: {e}")
         with pick_lock:
             jobs = select(args)
         write_status(jobs)
@@ -268,6 +308,7 @@ def write_status(jobs):
     lines = [f"{time.strftime('%Y-%m-%d %H:%M:%S')}  điều phối chạy {(time.time() - T0) / 3600:.2f} giờ"
              + ("  [TẠM DỪNG NHẬN VIỆC: results/hold]" if os.path.exists(HOLD) else ""),
              "Trạng thái: " + ", ".join(f"{k} {v}" for k, v in sorted(cnt.items())),
+             f"Ổ: còn {free_gb():.0f} GB" + (f" (DƯỚI {MIN_FREE_GB} GB: không nhận việc mới)" if free_gb() < MIN_FREE_GB else ""),
              "Còn lại theo tầng: " + (", ".join(f"tầng {t}: {n}" for t, n in sorted(by_tier.items())) or "-"),
              "Thời gian TB mỗi lần đã xong (giờ): " + (", ".join(f"{k} {v:.2f}" for k, v in sorted(mean.items())) or "-"),
              "Đang chạy:", *(rows or ["  (không)"]), "GPU (index, %, MiB dùng, MiB tổng):", smi]
