@@ -79,9 +79,11 @@ def main():
     ap.add_argument("--alpha", type=float, required=True)
     ap.add_argument("--model", default="mms_300m", help="checkpoint post-trained gốc (khoá MODELS)")
     ap.add_argument("--score", nargs="*", default=[])
+    ap.add_argument("--src-ckpt", default=None,
+                    help="đường dẫn checkpoint nguồn (mặc định <out>/ckpt/<src>.ckpt; Kaggle: output kernel khác)")
     ap.add_argument("--check-only", action="store_true")
     a = ap.parse_args()
-    ft = os.path.join(a.out, "ckpt", f"{a.src}.ckpt")
+    ft = a.src_ckpt or os.path.join(a.out, "ckpt", f"{a.src}.ckpt")
     if not os.path.exists(ft):
         sys.exit(f"Không thấy {ft}")
     s0 = sz.Checkpoints(a.cache, {a.model: 1}, keep=True).get(a.model)
@@ -90,6 +92,7 @@ def main():
         return
     run_dir = os.path.join(a.out, "train", a.name)
     os.makedirs(run_dir, exist_ok=True)
+    os.makedirs(os.path.join(a.out, "ckpt"), exist_ok=True)
     out_ckpt = os.path.join(a.out, "ckpt", f"{a.name}.ckpt")
     t0 = time.time()
     stats = interpolate(s0, ft, a.alpha, out_ckpt)
