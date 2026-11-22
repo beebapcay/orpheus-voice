@@ -1,0 +1,7 @@
+Score: higher = real. beta = 1.900, actDCF threshold = -0.642
+EER in %, lower is better. minDCF/actDCF: lower is better, 1.0 = no better than accepting everything.
+          subset  n_real  n_fake   eer_%  minDCF  actDCF  eer_threshold
+          Pooled    2000    2000 16.0000  0.3476  0.5170        -1.4686
+      prefix:ItW    1000    1000  3.4000  0.0808  0.2238        -4.0003
+prefix:RADAR2026    1000    1000 28.0000  0.6031  0.8102        -0.6209
+Saved to /kaggle/working/results/scores/Rw50_s4/ood_forget/metrics.csv
