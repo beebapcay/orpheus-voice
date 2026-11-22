@@ -9,6 +9,9 @@ S0_mms_300m_nda           0.89         0.76              0.04             2.10  
           B1_s1           0.00         0.48              0.00             8.96        NaN         34.67     7.10         28.20
           B2_s1           0.04         0.00              0.00             2.59        NaN         21.03     1.40         23.40
           G1_s1           0.04         0.04              0.00             4.16       0.05         23.53     5.90         25.70
+         G1b_s1           0.12         0.04              0.00             4.85       0.81         19.06     2.10         25.70
+        G1rv_s1           1.49         1.70              0.00             1.79       1.85           NaN     6.10         19.80
+         G1s_s1           0.08         0.04              0.00             4.96       0.24         22.99     2.40         26.70
           G2_s1           0.04         0.04              0.00             4.29       0.17         23.13     4.30         26.00
           N0_s1           0.00         0.00              0.00             3.60        NaN         20.50     5.40         25.30
           P0_s1           0.04         5.94              0.00             3.26        NaN         31.46    14.90         33.90
@@ -17,6 +20,7 @@ S0_mms_300m_nda           0.89         0.76              0.04             2.10  
            R_s3           0.04         0.04              0.00             6.15       0.16         25.77     4.80         28.10
            R_s4           0.04         0.07              0.00             6.10       0.28         26.63     6.20         31.60
            R_s5           0.04         0.04              0.00             4.09       0.21         22.32     9.10         27.50
+         Rrv_s1           1.98         2.22              0.00             1.54       1.42           NaN    12.60         20.20
 
 == 1b. Lỗi ở ngưỡng log-odds 0 (%): FAR giả bị nhận là thật, FRR thật bị coi là giả; actDCF − minDCF (lệch hiệu chuẩn)
          config  radar_vi_far0  radar_vi_frr0  radar_vi_minDCF  radar_vi_act_minus_min  test_cvreal_frr0  test_f5_far0  test_minimax_far0
@@ -29,6 +33,9 @@ S0_mms_300m_nda          34.51           5.30             0.44                  
           B1_s1          20.88          62.11             0.73                    0.62             78.15          3.45               0.00
           B2_s1          18.36          25.64             0.49                    0.14             12.75          0.51               0.00
           G1_s1          14.99          39.47             0.51                    0.37             18.60          0.85               0.00
+         G1b_s1          29.48           7.64             0.43                    0.00              1.20          4.51               0.05
+        G1rv_s1            NaN            NaN              NaN                     NaN              0.20          4.99               0.00
+         G1s_s1          22.88          23.14             0.52                    0.11              5.45          2.08               0.00
           G2_s1          14.66          39.90             0.49                    0.39             17.80          0.24               0.00
           N0_s1          14.62          31.29             0.49                    0.21             13.35          0.82               0.00
           P0_s1          23.41          53.37             0.65                    0.54             48.85         54.80               0.00
@@ -37,6 +44,7 @@ S0_mms_300m_nda          34.51           5.30             0.44                  
            R_s3          20.61          35.06             0.58                    0.25             12.55          2.39               0.00
            R_s4          28.56          23.71             0.63                    0.09              5.40         13.50               0.00
            R_s5          12.01          42.80             0.50                    0.40             18.30          0.44               0.00
+         Rrv_s1            NaN            NaN              NaN                     NaN              0.10          6.18               0.00
 
 == 1c. Trung bình và độ lệch chuẩn (ddof 1) qua các seed
       n_seed  test_cvreal_eer_mean  test_cvreal_eer_std  radar_vi_eer_mean  radar_vi_eer_std  itw_eer_mean  itw_eer_std  radar_en_eer_mean  radar_en_eer_std  radar_vi_frr0_mean  radar_vi_frr0_std
@@ -53,6 +61,9 @@ S0_mms_300m_nda     0.04      0.40        1.62    0.76    0.99     0.04  1.01
           B1_s1     0.00      0.00        0.00    0.48    0.00     0.00  0.00
           B2_s1     0.00      0.00        0.00    0.00    0.20     0.00  0.00
           G1_s1     0.00      0.00        0.02    0.04    0.00     0.00  0.00
+         G1b_s1     0.00      0.00        0.20    0.04    0.00     0.00  0.20
+        G1rv_s1     0.20      0.20        2.85    1.70    0.04     0.00  2.20
+         G1s_s1     0.00      0.00        0.20    0.04    0.02     0.00  0.02
           G2_s1     0.00      0.00        0.02    0.04    0.00     0.00  0.00
           N0_s1     0.00      0.00        0.00    0.00    0.00     0.00  0.00
           P0_s1     0.00      0.00        0.02    5.94    0.00     0.00  0.00
@@ -61,6 +72,7 @@ S0_mms_300m_nda     0.04      0.40        1.62    0.76    0.99     0.04  1.01
            R_s3     0.00      0.00        0.20    0.04    0.00     0.00  0.00
            R_s4     0.00      0.00        0.20    0.07    0.00     0.00  0.00
            R_s5     0.00      0.00        0.04    0.04    0.00     0.00  0.00
+         Rrv_s1     1.01      0.40        3.64    2.22    0.00     0.00  2.83
 
 == 2b. EER (%) theo hệ thống sinh, MLAAD fake/vi; _far0: % câu giả bị nhận là thật ở ngưỡng 0
          config  LEMAS-TTS  LEMAS-TTS_far0  OmniVoice  OmniVoice_far0  VieNeu-TTS  VieNeu-TTS_far0  VoxCPM2  VoxCPM2_far0  vixTTS  vixTTS_far0
@@ -69,11 +81,15 @@ S0_mms_300m_nda       0.00            0.00       0.11            0.90        0.0
    S0_w2v_large       0.02            0.10       0.00            0.00        0.00             0.00     6.90         36.50    0.00         0.00
    S0_w2v_small       0.29            1.20       0.60            1.90        0.02             0.00     6.61         35.30    0.00         0.00
           G1_s1       0.00            0.00       0.00            0.00        0.00             0.00     0.20          8.10    0.00         0.00
+         G1b_s1       0.00            0.30       0.00            0.60        0.00             0.10     1.81         82.50    0.00         0.00
+        G1rv_s1       0.09            0.10       0.09            0.10        0.00             0.00     6.10         26.80    0.00         0.00
+         G1s_s1       0.00            0.00       0.00            0.20        0.00             0.00     0.62         62.90    0.00         0.00
           G2_s1       0.00            0.00       0.00            0.00        0.00             0.00     0.42         27.40    0.00         0.00
            R_s2       0.00            0.00       0.00            0.00        0.00             0.00     0.29         28.70    0.00         0.00
            R_s3       0.00            0.00       0.00            0.00        0.00             0.00     0.40         31.70    0.00         0.00
            R_s4       0.00            0.10       0.00            0.50        0.00             0.10     1.01         59.30    0.00         0.00
            R_s5       0.00            0.00       0.00            0.00        0.00             0.00     0.62         30.90    0.00         0.00
+         Rrv_s1       0.09            0.10       0.11            0.10        0.09             0.00     4.20         12.60    0.09         0.10
 
 == 3. Tập 493 câu khó chung của GĐ3 (RADAR tiếng Việt): % còn sai (thấp hơn là tốt hơn)
          config  n_fake  n_real  fake_wrong_at_eer_thr_%  real_wrong_at_eer_thr_%  fake_wrong_at0_%  real_wrong_at0_%
@@ -86,6 +102,8 @@ S0_mms_300m_nda     238     255                    90.76                    92.9
           B1_s1     238     255                    77.73                    57.25             55.88             84.71
           B2_s1     238     255                    94.96                    83.92             92.44             92.55
           G1_s1     238     255                    84.03                    76.47             68.07             85.88
+         G1b_s1     238     255                    93.70                    83.53             99.58             62.35
+         G1s_s1     238     255                    89.50                    88.24             89.08             88.24
           G2_s1     238     255                    86.13                    85.88             71.01             96.86
           N0_s1     238     255                    76.89                    73.33             65.55             80.39
           P0_s1     238     255                    54.62                    60.78             35.29             77.65
@@ -251,42 +269,39 @@ S0_mms_300m_nda     S0_mms_300m     radar_vi  18.07  20.08           -2.02    -2
 == 5. So sánh qua seed: chênh lệch trung bình A − B (điểm %), KTC 95% và p (t-test hai phía).
    Hai bên ≥ 2 seed: Welch. Một bên 1 seed: dùng độ lệch seed của bên kia (giả định cùng
    độ lệch), t = (A − B)/(s·√(1 + 1/n)), bậc tự do n − 1.
- A           B          metric  n_A  n_B  mean_A  sd_A  mean_B  sd_B  diff_A_minus_B  ci95_lo  ci95_hi  df    p               test
-G1           R    radar_vi_eer    1    5   23.53   NaN   24.20  1.88           -0.67    -6.39     5.04   4 0.76    1 seed, s của R
-G1           R         itw_eer    1    5    5.90   NaN    6.44  1.93           -0.54    -6.42     5.34   4 0.81    1 seed, s của R
-G1           R    radar_en_eer    1    5   25.70   NaN   28.40  1.88           -2.70    -8.41     3.01   4 0.26    1 seed, s của R
-G1           R   radar_vi_frr0    1    5   39.47   NaN   32.92  7.10            6.55   -15.04    28.13   4 0.45    1 seed, s của R
-G1           R test_cvreal_eer    1    5    4.16   NaN    4.72  1.45           -0.56    -4.98     3.85   4 0.74    1 seed, s của R
-G1           R       mlaad_eer    1    4    0.05   NaN    0.19  0.08           -0.14    -0.42     0.15   3 0.23    1 seed, s của R
-G2           R    radar_vi_eer    1    5   23.13   NaN   24.20  1.88           -1.07    -6.79     4.64   4 0.63    1 seed, s của R
-G2           R         itw_eer    1    5    4.30   NaN    6.44  1.93           -2.14    -8.02     3.74   4 0.37    1 seed, s của R
-G2           R    radar_en_eer    1    5   26.00   NaN   28.40  1.88           -2.40    -8.11     3.31   4 0.31    1 seed, s của R
-G2           R   radar_vi_frr0    1    5   39.90   NaN   32.92  7.10            6.98   -14.61    28.56   4 0.42    1 seed, s của R
-G2           R test_cvreal_eer    1    5    4.29   NaN    4.72  1.45           -0.43    -4.84     3.99   4 0.80    1 seed, s của R
-G2           R       mlaad_eer    1    4    0.17   NaN    0.19  0.08           -0.02    -0.30     0.27   3 0.88    1 seed, s của R
-A0           R    radar_vi_eer    1    5   18.37   NaN   24.20  1.88           -5.83   -11.54    -0.11   4 0.05    1 seed, s của R
-A0           R         itw_eer    1    5    6.10   NaN    6.44  1.93           -0.34    -6.22     5.54   4 0.88    1 seed, s của R
-A0           R    radar_en_eer    1    5   25.00   NaN   28.40  1.88           -3.40    -9.11     2.31   4 0.17    1 seed, s của R
-A0           R   radar_vi_frr0    1    5   27.09   NaN   32.92  7.10           -5.84   -27.42    15.75   4 0.49    1 seed, s của R
-A0           R test_cvreal_eer    1    5    2.79   NaN    4.72  1.45           -1.93    -6.34     2.49   4 0.29    1 seed, s của R
-N0           R    radar_vi_eer    1    5   20.50   NaN   24.20  1.88           -3.70    -9.42     2.02   4 0.15    1 seed, s của R
-N0           R         itw_eer    1    5    5.40   NaN    6.44  1.93           -1.04    -6.92     4.84   4 0.65    1 seed, s của R
-N0           R    radar_en_eer    1    5   25.30   NaN   28.40  1.88           -3.10    -8.81     2.61   4 0.21    1 seed, s của R
-N0           R   radar_vi_frr0    1    5   31.29   NaN   32.92  7.10           -1.64   -23.22    19.95   4 0.84    1 seed, s của R
-N0           R test_cvreal_eer    1    5    3.60   NaN    4.72  1.45           -1.12    -5.54     3.29   4 0.52    1 seed, s của R
-B2           R    radar_vi_eer    1    5   21.03   NaN   24.20  1.88           -3.17    -8.89     2.54   4 0.20    1 seed, s của R
-B2           R         itw_eer    1    5    1.40   NaN    6.44  1.93           -5.04   -10.92     0.84   4 0.08    1 seed, s của R
-B2           R    radar_en_eer    1    5   23.40   NaN   28.40  1.88           -5.00   -10.71     0.71   4 0.07    1 seed, s của R
-B2           R   radar_vi_frr0    1    5   25.64   NaN   32.92  7.10           -7.28   -28.87    14.31   4 0.40    1 seed, s của R
-B2           R test_cvreal_eer    1    5    2.59   NaN    4.72  1.45           -2.13    -6.54     2.29   4 0.25    1 seed, s của R
-P0           R    radar_vi_eer    1    5   31.46   NaN   24.20  1.88            7.25     1.54    12.97   4 0.02    1 seed, s của R
-P0           R         itw_eer    1    5   14.90   NaN    6.44  1.93            8.46     2.58    14.34   4 0.02    1 seed, s của R
-P0           R    radar_en_eer    1    5   33.90   NaN   28.40  1.88            5.50    -0.21    11.21   4 0.06    1 seed, s của R
-P0           R   radar_vi_frr0    1    5   53.37   NaN   32.92  7.10           20.45    -1.14    42.03   4 0.06    1 seed, s của R
-P0           R test_cvreal_eer    1    5    3.26   NaN    4.72  1.45           -1.46    -5.87     2.96   4 0.41    1 seed, s của R
- R S0_mms_300m    radar_vi_eer    5    1   24.20  1.88   20.08   NaN            4.12     1.78     6.45   4 0.01 một mẫu, B cố định
- R S0_mms_300m         itw_eer    5    1    6.44  1.93    2.60   NaN            3.84     1.44     6.24   4 0.01 một mẫu, B cố định
- R S0_mms_300m    radar_en_eer    5    1   28.40  1.88   26.20   NaN            2.20    -0.13     4.53   4 0.06 một mẫu, B cố định
- R S0_mms_300m   radar_vi_frr0    5    1   32.92  7.10    4.81   NaN           28.11    19.30    36.92   4 0.00 một mẫu, B cố định
- R S0_mms_300m test_cvreal_eer    5    1    4.72  1.45    7.44   NaN           -2.72    -4.52    -0.92   4 0.01 một mẫu, B cố định
- R S0_mms_300m       mlaad_eer    4    1    0.19  0.08    5.18   NaN           -4.99    -5.12    -4.86   3 0.00 một mẫu, B cố định
+  A           B          metric  n_A  n_B  mean_A  sd_A  mean_B  sd_B  diff_A_minus_B  ci95_lo  ci95_hi  df    p               test
+ G1           R    radar_vi_eer    1    5   23.53   NaN   24.20  1.88           -0.67    -6.39     5.04   4 0.76    1 seed, s của R
+ G1           R         itw_eer    1    5    5.90   NaN    6.44  1.93           -0.54    -6.42     5.34   4 0.81    1 seed, s của R
+ G1           R    radar_en_eer    1    5   25.70   NaN   28.40  1.88           -2.70    -8.41     3.01   4 0.26    1 seed, s của R
+ G1           R   radar_vi_frr0    1    5   39.47   NaN   32.92  7.10            6.55   -15.04    28.13   4 0.45    1 seed, s của R
+ G1           R test_cvreal_eer    1    5    4.16   NaN    4.72  1.45           -0.56    -4.98     3.85   4 0.74    1 seed, s của R
+ G1           R       mlaad_eer    1    4    0.05   NaN    0.19  0.08           -0.14    -0.42     0.15   3 0.23    1 seed, s của R
+ G2           R    radar_vi_eer    1    5   23.13   NaN   24.20  1.88           -1.07    -6.79     4.64   4 0.63    1 seed, s của R
+ G2           R         itw_eer    1    5    4.30   NaN    6.44  1.93           -2.14    -8.02     3.74   4 0.37    1 seed, s của R
+ G2           R    radar_en_eer    1    5   26.00   NaN   28.40  1.88           -2.40    -8.11     3.31   4 0.31    1 seed, s của R
+ G2           R   radar_vi_frr0    1    5   39.90   NaN   32.92  7.10            6.98   -14.61    28.56   4 0.42    1 seed, s của R
+ G2           R test_cvreal_eer    1    5    4.29   NaN    4.72  1.45           -0.43    -4.84     3.99   4 0.80    1 seed, s của R
+ G2           R       mlaad_eer    1    4    0.17   NaN    0.19  0.08           -0.02    -0.30     0.27   3 0.88    1 seed, s của R
+ A0           R    radar_vi_eer    1    5   18.37   NaN   24.20  1.88           -5.83   -11.54    -0.11   4 0.05    1 seed, s của R
+ A0           R         itw_eer    1    5    6.10   NaN    6.44  1.93           -0.34    -6.22     5.54   4 0.88    1 seed, s của R
+ A0           R    radar_en_eer    1    5   25.00   NaN   28.40  1.88           -3.40    -9.11     2.31   4 0.17    1 seed, s của R
+ A0           R   radar_vi_frr0    1    5   27.09   NaN   32.92  7.10           -5.84   -27.42    15.75   4 0.49    1 seed, s của R
+ A0           R test_cvreal_eer    1    5    2.79   NaN    4.72  1.45           -1.93    -6.34     2.49   4 0.29    1 seed, s của R
+  R S0_mms_300m    radar_vi_eer    5    1   24.20  1.88   20.08   NaN            4.12     1.78     6.45   4 0.01 một mẫu, B cố định
+  R S0_mms_300m         itw_eer    5    1    6.44  1.93    2.60   NaN            3.84     1.44     6.24   4 0.01 một mẫu, B cố định
+  R S0_mms_300m    radar_en_eer    5    1   28.40  1.88   26.20   NaN            2.20    -0.13     4.53   4 0.06 một mẫu, B cố định
+  R S0_mms_300m   radar_vi_frr0    5    1   32.92  7.10    4.81   NaN           28.11    19.30    36.92   4 0.00 một mẫu, B cố định
+  R S0_mms_300m test_cvreal_eer    5    1    4.72  1.45    7.44   NaN           -2.72    -4.52    -0.92   4 0.01 một mẫu, B cố định
+  R S0_mms_300m       mlaad_eer    4    1    0.19  0.08    5.18   NaN           -4.99    -5.12    -4.86   3 0.00 một mẫu, B cố định
+G1s           R    radar_vi_eer    1    5   22.99   NaN   24.20  1.88           -1.21    -6.93     4.50   4 0.59    1 seed, s của R
+G1s           R         itw_eer    1    5    2.40   NaN    6.44  1.93           -4.04    -9.92     1.84   4 0.13    1 seed, s của R
+G1s           R    radar_en_eer    1    5   26.70   NaN   28.40  1.88           -1.70    -7.41     4.01   4 0.46    1 seed, s của R
+G1s           R   radar_vi_frr0    1    5   23.14   NaN   32.92  7.10           -9.78   -31.37    11.81   4 0.28    1 seed, s của R
+G1s           R test_cvreal_eer    1    5    4.96   NaN    4.72  1.45            0.24    -4.17     4.65   4 0.89    1 seed, s của R
+G1s           R       mlaad_eer    1    4    0.24   NaN    0.19  0.08            0.06    -0.23     0.34   3 0.58    1 seed, s của R
+G1b           R    radar_vi_eer    1    5   19.06   NaN   24.20  1.88           -5.14   -10.86     0.57   4 0.07    1 seed, s của R
+G1b           R         itw_eer    1    5    2.10   NaN    6.44  1.93           -4.34   -10.22     1.54   4 0.11    1 seed, s của R
+G1b           R    radar_en_eer    1    5   25.70   NaN   28.40  1.88           -2.70    -8.41     3.01   4 0.26    1 seed, s của R
+G1b           R   radar_vi_frr0    1    5    7.64   NaN   32.92  7.10          -25.28   -46.87    -3.69   4 0.03    1 seed, s của R
+G1b           R test_cvreal_eer    1    5    4.85   NaN    4.72  1.45            0.13    -4.28     4.54   4 0.94    1 seed, s của R
+G1b           R       mlaad_eer    1    4    0.81   NaN    0.19  0.08            0.63     0.34     0.92   3 0.01    1 seed, s của R
