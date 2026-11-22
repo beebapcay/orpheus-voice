@@ -1,0 +1,10 @@
+Score: higher = real. beta = 1.900, actDCF threshold = -0.642
+EER in %, lower is better. minDCF/actDCF: lower is better, 1.0 = no better than accepting everything.
+          subset  n_real  n_fake  eer_%  minDCF  actDCF  eer_threshold
+          Pooled    2475    5000 1.0955  0.0260  0.1754         7.2129
+ group:LEMAS-TTS    2475    1000 0.0000  0.0000  0.0040         2.0282
+ group:OmniVoice    2475    1000 0.0000  0.0000  0.0080         1.9594
+group:VieNeu-TTS    2475    1000 0.0000  0.0000  0.0010         2.0577
+   group:VoxCPM2    2475    1000 2.7939  0.0688  0.8640         7.4646
+    group:vixTTS    2475    1000 0.0000  0.0000  0.0000        -2.7047
+Saved to /kaggle/working/results/scores/G1b_s2/mlaad_vi_test/metrics.csv
